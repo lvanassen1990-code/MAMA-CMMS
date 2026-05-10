@@ -7,119 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../assets/mama.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #f5f5f7;
-      --surface: #ffffff;
-      --border: rgba(0,0,0,0.08);
-      --border-strong: rgba(0,0,0,0.14);
-      --text: #1d1d1f;
-      --text-2: #6e6e73;
-      --text-3: #aeaeb2;
-      --accent: #1a1a1a;
-      --green: #1D9E75;
-      --green-bg: #E1F5EE;
-      --green-text: #0F6E56;
-      --amber: #EF9F27;
-      --amber-bg: #FAEEDA;
-      --amber-text: #854F0B;
-      --red: #E24B4A;
-      --red-bg: #FCEBEB;
-      --red-text: #A32D2D;
-      --blue: #378ADD;
-      --blue-bg: #E6F1FB;
-      --blue-text: #185FA5;
-      --radius: 10px;
-      --radius-sm: 7px;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.5;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-    }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      width: 220px; min-width: 220px;
-      background: var(--surface);
-      border-right: 0.5px solid var(--border);
-      display: flex; flex-direction: column;
-      height: 100vh;
-    }
-    .sidebar-logo { padding: 20px 18px 16px; border-bottom: 0.5px solid var(--border); }
-    .logo-mark { display: flex; align-items: center; gap: 10px; }
-    .logo-icon {
-      width: 32px; height: 32px; background: var(--accent);
-      border-radius: 8px; display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 12px; font-weight: 600; letter-spacing: -0.5px;
-    }
-    .logo-name { font-size: 15px; font-weight: 600; }
-    .logo-sub { font-size: 10px; color: var(--text-3); letter-spacing: 0.6px; text-transform: uppercase; }
-    .sidebar-section {
-      padding: 14px 18px 4px;
-      font-size: 10px; font-weight: 500;
-      color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 9px;
-      padding: 7px 10px; margin: 1px 8px;
-      border-radius: var(--radius-sm);
-      cursor: pointer; font-size: 13px;
-      color: var(--text-2); transition: background 0.12s, color 0.12s;
-      text-decoration: none;
-    }
-    .nav-item:hover { background: var(--bg); color: var(--text); }
-    .nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
-    .nav-item i { font-size: 16px; }
-    .nav-badge {
-      margin-left: auto; background: var(--red); color: #fff;
-      font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500;
-    }
-    .sidebar-bottom {
-      margin-top: auto; padding: 12px 14px;
-      border-top: 0.5px solid var(--border);
-    }
-    .user-row { display: flex; align-items: center; gap: 10px; }
-    .user-avatar {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--blue-bg);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 600; color: var(--blue-text);
-    }
-    .user-name { font-size: 12px; font-weight: 500; }
-    .user-role { font-size: 10px; color: var(--text-3); }
-
-    /* ── Main ── */
-    .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-    .topbar {
-      background: var(--surface); border-bottom: 0.5px solid var(--border);
-      padding: 12px 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-shrink: 0;
-    }
-    .topbar-title { font-size: 15px; font-weight: 500; }
-    .topbar-sub { font-size: 12px; color: var(--text-2); }
-    .topbar-right { display: flex; align-items: center; gap: 8px; }
-    .btn {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 12px; border-radius: var(--radius-sm);
-      border: 0.5px solid var(--border-strong);
-      background: var(--surface); font-size: 12px; font-weight: 500;
-      color: var(--text-2); cursor: pointer; transition: background 0.12s;
-    }
-    .btn:hover { background: var(--bg); }
-    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn.primary:hover { background: #333; }
-    .btn i { font-size: 14px; }
-
     /* ── Content ── */
     .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
     .content-top { display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; padding-bottom: 4px; }
@@ -220,16 +109,10 @@
     .asset-name-main { font-size: 12px; font-weight: 500; }
     .asset-name-sub { font-size: 11px; color: var(--text-3); }
 
-    .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 10px; padding: 2px 8px;
-      border-radius: 10px; font-weight: 500; white-space: nowrap;
-    }
     .badge-ok { background: var(--green-bg); color: var(--green-text); }
     .badge-warn { background: var(--amber-bg); color: var(--amber-text); }
     .badge-crit { background: var(--red-bg); color: var(--red-text); }
     .badge-progress { background: var(--blue-bg); color: var(--blue-text); }
-    .badge-off { background: var(--bg); color: var(--text-3); border: 0.5px solid var(--border-strong); }
     .badge-inactive { background: var(--bg); color: var(--text-3); border: 0.5px solid var(--border-strong); text-decoration: line-through; }
     .dot-blue { background: var(--blue); }
 
@@ -320,24 +203,6 @@
     }
 
     /* ── Detail drawer ── */
-    .drawer-overlay {
-      position: fixed; inset: 0; z-index: 200;
-      background: rgba(0,0,0,0.18);
-      opacity: 0; pointer-events: none;
-      transition: opacity 0.22s;
-    }
-    .drawer-overlay.open { opacity: 1; pointer-events: all; }
-    .drawer {
-      position: fixed; top: 0; left: 220px; right: 0; bottom: 0;
-      background: var(--surface);
-      border-left: 0.5px solid var(--border);
-      box-shadow: -8px 0 32px rgba(0,0,0,0.10);
-      display: flex; flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
-      z-index: 201; overflow: hidden;
-    }
-    .drawer-overlay.open .drawer { transform: translateX(0); }
 
     /* Header */
     .drawer-header {
@@ -346,14 +211,6 @@
       display: flex; align-items: center; gap: 12px;
       flex-shrink: 0; background: var(--surface);
     }
-    .drawer-close {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--bg); border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-2); font-size: 14px; flex-shrink: 0;
-    }
-    .drawer-close:hover { background: var(--border-strong); }
-    .drawer-title { font-size: 15px; font-weight: 600; flex: 1; }
 
     /* Top hero: foto + info naast elkaar */
     .drawer-hero {
@@ -385,28 +242,7 @@
     .drawer-value.mono { font-family: monospace; font-size: 12px; }
     .drawer-value.muted { color: var(--text-2); font-weight: 400; }
 
-    /* Tabs */
-    .drawer-tabs {
-      display: flex; flex-shrink: 0;
-      border-bottom: 0.5px solid var(--border);
-      background: var(--surface); padding: 0 20px; gap: 0;
-    }
-    .drawer-tab {
-      padding: 10px 16px; font-size: 12px; font-weight: 500;
-      color: var(--text-3); border: none; background: transparent;
-      cursor: pointer; border-bottom: 2px solid transparent;
-      margin-bottom: -0.5px; font-family: inherit;
-      transition: color 0.12s, border-color 0.12s;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .drawer-tab i { font-size: 14px; }
-    .drawer-tab:hover { color: var(--text-2); }
-    .drawer-tab.active { color: var(--text); border-bottom-color: var(--accent); }
-
     /* Tab content */
-    .drawer-tab-content { flex: 1; overflow-y: auto; }
-    .drawer-tab-pane { display: none; padding: 20px 24px; }
-    .drawer-tab-pane.active { display: block; }
 
     /* Onderhoudshistorie */
     .history-header {
@@ -483,50 +319,7 @@
     .drawer-hero.edit-mode .drawer-hero-info { background: #fafafa; }
 
     /* Modal */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.18s;
-    }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: var(--surface); border-radius: 14px;
-      border: 0.5px solid var(--border);
-      width: 520px; max-width: 94vw;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.12);
-      transform: scale(0.97); transition: transform 0.18s;
-    }
-    .modal-overlay.open .modal { transform: scale(1); }
-    .modal-header {
-      padding: 18px 20px 16px;
-      border-bottom: 0.5px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .modal-title { font-size: 14px; font-weight: 600; }
-    .modal-close {
-      width: 26px; height: 26px; border-radius: 50%;
-      background: var(--bg); border: none; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--text-2); font-size: 14px;
-    }
     .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-field { display: flex; flex-direction: column; gap: 5px; }
-    .form-field.full { grid-column: 1 / -1; }
-    .form-label { font-size: 11px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
-    .form-input {
-      padding: 8px 10px; border-radius: var(--radius-sm);
-      border: 0.5px solid var(--border-strong);
-      font-size: 13px; font-family: inherit; color: var(--text);
-      background: var(--bg); outline: none; transition: border-color 0.12s;
-    }
-    .form-input:focus { border-color: var(--blue); background: var(--surface); }
-    .modal-footer {
-      padding: 14px 20px;
-      border-top: 0.5px solid var(--border);
-      display: flex; justify-content: flex-end; gap: 8px;
-    }
     .photo-upload-area {
       border: 1.5px dashed var(--border-strong);
       border-radius: var(--radius);
