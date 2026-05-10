@@ -103,7 +103,7 @@
 /* ── Base ──────────────────────────────────────────────────── */
 html {
   height: 100%;
-  scrollbar-gutter: stable;
+  overflow: hidden;   /* fixed elements off-screen veroorzaken anders een scroll-shift */
 }
 
 body {
@@ -115,6 +115,7 @@ body {
   height: 100vh;
   width: 100%;
   overflow: hidden;
+  overscroll-behavior: none;  /* voorkomt rubber-band scroll-chaining */
   display: flex;
   -webkit-font-smoothing: antialiased;
 }
@@ -294,16 +295,17 @@ body {
 .drawer-overlay.open { opacity: 1; pointer-events: auto; }
 
 .drawer {
-  position: fixed; top: 0; right: 0;
-  height: 100vh; width: 480px;
+  position: fixed; top: 0; left: 220px; right: 0; bottom: 0;
   background: var(--surface);
+  border-left: var(--border-width) solid var(--border);
   box-shadow: var(--shadow-drawer);
   z-index: 50;
   transform: translateX(100%);
   transition: transform var(--dur-drawer) var(--ease-out);
   display: flex; flex-direction: column;
+  overflow: hidden;
 }
-.drawer.open { transform: translateX(0); }
+.drawer-overlay.open .drawer { transform: translateX(0); }
 
 /* ── Modal ─────────────────────────────────────────────────── */
 .modal-overlay {
