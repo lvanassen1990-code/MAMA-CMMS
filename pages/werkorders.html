@@ -696,10 +696,9 @@
     const tbody = document.getElementById('woBody');
     tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Laden…</td></tr>`;
 
-    const [{ data: wos, error: woErr }, { data: assets }, { data: parts }] = await Promise.all([
+    const [{ data: wos, error: woErr }, { data: assets }] = await Promise.all([
       sb.from('werkorders').select('*').order('created_at', { ascending: false }),
       sb.from('assets').select('asset_id,name,category,location,photo_url'),
-      sb.from('parts').select('id,part_number,name,unit,stock_qty,min_stock').order('part_number', { ascending: true }),
     ]);
 
     if (woErr) {
@@ -708,7 +707,12 @@
     }
     allWerkorders = wos || [];
     allAssets = assets || [];
-    allParts = parts || [];
+
+    // Parts afzonderlijk laden zodat een fout hier de rest niet breekt
+    try {
+      const { data: parts } = await sb.from('parts').select('id,part_number,name,unit,stock_qty,min_stock').order('part_number', { ascending: true });
+      allParts = parts || [];
+    } catch(e) { allParts = []; }
     updateKPIs(allWerkorders);
     filterTable();
     populateAssetSelect();

@@ -187,6 +187,14 @@ CREATE TABLE IF NOT EXISTS werkorder_parts (
   created_at   timestamptz DEFAULT now()
 );
 
+-- RLS uitschakelen (prototype fase — geen auth vereist)
+ALTER TABLE parts              DISABLE ROW LEVEL SECURITY;
+ALTER TABLE werkorder_parts    DISABLE ROW LEVEL SECURITY;
+ALTER TABLE assets             DISABLE ROW LEVEL SECURITY;
+ALTER TABLE werkorders         DISABLE ROW LEVEL SECURITY;
+ALTER TABLE storingen          DISABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_history DISABLE ROW LEVEL SECURITY;
+
 -- Voorbeelddata onderdelen
 INSERT INTO parts (part_number, name, description, category, unit, stock_qty, min_stock, max_stock, storage_location, supplier, supplier_ref, unit_price) VALUES
 ('OND-0001', 'Oliefilter Atlas Copco GA55',     'Oliefilter voor Atlas Copco GA55 compressor',           'Filter',      'stuk',   8,   3,  15, 'Rek A1 Vak 1', 'Atlas Copco',     'AC-1622-3151',  24.50),
