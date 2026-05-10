@@ -101,13 +101,19 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ── Base ──────────────────────────────────────────────────── */
-html, body {
+html {
+  height: 100%;
+  scrollbar-gutter: stable;
+}
+
+body {
   font-family: var(--font-sans);
   font-size: var(--fs-base);
   line-height: var(--lh-base);
   color: var(--text);
   background: var(--bg);
   height: 100vh;
+  width: 100%;
   overflow: hidden;
   display: flex;
   -webkit-font-smoothing: antialiased;
