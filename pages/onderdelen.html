@@ -627,36 +627,11 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SB_URL  = 'https://mtghxnllimxhlnjtshjq.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxOTE5MDAsImV4cCI6MjA2MTc2NzkwMH0.ztNQBiIFCMfjI1T_wd2SLNKB6SXoORrRU-JiHF0yzW4';
-
-const sb = {
-  from: (table) => ({
-    select: (cols = '*') => {
-      let url = `${SB_URL}/rest/v1/${table}?select=${encodeURIComponent(cols)}`;
-      let filters = [], orderClause = '', limitClause = '', rangeHeader = null;
-      const q = {
-        eq:    (c,v) => { filters.push(`${c}=eq.${v}`); return q; },
-        order: (c, opts={}) => { orderClause = `&order=${c}.${opts.ascending===false?'desc':'asc'}`; return q; },
-        limit: (n) => { limitClause = `&limit=${n}`; return q; },
-        then:  (fn) => fetch(url + (filters.length?'&'+filters.join('&'):'') + orderClause + limitClause, {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(r=>r.json()).then(data=>fn({data,error:null})).catch(e=>fn({data:null,error:e}))
-      };
-      return q;
-    },
-    insert: (rows) => ({
-      select: () => ({
-        then: (fn) => fetch(`${SB_URL}/rest/v1/${table}?select=*`, {method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(Array.isArray(rows)?rows:[rows])}).then(r=>r.json()).then(data=>fn({data,error:null})).catch(e=>fn({data:null,error:e}))
-      }),
-      then: (fn) => fetch(`${SB_URL}/rest/v1/${table}`, {method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(Array.isArray(rows)?rows:[rows])}).then(r=>r.ok?fn({data:null,error:null}):r.json().then(e=>fn({data:null,error:e}))).catch(e=>fn({data:null,error:e}))
-    }),
-    update: (obj) => ({
-      eq: (c,v) => ({
-        then: (fn) => fetch(`${SB_URL}/rest/v1/${table}?${c}=eq.${v}`, {method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(obj)}).then(r=>r.ok?fn({data:null,error:null}):r.json().then(e=>fn({data:null,error:e}))).catch(e=>fn({data:null,error:e}))
-      })
-    })
-  })
-};
+const SB_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
+const sb = supabase.createClient(SB_URL, SB_KEY);
 
 let allParts = [];
 let filtered = [];
