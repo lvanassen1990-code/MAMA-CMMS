@@ -155,3 +155,68 @@ CREATE TABLE IF NOT EXISTS maintenance_history (
   cost             numeric(10,2),
   created_at       timestamptz DEFAULT now()
 );
+
+-- Onderdelencatalogus (spare parts)
+CREATE TABLE IF NOT EXISTS parts (
+  id               uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  part_number      text NOT NULL UNIQUE,
+  name             text NOT NULL,
+  description      text,
+  category         text DEFAULT 'Mechanisch',
+  unit             text DEFAULT 'stuk',
+  stock_qty        numeric(10,2) DEFAULT 0,
+  min_stock        numeric(10,2) DEFAULT 1,
+  max_stock        numeric(10,2) DEFAULT 10,
+  storage_location text,
+  supplier         text,
+  supplier_ref     text,
+  unit_price       numeric(10,2),
+  photo_url        text,
+  created_at       timestamptz DEFAULT now()
+);
+
+-- Koppeling onderdelen ↔ werkorders (reservering + afboeking)
+CREATE TABLE IF NOT EXISTS werkorder_parts (
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  wo_id        uuid NOT NULL REFERENCES werkorders(id),
+  part_id      uuid NOT NULL REFERENCES parts(id),
+  qty_reserved numeric(10,2) DEFAULT 0,
+  qty_used     numeric(10,2) DEFAULT 0,
+  status       text DEFAULT 'Gereserveerd',
+  notes        text,
+  created_at   timestamptz DEFAULT now()
+);
+
+-- Voorbeelddata onderdelen
+INSERT INTO parts (part_number, name, description, category, unit, stock_qty, min_stock, max_stock, storage_location, supplier, supplier_ref, unit_price) VALUES
+('OND-0001', 'Oliefilter Atlas Copco GA55',     'Oliefilter voor Atlas Copco GA55 compressor',           'Filter',      'stuk',   8,   3,  15, 'Rek A1 Vak 1', 'Atlas Copco',     'AC-1622-3151',  24.50),
+('OND-0002', 'Luchtfilter Atlas Copco GA55',     'Luchtfilter voor GA55/GA75 serie',                      'Filter',      'stuk',   5,   2,  10, 'Rek A1 Vak 2', 'Atlas Copco',     'AC-1614-5714',  31.00),
+('OND-0003', 'Separatorfilter Atlas Copco GA55', 'Olie-luchtseparator voor GA55',                         'Filter',      'stuk',   2,   2,   6, 'Rek A1 Vak 3', 'Atlas Copco',     'AC-1614-9073',  89.00),
+('OND-0004', 'V-snaar Hytrol E24',               'V-snaar voor transportband Hytrol E24',                 'Mechanisch',  'stuk',   6,   4,  20, 'Rek B2 Vak 1', 'Hytrol',          'HY-E24-VB',     18.75),
+('OND-0005', 'Transportband riem 500mm',          'Platte transportband riem 500mm breed per meter',       'Mechanisch',  'meter',  12,  5,  30, 'Rek B2 Vak 2', 'Habasit',         'HB-NNB-15E',    22.40),
+('OND-0006', 'Hydrauliekolie HLP 46 (20L)',       'Minerale hydrauliekolie ISO VG 46',                    'Smering',     'liter', 120, 40, 200, 'Opslagruimte',  'Shell',           'SH-TELLUS46',    3.80),
+('OND-0007', 'Compressorolie (4L)',               'Synthetische compressorolie Atlas Copco',               'Smering',     'liter',  32, 16,  60, 'Opslagruimte',  'Atlas Copco',     'AC-ROTO-INJECT', 12.90),
+('OND-0008', 'Pakking hydrauliekpomp A10V',       'Pakkingset Bosch Rexroth A10V serie',                  'Afdichting',  'set',    3,   2,   8, 'Rek A2 Vak 1', 'Bosch Rexroth',   'BR-R909605642',  67.00),
+('OND-0009', 'O-ring set hydrauliek (50 stuks)',  'Assortiment O-ringen NBR voor hydrauliek',             'Afdichting',  'set',    4,   2,   8, 'Rek A2 Vak 2', 'Eriks',           'ER-OR-NBR-50',   28.50),
+('OND-0010', 'Lager 6205-2RS',                   'Gesloten kogellager 6205-2RS 25x52x15mm',               'Mechanisch',  'stuk',  10,   4,  20, 'Rek B1 Vak 1', 'SKF',             'SKF-6205-2RS',   14.20),
+('OND-0011', 'Lager 6305-2RS',                   'Gesloten kogellager 6305-2RS 25x62x17mm',               'Mechanisch',  'stuk',   7,   3,  15, 'Rek B1 Vak 2', 'SKF',             'SKF-6305-2RS',   19.80),
+('OND-0012', 'Lager 6308-2RS',                   'Gesloten kogellager 6308-2RS 40x90x23mm',               'Mechanisch',  'stuk',   4,   2,  10, 'Rek B1 Vak 3', 'SKF',             'SKF-6308-2RS',   34.60),
+('OND-0013', 'Koudemiddel R410A (10kg)',          'Koelmiddel R410A cilinder 10kg',                        'Koeling',     'kg',     0,   5,  30, 'Opslagruimte',  'Reftrade',        'RT-R410A-10',    98.00),
+('OND-0014', 'Droogmiddelpatroon koeling',        'Droogmiddelpatroon voor Danfoss Optyma',                'Filter',      'stuk',   3,   2,   8, 'Rek A3 Vak 1', 'Danfoss',         'DF-023Z5014',    45.00),
+('OND-0015', 'Zekering 63A traag',                'Installatie automaat 63A traag 3-fase',                 'Elektrisch',  'stuk',   6,   2,  12, 'Rek C1 Vak 1', 'Schneider',       'SC-A9N61563',    22.30),
+('OND-0016', 'Zekering 32A traag',                'Installatie automaat 32A traag 3-fase',                 'Elektrisch',  'stuk',   8,   3,  15, 'Rek C1 Vak 2', 'Schneider',       'SC-A9N61532',    18.70),
+('OND-0017', 'Drukschakelaar 6-10 bar',           'Pressostat / drukschakelaar 6-10 bar aanpasbaar',       'Pneumatisch', 'stuk',   2,   1,   5, 'Rek C2 Vak 1', 'Condor',          'CO-MDR-53',      38.90),
+('OND-0018', 'Pneumatisch filter 1/2"',           'FRL eenheid filter 1/2" met waterafscheider',           'Pneumatisch', 'stuk',   3,   1,   6, 'Rek C2 Vak 2', 'Festo',           'FE-LFR-1/2',     54.00),
+('OND-0019', 'Hydrauliekslang DN12 (1m)',         'Hoge druk hydrauliekslang DN12 per meter',              'Hydrauliek',  'meter',  15,  5,  30, 'Rek A3 Vak 2', 'Gates',           'GA-HY-DN12',      8.50),
+('OND-0020', 'Hydrauliekkoppeling 3/8"',          'Snelkoppeling hydrauliek 3/8" binnendraad',             'Hydrauliek',  'stuk',   8,   3,  15, 'Rek A3 Vak 3', 'Parker',          'PA-SK-3/8F',     12.40),
+('OND-0021', 'Thermisch relais 4-6A',             'Motorbeveiliging thermisch relais instelbaar 4-6A',     'Elektrisch',  'stuk',   4,   2,   8, 'Rek C1 Vak 3', 'Schneider',       'SC-LRD10',       29.50),
+('OND-0022', 'Contactor 18A 24V',                 '3-fase contactor 18A spoelspanning 24VDC',              'Elektrisch',  'stuk',   5,   2,  10, 'Rek C1 Vak 4', 'Schneider',       'SC-LC1D18BD',    42.80),
+('OND-0023', 'Motorolie SAE 10W-40 (5L)',         'Motorolie voor noodaggregaat Caterpillar C9',           'Smering',     'liter',  25, 10,  50, 'Opslagruimte',  'Castrol',         'CA-10W40-5L',     7.20),
+('OND-0024', 'Tandwielpomp hydrauliek',           'Tandwielpomp 16cc/omw voor hydrauliekunit',             'Hydrauliek',  'stuk',   1,   1,   3, 'Rek A4 Vak 1', 'Bosch Rexroth',   'BR-0510325022', 285.00),
+('OND-0025', 'Drukregelventiel 250 bar',          'Proportioneel drukregelventiel max 250 bar',            'Hydrauliek',  'stuk',   1,   1,   2, 'Rek A4 Vak 2', 'Parker',          'PA-RDBA-LCN',   195.00),
+('OND-0026', 'Ventilatormotor 0.75kW',            'Elektromotor 0.75kW 1400rpm IP55',                     'Elektrisch',  'stuk',   2,   1,   4, 'Rek C2 Vak 3', 'WEG',             'WE-W21-075-4',  168.00),
+('OND-0027', 'Luchtvering compressor',            'Anti-trillingsdemper rubber 60x60mm M10',               'Mechanisch',  'stuk',  16,   8,  30, 'Rek B3 Vak 1', 'Grayston',        'GR-RB-6060',      6.40),
+('OND-0028', 'Patroonfilter perslucht 0.01µm',    'Fijnfilterpatroon voor perslucht nabehandeling',        'Filter',      'stuk',   4,   2,   8, 'Rek A1 Vak 4', 'Donaldson',       'DO-P-SH000',     38.00),
+('OND-0029', 'Veiligheidsmembraan 16 bar',        'Breekschijf drukveiligheid 16 bar DN50',                'Pneumatisch', 'stuk',   3,   2,   6, 'Rek C3 Vak 1', 'Rembe',           'RE-KUB-A',       72.00),
+('OND-0030', 'Sensorbekabeling M12 5m',           'Aansluitkabel sensor M12 4-polig 5 meter',              'Elektrisch',  'stuk',   0,   3,  15, 'Rek C3 Vak 2', 'Pepperl+Fuchs',   'PE-V1-G-5M',      9.80)
+ON CONFLICT (part_number) DO NOTHING;

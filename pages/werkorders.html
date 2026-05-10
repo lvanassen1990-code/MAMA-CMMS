@@ -182,6 +182,32 @@
     .drawer-tab:hover { color: var(--text-2); }
     .drawer-tab.active { color: var(--text); border-bottom-color: var(--accent); }
 
+    /* Parts in drawer */
+    .parts-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .parts-row:last-child { border-bottom: none; }
+    .parts-num  { font-family: monospace; font-size: 11px; color: var(--text-3); min-width: 90px; }
+    .parts-name { flex: 1; font-size: 12px; font-weight: 500; }
+    .parts-qty  { font-size: 12px; color: var(--text-2); min-width: 60px; text-align: right; }
+    .parts-status { min-width: 80px; }
+
+    /* Parts picker in modal */
+    .parts-picker { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; }
+    .parts-picker-search { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 0.5px solid var(--border); }
+    .parts-picker-search i { color: var(--text-3); font-size: 14px; }
+    .parts-picker-search input { border: none; outline: none; background: transparent; font-size: 13px; width: 100%; font-family: inherit; color: var(--text); }
+    .parts-dropdown { max-height: 140px; overflow-y: auto; background: var(--surface); }
+    .parts-dropdown-item { padding: 8px 12px; font-size: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .parts-dropdown-item:hover { background: var(--bg); }
+    .parts-dropdown-item .pd-name { font-weight: 500; }
+    .parts-dropdown-item .pd-stock { font-size: 11px; color: var(--text-3); }
+    .modal-parts-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .modal-part-row { display: flex; align-items: center; gap: 8px; background: var(--bg); border-radius: var(--radius-sm); padding: 7px 10px; }
+    .modal-part-row .mp-name { flex: 1; font-size: 12px; font-weight: 500; }
+    .modal-part-row .mp-num  { font-family: monospace; font-size: 10px; color: var(--text-3); }
+    .modal-part-row input.mp-qty { width: 60px; padding: 4px 6px; border-radius: 5px; border: 0.5px solid var(--border-strong); font-size: 12px; font-family: inherit; text-align: center; background: var(--surface); }
+    .modal-part-row .mp-unit { font-size: 11px; color: var(--text-3); }
+    .mp-remove { background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 14px; padding: 2px; }
+
     .drawer-tab-content { flex: 1; overflow-y: auto; }
     .drawer-tab-pane { display: none; padding: 20px 24px; }
     .drawer-tab-pane.active { display: block; }
@@ -233,7 +259,7 @@
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
   <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
   <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
-  <a href="#" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
   <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
@@ -387,11 +413,13 @@
 
     <div class="drawer-tabs">
       <button type="button" class="drawer-tab active" onclick="switchDrawerTab('activity',this)"><i class="ti ti-list-details"></i> Activiteit</button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('parts',this)"><i class="ti ti-box"></i> Onderdelen</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)"><i class="ti ti-note"></i> Notities</button>
     </div>
 
     <div class="drawer-tab-content">
       <div class="drawer-tab-pane active" id="tabActivity"></div>
+      <div class="drawer-tab-pane" id="tabParts"><div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="font-size:24px;"></i></div></div>
       <div class="drawer-tab-pane" id="tabNotes"></div>
     </div>
 
@@ -470,6 +498,17 @@
         <label class="form-label">Notities</label>
         <textarea class="form-input" id="fNotes" rows="2" placeholder="Aanvullende informatie…" style="resize:vertical;"></textarea>
       </div>
+      <div class="form-field full">
+        <label class="form-label" style="margin-bottom:6px;">Onderdelen reserveren</label>
+        <div class="parts-picker">
+          <div class="parts-picker-search">
+            <i class="ti ti-search"></i>
+            <input type="text" id="partPickerInput" placeholder="Zoek op naam of nummer…" oninput="searchPartsDropdown()" onfocus="showPartsDropdown()" autocomplete="off" />
+          </div>
+          <div class="parts-dropdown" id="partsDropdown" style="display:none;"></div>
+        </div>
+        <div class="modal-parts-list" id="modalPartsList"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Annuleren</button>
@@ -517,6 +556,8 @@
 
   let allWerkorders = [];
   let allAssets = [];
+  let allParts = [];
+  let pendingParts = []; // [{part, qty}] for new WO modal
 
   const catIcons = { 'Compressor':'ti-wind','Hydrauliek':'ti-droplet','Ventilatie':'ti-air-conditioning','Transport':'ti-arrows-right-left','Elektrisch':'ti-bolt','Koeling':'ti-snowflake' };
 
@@ -655,9 +696,10 @@
     const tbody = document.getElementById('woBody');
     tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Laden…</td></tr>`;
 
-    const [{ data: wos, error: woErr }, { data: assets }] = await Promise.all([
+    const [{ data: wos, error: woErr }, { data: assets }, { data: parts }] = await Promise.all([
       sb.from('werkorders').select('*').order('created_at', { ascending: false }),
       sb.from('assets').select('asset_id,name,category,location,photo_url'),
+      sb.from('parts').select('id,part_number,name,unit,stock_qty,min_stock').order('part_number', { ascending: true }),
     ]);
 
     if (woErr) {
@@ -666,6 +708,7 @@
     }
     allWerkorders = wos || [];
     allAssets = assets || [];
+    allParts = parts || [];
     updateKPIs(allWerkorders);
     filterTable();
     populateAssetSelect();
@@ -771,10 +814,64 @@
     document.querySelectorAll('.drawer-tab').forEach((b,i) => b.classList.toggle('active', i===0));
     document.querySelectorAll('.drawer-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
 
+    loadDrawerParts(wo.id);
     document.getElementById('drawerOverlay').classList.add('open');
   }
 
   function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); drawerWO = null; }
+
+  async function loadDrawerParts(woId) {
+    const pane = document.getElementById('tabParts');
+    pane.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-3);">Laden…</div>';
+
+    const { data, error } = await sb.from('werkorder_parts').select('*, parts(part_number,name,unit)').eq('wo_id', woId);
+
+    if (error || !data) { pane.innerHTML = '<div style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden onderdelen.</div>'; return; }
+    if (!data.length) {
+      pane.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;color:var(--text-3);">
+          <i class="ti ti-box" style="font-size:32px;display:block;margin-bottom:8px;"></i>
+          <p style="font-size:12px;">Geen onderdelen gekoppeld aan deze werkorder</p>
+          <button type="button" class="btn" style="margin-top:12px;" onclick="openPartsModalForDrawer()"><i class="ti ti-plus"></i> Onderdeel toevoegen</button>
+        </div>`;
+      return;
+    }
+
+    const rows = data.map(wp => {
+      const p = wp.parts;
+      const statusCls = wp.status === 'Afigeboekt' ? 'badge-done' : wp.status === 'Geannuleerd' ? 'badge-off' : 'badge-open';
+      const qty = wp.status === 'Afigeboekt'
+        ? `Verbruikt: ${wp.qty_used} ${p?.unit||'stuk'}`
+        : `Gereserveerd: ${wp.qty_reserved} ${p?.unit||'stuk'}`;
+      return `<div class="parts-row">
+        <div class="parts-num">${p?.part_number||'—'}</div>
+        <div class="parts-name">${p?.name||'—'}</div>
+        <div class="parts-qty">${qty}</div>
+        <div class="parts-status"><span class="badge ${statusCls}">${wp.status}</span></div>
+        ${wp.status === 'Gereserveerd' ? `<button type="button" class="btn" style="padding:3px 8px;font-size:11px;" onclick="afboekenPart('${wp.id}','${p?.unit||'stuk'}',${wp.qty_reserved})"><i class="ti ti-arrow-down-circle"></i> Afboeken</button>` : ''}
+      </div>`;
+    }).join('');
+
+    pane.innerHTML = `
+      <div style="padding:16px 20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <span style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">${data.length} onderdeel${data.length!==1?'en':''}</span>
+          <button type="button" class="btn" onclick="openPartsModalForDrawer()"><i class="ti ti-plus"></i> Toevoegen</button>
+        </div>
+        ${rows}
+      </div>`;
+  }
+
+  let afboekenModal = null;
+  async function afboekenPart(wpId, unit, maxQty) {
+    const qty = parseFloat(prompt(`Hoeveel ${unit} daadwerkelijk verbruikt? (max ${maxQty})`, maxQty));
+    if (!qty || qty <= 0) return;
+    const { error } = await sb.from('werkorder_parts').update({ qty_used: qty, status: 'Afigeboekt' }).eq('id', wpId);
+    if (error) { alert('Fout: ' + error.message); return; }
+    if (drawerWO) loadDrawerParts(drawerWO.id);
+  }
+
+  function openPartsModalForDrawer() { alert('Voeg onderdelen toe via "Nieuwe werkorder" bij aanmaken, of via de Onderdelen pagina.'); }
 
   async function markInProgress() {
     if (!drawerWO || drawerWO.status === 'In uitvoering') return;
@@ -847,8 +944,69 @@
     document.getElementById('fNotes').value = '';
     document.getElementById('fDue').value = '';
     document.getElementById('fAsset').value = preAssetId || '';
+    pendingParts = [];
+    renderModalParts();
+    document.getElementById('partPickerInput').value = '';
+    document.getElementById('partsDropdown').style.display = 'none';
     document.getElementById('modalOverlay').classList.add('open');
   }
+
+  function searchPartsDropdown() {
+    const q = document.getElementById('partPickerInput').value.toLowerCase();
+    showPartsDropdown(q);
+  }
+
+  function showPartsDropdown(q = '') {
+    const dd = document.getElementById('partsDropdown');
+    const matches = allParts.filter(p =>
+      !pendingParts.find(pp => pp.part.id === p.id) &&
+      (`${p.part_number} ${p.name}`.toLowerCase().includes(q))
+    ).slice(0, 8);
+
+    if (!matches.length) { dd.style.display = 'none'; return; }
+    dd.style.display = '';
+    dd.innerHTML = matches.map(p => {
+      const st = p.stock_qty <= 0 ? 'Leeg' : p.stock_qty < p.min_stock ? 'Laag' : `${p.stock_qty} ${p.unit||'stuk'}`;
+      const stColor = p.stock_qty <= 0 ? 'var(--red-text)' : p.stock_qty < p.min_stock ? 'var(--amber-text)' : 'var(--text-3)';
+      return `<div class="parts-dropdown-item" onclick="addPartToModal('${p.id}')">
+        <span><span class="pd-name">${p.name}</span> <span style="font-family:monospace;font-size:10px;color:var(--text-3);">${p.part_number}</span></span>
+        <span class="pd-stock" style="color:${stColor};">${st}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function addPartToModal(partId) {
+    const part = allParts.find(p => p.id === partId);
+    if (!part) return;
+    pendingParts.push({ part, qty: 1 });
+    document.getElementById('partPickerInput').value = '';
+    document.getElementById('partsDropdown').style.display = 'none';
+    renderModalParts();
+  }
+
+  function renderModalParts() {
+    const list = document.getElementById('modalPartsList');
+    if (!pendingParts.length) { list.innerHTML = ''; return; }
+    list.innerHTML = pendingParts.map((pp, i) => `
+      <div class="modal-part-row">
+        <div style="flex:1;">
+          <div class="mp-name">${pp.part.name}</div>
+          <div class="mp-num">${pp.part.part_number}</div>
+        </div>
+        <input type="number" class="mp-qty" value="${pp.qty}" min="0.01" step="0.01" onchange="updatePartQty(${i}, this.value)" />
+        <span class="mp-unit">${pp.part.unit||'stuk'}</span>
+        <button type="button" class="mp-remove" onclick="removePart(${i})"><i class="ti ti-x"></i></button>
+      </div>`).join('');
+  }
+
+  function updatePartQty(i, val) { pendingParts[i].qty = parseFloat(val) || 1; }
+  function removePart(i) { pendingParts.splice(i, 1); renderModalParts(); }
+
+  document.addEventListener('click', e => {
+    if (!document.getElementById('partsDropdown').contains(e.target) && e.target.id !== 'partPickerInput') {
+      document.getElementById('partsDropdown').style.display = 'none';
+    }
+  });
 
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
@@ -868,9 +1026,22 @@
       notes:       document.getElementById('fNotes').value.trim() || null,
       status:      'Open',
     };
-    const { error } = await sb.from('werkorders').insert(payload);
+    const { data: inserted, error } = await sb.from('werkorders').insert(payload).select();
     btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Aanmaken';
     if (error) { alert('Fout: ' + error.message); return; }
+
+    if (pendingParts.length && inserted && inserted[0]) {
+      const woId = inserted[0].id;
+      const partRows = pendingParts.map(pp => ({
+        wo_id: woId,
+        part_id: pp.part.id,
+        qty_reserved: pp.qty,
+        qty_used: 0,
+        status: 'Gereserveerd'
+      }));
+      await sb.from('werkorder_parts').insert(partRows);
+    }
+    pendingParts = [];
     closeModal();
     loadData();
   }

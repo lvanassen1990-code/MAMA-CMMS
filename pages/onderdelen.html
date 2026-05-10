@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onderdelen — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border-strong: rgba(0,0,0,0.14);
+      --text: #1d1d1f;
+      --text-2: #6e6e73;
+      --text-3: #aeaeb2;
+      --accent: #1a1a1a;
+      --green: #1D9E75;   --green-bg: #E1F5EE;   --green-text: #0F6E56;
+      --amber: #EF9F27;   --amber-bg: #FAEEDA;   --amber-text: #854F0B;
+      --red: #E24B4A;     --red-bg: #FCEBEB;     --red-text: #A32D2D;
+      --blue: #378ADD;    --blue-bg: #E6F1FB;    --blue-text: #185FA5;
+      --purple: #8B5CF6;  --purple-bg: #EDE9FE;  --purple-text: #5B21B6;
+      --radius: 10px;
+      --radius-sm: 7px;
+    }
+
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; height: 100vh; overflow: hidden; display: flex; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; height: 100vh; }
+    .sidebar-logo { padding: 20px 18px 16px; border-bottom: 0.5px solid var(--border); }
+    .logo-mark { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; letter-spacing: -0.5px; }
+    .logo-name { font-size: 15px; font-weight: 600; }
+    .logo-sub { font-size: 10px; color: var(--text-3); letter-spacing: 0.6px; text-transform: uppercase; }
+    .sidebar-section { padding: 14px 18px 4px; font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; }
+    .nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 10px; margin: 1px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--text-2); transition: background 0.12s, color 0.12s; text-decoration: none; }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+    .nav-item i { font-size: 16px; }
+    .nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; }
+    .sidebar-bottom { margin-top: auto; padding: 12px 14px; border-top: 0.5px solid var(--border); }
+    .user-row { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--blue-bg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--blue-text); }
+    .user-name { font-size: 12px; font-weight: 500; }
+    .user-role { font-size: 10px; color: var(--text-3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .topbar { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar-title { font-size: 15px; font-weight: 500; }
+    .topbar-sub { font-size: 12px; color: var(--text-2); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: background 0.12s; font-family: inherit; }
+    .btn:hover { background: var(--bg); }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.primary:hover { background: #333; }
+    .btn i { font-size: 14px; }
+
+    /* ── Content ── */
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-top { display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; padding-bottom: 4px; }
+    .content-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 20px; scrollbar-gutter: stable; display: flex; flex-direction: column; gap: 12px; }
+
+    /* KPI row */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .kpi-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .kpi-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .kpi-label i { font-size: 13px; }
+    .kpi-value { font-size: 26px; font-weight: 500; line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    /* Filter bar */
+    .filter-bar { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px; }
+    .search-wrap i { color: var(--text-3); font-size: 15px; }
+    .search-wrap input { border: none; outline: none; background: transparent; font-size: 13px; color: var(--text); width: 100%; font-family: inherit; }
+    .search-wrap input::placeholder { color: var(--text-3); }
+    .divider-v { width: 0.5px; height: 20px; background: var(--border-strong); }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-label { font-size: 11px; color: var(--text-3); }
+    select.filter-select { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg); padding: 4px 8px; font-size: 12px; color: var(--text-2); cursor: pointer; font-family: inherit; outline: none; }
+
+    .status-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid transparent; background: var(--bg); color: var(--text-3); transition: all 0.15s; font-family: inherit; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.4; transition: opacity 0.15s; }
+    .status-chip.active .chip-dot { opacity: 1; }
+    .status-chip.active { color: var(--text); }
+    .status-chip.chip-ok.active    { background: var(--green-bg);  border-color: var(--green);  color: var(--green-text); }
+    .status-chip.chip-low.active   { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber-text); }
+    .status-chip.chip-empty.active { background: var(--red-bg);    border-color: var(--red);    color: var(--red-text); }
+    .status-chip:not(.active) { opacity: 0.45; }
+    .status-chip:hover { opacity: 1; }
+
+    /* Table */
+    .table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: clip; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 0.5px solid var(--border); background: var(--bg); white-space: nowrap; }
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.1s; cursor: default; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { filter: brightness(0.97); }
+    tbody td { padding: 10px 14px; font-size: 12px; vertical-align: middle; }
+
+    tbody tr.stock-empty { background: #fdf2f2; }
+    tbody tr.stock-low   { background: #fdfaf0; }
+
+    .part-number { font-family: monospace; font-size: 11px; color: var(--text-3); }
+    .part-name   { font-size: 12px; font-weight: 500; }
+    .part-desc   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+    .badge-ok    { background: var(--green-bg);  color: var(--green-text); }
+    .badge-low   { background: var(--amber-bg);  color: var(--amber-text); }
+    .badge-empty { background: var(--red-bg);    color: var(--red-text); }
+
+    .stock-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .stock-num { font-size: 12px; font-weight: 500; min-width: 32px; }
+    .stock-bar { flex: 1; max-width: 60px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .stock-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .fill-ok    { background: var(--green); }
+    .fill-low   { background: var(--amber); }
+    .fill-empty { background: var(--red); }
+
+    thead th.sortable { cursor: pointer; user-select: none; }
+    thead th.sortable:hover { color: var(--text-2); background: #ececec; }
+    thead th.sort-active { color: var(--text) !important; }
+    .sort-icon { font-size: 10px; margin-left: 3px; color: var(--text-3); display: inline-block; width: 10px; }
+
+    .table-footer { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-top: 0.5px solid var(--border); background: var(--bg); }
+    .footer-count { font-size: 11px; color: var(--text-3); }
+
+    /* ── Drawer ── */
+    .drawer-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.18); opacity: 0; pointer-events: none; transition: opacity 0.22s; }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .drawer { position: fixed; top: 0; left: 220px; right: 0; bottom: 0; background: var(--surface); border-left: 0.5px solid var(--border); box-shadow: -8px 0 32px rgba(0,0,0,0.10); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.26s cubic-bezier(0.4,0,0.2,1); z-index: 201; overflow: hidden; }
+    .drawer-overlay.open .drawer { transform: translateX(0); }
+
+    .drawer-header { padding: 14px 20px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .drawer-close { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 14px; flex-shrink: 0; }
+    .drawer-close:hover { background: var(--border-strong); }
+    .drawer-title { font-size: 15px; font-weight: 600; flex: 1; }
+
+    .drawer-hero { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
+    .drawer-hero-left { width: 280px; flex-shrink: 0; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; }
+    .drawer-part-photo { flex: 1; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; min-height: 160px; max-height: 200px; }
+    .drawer-part-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .drawer-part-photo-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .drawer-part-photo-placeholder i { font-size: 40px; color: var(--text-3); }
+    .drawer-part-photo-placeholder span { font-size: 11px; color: var(--text-3); }
+    .drawer-part-number { padding: 12px 16px; border-top: 0.5px solid var(--border); }
+    .drawer-part-num-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .drawer-part-num-val { font-size: 14px; font-family: monospace; font-weight: 600; margin-top: 2px; }
+    .drawer-stock-snapshot { padding: 12px 16px; border-top: 0.5px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .snapshot-circle { width: 52px; height: 52px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; flex-shrink: 0; }
+    .snapshot-info { flex: 1; }
+    .snapshot-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .snapshot-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+
+    .drawer-hero-right { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .drawer-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 20px; }
+    .drawer-field { display: flex; flex-direction: column; gap: 3px; }
+    .drawer-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .drawer-value { font-size: 13px; font-weight: 500; }
+    .drawer-value.muted { color: var(--text-2); font-weight: 400; }
+
+    .drawer-tabs { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); background: var(--surface); padding: 0 20px; }
+    .drawer-tab { padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--text-3); border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; font-family: inherit; transition: color 0.12s, border-color 0.12s; display: flex; align-items: center; gap: 6px; }
+    .drawer-tab i { font-size: 14px; }
+    .drawer-tab:hover { color: var(--text-2); }
+    .drawer-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    .drawer-tab-content { flex: 1; overflow-y: auto; }
+    .drawer-tab-pane { display: none; padding: 20px 24px; }
+    .drawer-tab-pane.active { display: block; }
+
+    .timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .timeline-item:last-child { border-bottom: none; }
+    .timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
+    .timeline-dot.dot-in  { background: var(--green); }
+    .timeline-dot.dot-out { background: var(--red); }
+    .timeline-dot.dot-cor { background: var(--amber); }
+    .timeline-body { flex: 1; }
+    .timeline-text { font-size: 12px; font-weight: 500; }
+    .timeline-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .timeline-qty  { font-size: 12px; font-weight: 600; margin-left: auto; padding-left: 12px; flex-shrink: 0; }
+    .qty-in  { color: var(--green-text); }
+    .qty-out { color: var(--red-text); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-3); }
+    .empty-state i { font-size: 36px; display: block; margin-bottom: 8px; }
+    .empty-state p { font-size: 12px; }
+
+    .wo-link-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .wo-link-row:last-child { border-bottom: none; }
+    .wo-link-num { font-family: monospace; font-size: 11px; color: var(--text-3); min-width: 110px; }
+    .wo-link-desc { flex: 1; font-size: 12px; font-weight: 500; }
+    .wo-link-qty { font-size: 12px; font-weight: 500; color: var(--text-2); }
+
+    .drawer-footer { padding: 12px 20px; border-top: 0.5px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; background: var(--surface); }
+
+    /* ── Stock update modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.18s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border-radius: 14px; border: 0.5px solid var(--border); width: 520px; max-width: 94vw; box-shadow: 0 24px 64px rgba(0,0,0,0.12); transform: scale(0.97); transition: transform 0.18s; }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header { padding: 18px 20px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 14px; font-weight: 600; }
+    .modal-close { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 14px; }
+    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; max-height: 62vh; overflow-y: auto; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field.span3 { grid-column: span 3; }
+    .form-label { font-size: 11px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input { padding: 8px 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.12s; }
+    .form-input:focus { border-color: var(--blue); background: var(--surface); }
+    .form-input[readonly] { color: var(--text-3); cursor: default; }
+    .modal-footer { padding: 14px 20px; border-top: 0.5px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .mutation-type-row { display: flex; gap: 8px; }
+    .mutation-btn { flex: 1; padding: 8px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--bg); font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; font-family: inherit; text-align: center; transition: all 0.15s; }
+    .mutation-btn.active-in  { background: var(--green-bg);  border-color: var(--green);  color: var(--green-text); }
+    .mutation-btn.active-out { background: var(--red-bg);    border-color: var(--red);    color: var(--red-text); }
+    .mutation-btn.active-cor { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber-text); }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">MA</div>
+      <div>
+        <div class="logo-name">MAMA</div>
+        <div class="logo-sub">Maintenance Manager</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders</a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
+  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <a href="onderdelen.html" class="nav-item active"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div>
+        <div class="user-name">Leon</div>
+        <div class="user-role">Board / Owner</div>
+      </div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Onderdelen</div>
+      <div class="topbar-sub" id="topbarSub">Laden…</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn"><i class="ti ti-download"></i> Exporteer</button>
+      <button class="btn primary" onclick="openNewModal()"><i class="ti ti-plus"></i> Nieuw onderdeel</button>
+    </div>
+  </div>
+
+  <div class="content">
+  <div class="content-top">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-box"></i> Totaal SKU's</div>
+        <div class="kpi-value" id="kpiTotal">—</div>
+        <div class="kpi-sub">Unieke onderdelen</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="color:var(--red-text);"><i class="ti ti-alert-circle"></i> Leeg</div>
+        <div class="kpi-value" style="color:var(--red);" id="kpiEmpty">—</div>
+        <div class="kpi-sub">Voorraad = 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="color:var(--amber-text);"><i class="ti ti-arrow-down-circle"></i> Te bestellen</div>
+        <div class="kpi-value" style="color:var(--amber);" id="kpiLow">—</div>
+        <div class="kpi-sub">Onder minimum</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-currency-euro"></i> Voorraadwaarde</div>
+        <div class="kpi-value" id="kpiValue">—</div>
+        <div class="kpi-sub">Totale waarde</div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="searchInput" placeholder="Zoek op naam, nummer of leverancier…" oninput="applyFilters()" />
+      </div>
+      <div class="divider-v"></div>
+      <div class="status-chips" id="statusChips">
+        <button class="status-chip chip-ok active"   data-status="ok"    onclick="toggleChip(this)"><span class="chip-dot" style="background:var(--green)"></span> Voldoende</button>
+        <button class="status-chip chip-low active"  data-status="low"   onclick="toggleChip(this)"><span class="chip-dot" style="background:var(--amber)"></span> Laag</button>
+        <button class="status-chip chip-empty active" data-status="empty" onclick="toggleChip(this)"><span class="chip-dot" style="background:var(--red)"></span> Leeg</button>
+      </div>
+      <div class="divider-v"></div>
+      <div class="filter-group">
+        <span class="filter-label">Categorie</span>
+        <select class="filter-select" id="catFilter" onchange="applyFilters()">
+          <option value="">Alle</option>
+          <option>Filter</option>
+          <option>Smering</option>
+          <option>Afdichting</option>
+          <option>Elektrisch</option>
+          <option>Mechanisch</option>
+          <option>Hydrauliek</option>
+          <option>Pneumatisch</option>
+          <option>Koeling</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Leverancier</span>
+        <select class="filter-select" id="supplierFilter" onchange="applyFilters()">
+          <option value="">Alle</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-scroll">
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-col="part_number" onclick="sortBy('part_number')">Onderdeel# <span class="sort-icon" id="sort-part_number"></span></th>
+            <th class="sortable" data-col="name" onclick="sortBy('name')">Naam <span class="sort-icon" id="sort-name"></span></th>
+            <th class="sortable" data-col="category" onclick="sortBy('category')">Categorie <span class="sort-icon" id="sort-category"></span></th>
+            <th class="sortable" data-col="stock_qty" onclick="sortBy('stock_qty')">Voorraad <span class="sort-icon" id="sort-stock_qty"></span></th>
+            <th class="sortable" data-col="min_stock" onclick="sortBy('min_stock')">Min <span class="sort-icon" id="sort-min_stock"></span></th>
+            <th class="sortable" data-col="storage_location" onclick="sortBy('storage_location')">Locatie <span class="sort-icon" id="sort-storage_location"></span></th>
+            <th class="sortable" data-col="unit_price" onclick="sortBy('unit_price')">Prijs <span class="sort-icon" id="sort-unit_price"></span></th>
+            <th class="sortable" data-col="supplier" onclick="sortBy('supplier')">Leverancier <span class="sort-icon" id="sort-supplier"></span></th>
+          </tr>
+        </thead>
+        <tbody id="partsBody">
+          <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-3);">Laden…</td></tr>
+        </tbody>
+      </table>
+      <div class="table-footer">
+        <span class="footer-count" id="tableFooter">—</span>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ── Drawer ── -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="handleOverlayClick(event)">
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      <div class="drawer-title" id="drawerTitle">Onderdeel</div>
+      <span id="drawerBadge" class="badge" style="margin-left:auto;"></span>
+    </div>
+
+    <div class="drawer-hero">
+      <div class="drawer-hero-left">
+        <div class="drawer-part-photo" id="drawerPhoto">
+          <div class="drawer-part-photo-placeholder">
+            <i class="ti ti-box"></i>
+            <span>Geen foto</span>
+          </div>
+        </div>
+        <div class="drawer-part-number">
+          <div class="drawer-part-num-label">Onderdeel#</div>
+          <div class="drawer-part-num-val" id="drawerPartNum">—</div>
+        </div>
+        <div class="drawer-stock-snapshot">
+          <div class="snapshot-circle" id="drawerStockCircle">
+            <span id="drawerStockNum">—</span>
+          </div>
+          <div class="snapshot-info">
+            <div class="snapshot-label">Huidige voorraad</div>
+            <div class="snapshot-sub" id="drawerStockSub">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-hero-right">
+        <div class="drawer-meta-grid" id="drawerMeta"></div>
+      </div>
+    </div>
+
+    <div class="drawer-tabs">
+      <button class="drawer-tab active" onclick="switchTab('voorraad')" id="tab-voorraad"><i class="ti ti-chart-bar"></i> Voorraad</button>
+      <button class="drawer-tab" onclick="switchTab('werkorders')" id="tab-werkorders"><i class="ti ti-clipboard-list"></i> Werkorders</button>
+      <button class="drawer-tab" onclick="switchTab('notities')" id="tab-notities"><i class="ti ti-notes"></i> Notities</button>
+    </div>
+
+    <div class="drawer-tab-content">
+      <div class="drawer-tab-pane active" id="pane-voorraad">
+        <div id="voorraadContent"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
+      </div>
+      <div class="drawer-tab-pane" id="pane-werkorders">
+        <div id="woContent"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
+      </div>
+      <div class="drawer-tab-pane" id="pane-notities">
+        <div id="notitiesContent"></div>
+      </div>
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn primary" onclick="openStockModal()"><i class="ti ti-arrows-exchange"></i> Voorraad bijwerken</button>
+      <button class="btn" onclick="openEditModal()"><i class="ti ti-edit"></i> Bewerken</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Nieuw onderdeel modal ── -->
+<div class="modal-overlay" id="newModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Nieuw onderdeel</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Automatisch: <span id="newPartNum" style="font-family:monospace;"></span></div>
+      </div>
+      <button class="modal-close" onclick="closeNewModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Naam *</label>
+          <input class="form-input" id="newName" placeholder="Bijv. Oliefilter 10µm" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Categorie</label>
+          <select class="form-input" id="newCat">
+            <option>Filter</option>
+            <option>Smering</option>
+            <option>Afdichting</option>
+            <option>Elektrisch</option>
+            <option selected>Mechanisch</option>
+            <option>Hydrauliek</option>
+            <option>Pneumatisch</option>
+            <option>Koeling</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Beschrijving</label>
+        <textarea class="form-input" id="newDesc" rows="2" placeholder="Optionele omschrijving…" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row-3">
+        <div class="form-field">
+          <label class="form-label">Eenheid</label>
+          <select class="form-input" id="newUnit">
+            <option selected>stuk</option>
+            <option>meter</option>
+            <option>liter</option>
+            <option>kg</option>
+            <option>set</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Min. voorraad</label>
+          <input class="form-input" type="number" id="newMinStock" value="1" min="0" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Max. voorraad</label>
+          <input class="form-input" type="number" id="newMaxStock" value="10" min="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Opslaglocatie</label>
+          <input class="form-input" id="newLocation" placeholder="Bijv. Rek A3 Vak 2" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Prijs per eenheid (€)</label>
+          <input class="form-input" type="number" id="newPrice" step="0.01" min="0" placeholder="0,00" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Leverancier</label>
+          <input class="form-input" id="newSupplier" placeholder="Bijv. SKF Nederland" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Leveranciersref.</label>
+          <input class="form-input" id="newSupplierRef" placeholder="Bijv. 6205-2RS1" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Beginhoeveelheid in voorraad</label>
+        <input class="form-input" type="number" id="newInitStock" value="0" min="0" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeNewModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveNewPart()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Voorraad bijwerken modal ── -->
+<div class="modal-overlay" id="stockModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Voorraad bijwerken</div>
+      <button class="modal-close" onclick="closeStockModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="form-label">Type mutatie</label>
+        <div class="mutation-type-row">
+          <button class="mutation-btn active-in" id="mTypeIn"  onclick="setMutationType('in')"><i class="ti ti-arrow-up-circle"></i> Ontvangst</button>
+          <button class="mutation-btn" id="mTypeOut" onclick="setMutationType('out')"><i class="ti ti-arrow-down-circle"></i> Verbruik</button>
+          <button class="mutation-btn" id="mTypeCor" onclick="setMutationType('cor')"><i class="ti ti-adjustments"></i> Correctie</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Hoeveelheid</label>
+          <input class="form-input" type="number" id="stockQty" min="0" step="0.01" value="1" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Huidige voorraad</label>
+          <input class="form-input" id="stockCurrent" readonly />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Referentie / Opmerking</label>
+        <input class="form-input" id="stockNote" placeholder="Bijv. Levering bon #1234 of correctie na inventarisatie" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeStockModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveStockMutation()"><i class="ti ti-check"></i> Verwerken</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Bewerken modal ── -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Onderdeel bewerken</div>
+      <button class="modal-close" onclick="closeEditModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Naam</label>
+          <input class="form-input" id="editName" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Categorie</label>
+          <select class="form-input" id="editCat">
+            <option>Filter</option><option>Smering</option><option>Afdichting</option>
+            <option>Elektrisch</option><option>Mechanisch</option>
+            <option>Hydrauliek</option><option>Pneumatisch</option><option>Koeling</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Beschrijving</label>
+        <textarea class="form-input" id="editDesc" rows="2" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row-3">
+        <div class="form-field">
+          <label class="form-label">Eenheid</label>
+          <select class="form-input" id="editUnit">
+            <option>stuk</option><option>meter</option><option>liter</option><option>kg</option><option>set</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Min. voorraad</label>
+          <input class="form-input" type="number" id="editMin" min="0" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Max. voorraad</label>
+          <input class="form-input" type="number" id="editMax" min="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Opslaglocatie</label>
+          <input class="form-input" id="editLocation" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Prijs per eenheid (€)</label>
+          <input class="form-input" type="number" id="editPrice" step="0.01" min="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Leverancier</label>
+          <input class="form-input" id="editSupplier" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Leveranciersref.</label>
+          <input class="form-input" id="editSupplierRef" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeEditModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveEdit()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL  = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxOTE5MDAsImV4cCI6MjA2MTc2NzkwMH0.ztNQBiIFCMfjI1T_wd2SLNKB6SXoORrRU-JiHF0yzW4';
+
+const sb = {
+  from: (table) => ({
+    select: (cols = '*') => {
+      let url = `${SB_URL}/rest/v1/${table}?select=${encodeURIComponent(cols)}`;
+      let filters = [], orderClause = '', limitClause = '', rangeHeader = null;
+      const q = {
+        eq:    (c,v) => { filters.push(`${c}=eq.${v}`); return q; },
+        order: (c, opts={}) => { orderClause = `&order=${c}.${opts.ascending===false?'desc':'asc'}`; return q; },
+        limit: (n) => { limitClause = `&limit=${n}`; return q; },
+        then:  (fn) => fetch(url + (filters.length?'&'+filters.join('&'):'') + orderClause + limitClause, {headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY}}).then(r=>r.json()).then(data=>fn({data,error:null})).catch(e=>fn({data:null,error:e}))
+      };
+      return q;
+    },
+    insert: (rows) => ({
+      select: () => ({
+        then: (fn) => fetch(`${SB_URL}/rest/v1/${table}?select=*`, {method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(Array.isArray(rows)?rows:[rows])}).then(r=>r.json()).then(data=>fn({data,error:null})).catch(e=>fn({data:null,error:e}))
+      }),
+      then: (fn) => fetch(`${SB_URL}/rest/v1/${table}`, {method:'POST',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(Array.isArray(rows)?rows:[rows])}).then(r=>r.ok?fn({data:null,error:null}):r.json().then(e=>fn({data:null,error:e}))).catch(e=>fn({data:null,error:e}))
+    }),
+    update: (obj) => ({
+      eq: (c,v) => ({
+        then: (fn) => fetch(`${SB_URL}/rest/v1/${table}?${c}=eq.${v}`, {method:'PATCH',headers:{'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(obj)}).then(r=>r.ok?fn({data:null,error:null}):r.json().then(e=>fn({data:null,error:e}))).catch(e=>fn({data:null,error:e}))
+      })
+    })
+  })
+};
+
+let allParts = [];
+let filtered = [];
+let sortCol = 'part_number';
+let sortDir = 'asc';
+let activeStatuses = new Set(['ok','low','empty']);
+let currentPart = null;
+let mutationType = 'in';
+
+async function loadParts() {
+  const { data, error } = await sb.from('parts').select('*').order('part_number', { ascending: true });
+  if (error || !data) { document.getElementById('partsBody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--red-text);">Fout bij laden: ${error?.message||'onbekend'}</td></tr>`; return; }
+  allParts = data;
+  buildSupplierFilter(data);
+  updateKPIs(data);
+  applyFilters();
+}
+
+function buildSupplierFilter(parts) {
+  const suppliers = [...new Set(parts.map(p => p.supplier).filter(Boolean))].sort();
+  const sel = document.getElementById('supplierFilter');
+  sel.innerHTML = '<option value="">Alle</option>' + suppliers.map(s => `<option>${s}</option>`).join('');
+}
+
+function updateKPIs(parts) {
+  const empty = parts.filter(p => p.stock_qty <= 0);
+  const low   = parts.filter(p => p.stock_qty > 0 && p.stock_qty < p.min_stock);
+  const totalVal = parts.reduce((s, p) => s + ((p.stock_qty || 0) * (p.unit_price || 0)), 0);
+  document.getElementById('kpiTotal').textContent = parts.length;
+  document.getElementById('kpiEmpty').textContent = empty.length;
+  document.getElementById('kpiLow').textContent   = low.length;
+  document.getElementById('kpiValue').textContent = '€ ' + totalVal.toLocaleString('nl-NL', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('topbarSub').textContent = `${parts.length} onderdelen · ${empty.length + low.length} onder minimum`;
+}
+
+function stockStatus(p) {
+  if (p.stock_qty <= 0) return 'empty';
+  if (p.stock_qty < p.min_stock) return 'low';
+  return 'ok';
+}
+
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const sup = document.getElementById('supplierFilter').value;
+
+  filtered = allParts.filter(p => {
+    const st = stockStatus(p);
+    if (!activeStatuses.has(st)) return false;
+    if (cat && p.category !== cat) return false;
+    if (sup && p.supplier !== sup) return false;
+    if (q && !`${p.part_number} ${p.name} ${p.supplier||''}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  sortFiltered();
+  renderTable();
+}
+
+function sortFiltered() {
+  filtered.sort((a, b) => {
+    let va = a[sortCol] ?? '';
+    let vb = b[sortCol] ?? '';
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ?  1 : -1;
+    return 0;
+  });
+}
+
+function sortBy(col) {
+  if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+  else { sortCol = col; sortDir = 'asc'; }
+  document.querySelectorAll('thead th').forEach(th => { th.classList.remove('sort-active'); document.getElementById('sort-' + th.dataset.col).textContent = ''; });
+  const th = document.querySelector(`th[data-col="${col}"]`);
+  if (th) { th.classList.add('sort-active'); document.getElementById('sort-'+col).textContent = sortDir === 'asc' ? '↑' : '↓'; }
+  sortFiltered();
+  renderTable();
+}
+
+function catIcon(cat) {
+  const icons = { Filter:'ti-filter', Smering:'ti-droplet', Afdichting:'ti-circle-check', Elektrisch:'ti-bolt', Mechanisch:'ti-settings', Hydrauliek:'ti-ripple', Pneumatisch:'ti-wind', Koeling:'ti-snowflake' };
+  return icons[cat] || 'ti-box';
+}
+
+function renderTable() {
+  const tbody = document.getElementById('partsBody');
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-3);">Geen onderdelen gevonden</td></tr>';
+    document.getElementById('tableFooter').textContent = '0 onderdelen';
+    return;
+  }
+
+  const low = filtered.filter(p => stockStatus(p) === 'low').length;
+  const empty = filtered.filter(p => stockStatus(p) === 'empty').length;
+
+  tbody.innerHTML = filtered.map(p => {
+    const st = stockStatus(p);
+    const rowClass = st === 'empty' ? 'stock-empty' : st === 'low' ? 'stock-low' : '';
+    const pct = p.max_stock > 0 ? Math.min(100, Math.round((p.stock_qty / p.max_stock) * 100)) : 0;
+    const fillClass = st === 'empty' ? 'fill-empty' : st === 'low' ? 'fill-low' : 'fill-ok';
+    const badgeCls = st === 'empty' ? 'badge-empty' : st === 'low' ? 'badge-low' : 'badge-ok';
+    const badgeText = st === 'empty' ? 'Leeg' : st === 'low' ? 'Laag' : 'OK';
+    const price = p.unit_price != null ? '€ ' + Number(p.unit_price).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+    return `<tr class="${rowClass}" data-partid="${p.id}">
+      <td><span class="part-number">${p.part_number}</span></td>
+      <td>
+        <div class="part-name">${p.name}</div>
+        ${p.description ? `<div class="part-desc">${p.description.substring(0,60)}${p.description.length>60?'…':''}</div>` : ''}
+      </td>
+      <td><span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;"><i class="ti ${catIcon(p.category)}" style="font-size:13px;color:var(--text-3);"></i>${p.category||'—'}</span></td>
+      <td>
+        <div class="stock-bar-wrap">
+          <span class="stock-num">${p.stock_qty} ${p.unit||''}</span>
+          <div class="stock-bar"><div class="stock-bar-fill ${fillClass}" style="width:${pct}%"></div></div>
+          <span class="badge ${badgeCls}">${badgeText}</span>
+        </div>
+      </td>
+      <td style="color:var(--text-3);font-size:11px;">${p.min_stock}</td>
+      <td style="font-size:11px;color:var(--text-2);">${p.storage_location||'—'}</td>
+      <td style="font-size:12px;font-weight:500;">${price}</td>
+      <td style="font-size:11px;color:var(--text-2);">${p.supplier||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  let footerText = `${filtered.length} onderdelen`;
+  if (empty > 0) footerText += ` · ${empty} leeg`;
+  if (low > 0) footerText += ` · ${low} laag`;
+  document.getElementById('tableFooter').textContent = footerText;
+}
+
+function toggleChip(btn) {
+  const st = btn.dataset.status;
+  if (activeStatuses.has(st)) { activeStatuses.delete(st); btn.classList.remove('active'); }
+  else { activeStatuses.add(st); btn.classList.add('active'); }
+  applyFilters();
+}
+
+// ── Drawer ──
+document.getElementById('partsBody').addEventListener('dblclick', function(e) {
+  const row = e.target.closest('tr[data-partid]');
+  if (row) openDrawer(row.dataset.partid);
+});
+
+function openDrawer(id) {
+  currentPart = allParts.find(p => p.id === id);
+  if (!currentPart) return;
+  renderDrawer(currentPart);
+  loadDrawerVoorraad(currentPart);
+  loadDrawerWO(currentPart);
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+
+function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); currentPart = null; }
+
+function handleOverlayClick(e) { if (e.target === document.getElementById('drawerOverlay')) closeDrawer(); }
+
+function renderDrawer(p) {
+  document.getElementById('drawerTitle').textContent = p.name;
+
+  const st = stockStatus(p);
+  const badgeCls = st === 'empty' ? 'badge-empty' : st === 'low' ? 'badge-low' : 'badge-ok';
+  const badgeTxt = st === 'empty' ? 'Leeg' : st === 'low' ? 'Laag' : 'Voldoende';
+  const badge = document.getElementById('drawerBadge');
+  badge.className = `badge ${badgeCls}`;
+  badge.textContent = badgeTxt;
+
+  const photo = document.getElementById('drawerPhoto');
+  if (p.photo_url) { photo.innerHTML = `<img src="${p.photo_url}" alt="${p.name}" />`; }
+  else {
+    photo.innerHTML = `<div class="drawer-part-photo-placeholder"><i class="ti ${catIcon(p.category)}" style="font-size:48px;color:var(--text-3);"></i><span>${p.category||'Onderdeel'}</span></div>`;
+  }
+
+  document.getElementById('drawerPartNum').textContent = p.part_number;
+
+  const circle = document.getElementById('drawerStockCircle');
+  const circleColor = st === 'empty' ? 'var(--red-bg)' : st === 'low' ? 'var(--amber-bg)' : 'var(--green-bg)';
+  const circleTextColor = st === 'empty' ? 'var(--red-text)' : st === 'low' ? 'var(--amber-text)' : 'var(--green-text)';
+  circle.style.background = circleColor;
+  circle.style.color = circleTextColor;
+  document.getElementById('drawerStockNum').textContent = p.stock_qty;
+  document.getElementById('drawerStockSub').textContent = `Min: ${p.min_stock} · Max: ${p.max_stock} ${p.unit||'stuk'}`;
+
+  const price = p.unit_price != null ? '€ ' + Number(p.unit_price).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—';
+  document.getElementById('drawerMeta').innerHTML = `
+    <div class="drawer-field"><div class="drawer-label">Categorie</div><div class="drawer-value">${p.category||'—'}</div></div>
+    <div class="drawer-field"><div class="drawer-label">Eenheid</div><div class="drawer-value">${p.unit||'—'}</div></div>
+    <div class="drawer-field"><div class="drawer-label">Prijs/eenheid</div><div class="drawer-value">${price}</div></div>
+    <div class="drawer-field"><div class="drawer-label">Opslaglocatie</div><div class="drawer-value">${p.storage_location||'—'}</div></div>
+    <div class="drawer-field"><div class="drawer-label">Leverancier</div><div class="drawer-value">${p.supplier||'—'}</div></div>
+    <div class="drawer-field"><div class="drawer-label">Leveranciersref.</div><div class="drawer-value muted">${p.supplier_ref||'—'}</div></div>
+    ${p.description ? `<div class="drawer-field" style="grid-column:1/-1;"><div class="drawer-label">Beschrijving</div><div class="drawer-value muted" style="font-size:12px;line-height:1.6;">${p.description}</div></div>` : ''}
+  `;
+
+  document.getElementById('notitiesContent').innerHTML = p.description
+    ? `<div style="background:var(--bg);border-radius:var(--radius-sm);padding:14px;font-size:12px;color:var(--text-2);line-height:1.7;border:0.5px solid var(--border);">${p.description}</div>`
+    : '<div class="empty-state"><i class="ti ti-notes"></i><p>Geen notities</p></div>';
+
+  switchTab('voorraad');
+}
+
+async function loadDrawerVoorraad(p) {
+  document.getElementById('voorraadContent').innerHTML = '<div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div>';
+
+  const timeline = [];
+
+  if (p.stock_qty > 0) {
+    timeline.push({
+      type: 'in',
+      text: 'Beginsaldo',
+      sub: 'Initiële voorraad',
+      qty: `+${p.stock_qty} ${p.unit||'stuk'}`,
+      date: new Date(p.created_at).toLocaleDateString('nl-NL')
+    });
+  }
+
+  if (!timeline.length) {
+    document.getElementById('voorraadContent').innerHTML = '<div class="empty-state"><i class="ti ti-chart-bar"></i><p>Geen voorraadmutaties</p></div>';
+    return;
+  }
+
+  document.getElementById('voorraadContent').innerHTML = `
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Mutaties</div>
+      ${timeline.map(t => `
+        <div class="timeline-item">
+          <div class="timeline-dot dot-${t.type}"></div>
+          <div class="timeline-body">
+            <div class="timeline-text">${t.text}</div>
+            <div class="timeline-sub">${t.sub} · ${t.date}</div>
+          </div>
+          <div class="timeline-qty ${t.type === 'in' ? 'qty-in' : t.type === 'out' ? 'qty-out' : ''}">${t.qty}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function loadDrawerWO(p) {
+  document.getElementById('woContent').innerHTML = '<div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div>';
+
+  const { data, error } = await sb.from('werkorder_parts')
+    .select('*, werkorders(wo_number, description, status)')
+    .eq('part_id', p.id);
+
+  if (error || !data || !data.length) {
+    document.getElementById('woContent').innerHTML = '<div class="empty-state"><i class="ti ti-clipboard-list"></i><p>Geen werkorders gekoppeld</p></div>';
+    return;
+  }
+
+  document.getElementById('woContent').innerHTML = data.map(wp => {
+    const wo = wp.werkorders;
+    const qtyText = wp.status === 'Afigeboekt'
+      ? `${wp.qty_used} ${p.unit||'stuk'} verbruikt`
+      : `${wp.qty_reserved} ${p.unit||'stuk'} gereserveerd`;
+    const statusCls = wp.status === 'Afigeboekt' ? 'badge-done' : wp.status === 'Geannuleerd' ? 'badge-off' : 'badge-open';
+    return `<div class="wo-link-row">
+      <div class="wo-link-num">${wo?.wo_number||'—'}</div>
+      <div class="wo-link-desc">${wo?.description||'—'}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;color:var(--text-2);">${qtyText}</span>
+        <span class="badge ${statusCls}">${wp.status}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.drawer-tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('pane-' + name).classList.add('active');
+}
+
+// ── New part modal ──
+async function openNewModal() {
+  const { data } = await sb.from('parts').select('part_number').order('created_at', { ascending: false }).limit(1);
+  let nextSeq = 1;
+  if (data && data.length) {
+    const m = data[0].part_number.match(/OND-(\d+)/);
+    if (m) nextSeq = parseInt(m[1], 10) + 1;
+  }
+  document.getElementById('newPartNum').textContent = `OND-${String(nextSeq).padStart(4, '0')}`;
+  document.getElementById('newModal').classList.add('open');
+}
+function closeNewModal() { document.getElementById('newModal').classList.remove('open'); }
+
+async function saveNewPart() {
+  const name = document.getElementById('newName').value.trim();
+  if (!name) { alert('Naam is verplicht'); return; }
+
+  const numText = document.getElementById('newPartNum').textContent;
+
+  const { data, error } = await sb.from('parts').insert({
+    part_number: numText,
+    name,
+    description: document.getElementById('newDesc').value.trim() || null,
+    category: document.getElementById('newCat').value,
+    unit: document.getElementById('newUnit').value,
+    min_stock: parseFloat(document.getElementById('newMinStock').value) || 1,
+    max_stock: parseFloat(document.getElementById('newMaxStock').value) || 10,
+    stock_qty: parseFloat(document.getElementById('newInitStock').value) || 0,
+    storage_location: document.getElementById('newLocation').value.trim() || null,
+    unit_price: parseFloat(document.getElementById('newPrice').value) || null,
+    supplier: document.getElementById('newSupplier').value.trim() || null,
+    supplier_ref: document.getElementById('newSupplierRef').value.trim() || null
+  }).select();
+
+  if (error) { alert('Fout: ' + (error.message||JSON.stringify(error))); return; }
+  closeNewModal();
+  await loadParts();
+}
+
+// ── Stock modal ──
+function openStockModal() {
+  if (!currentPart) return;
+  mutationType = 'in';
+  updateMutationButtons();
+  document.getElementById('stockCurrent').value = `${currentPart.stock_qty} ${currentPart.unit||'stuk'}`;
+  document.getElementById('stockQty').value = 1;
+  document.getElementById('stockNote').value = '';
+  document.getElementById('stockModal').classList.add('open');
+}
+function closeStockModal() { document.getElementById('stockModal').classList.remove('open'); }
+
+function setMutationType(t) { mutationType = t; updateMutationButtons(); }
+function updateMutationButtons() {
+  ['in','out','cor'].forEach(t => {
+    const btn = document.getElementById('mType' + t.charAt(0).toUpperCase() + t.slice(1));
+    btn.className = 'mutation-btn' + (mutationType === t ? ` active-${t}` : '');
+  });
+}
+
+async function saveStockMutation() {
+  if (!currentPart) return;
+  const qty = parseFloat(document.getElementById('stockQty').value) || 0;
+  if (qty <= 0) { alert('Voer een geldige hoeveelheid in'); return; }
+
+  let newQty = currentPart.stock_qty;
+  if (mutationType === 'in')  newQty += qty;
+  if (mutationType === 'out') newQty = Math.max(0, newQty - qty);
+  if (mutationType === 'cor') newQty = qty;
+
+  const { error } = await sb.from('parts').update({ stock_qty: newQty }).eq('id', currentPart.id);
+  if (error) { alert('Fout bij bijwerken: ' + (error.message||JSON.stringify(error))); return; }
+
+  closeStockModal();
+  await loadParts();
+  currentPart = allParts.find(p => p.id === currentPart.id);
+  if (currentPart) renderDrawer(currentPart);
+}
+
+// ── Edit modal ──
+function openEditModal() {
+  if (!currentPart) return;
+  const p = currentPart;
+  document.getElementById('editName').value = p.name || '';
+  document.getElementById('editCat').value = p.category || 'Mechanisch';
+  document.getElementById('editDesc').value = p.description || '';
+  document.getElementById('editUnit').value = p.unit || 'stuk';
+  document.getElementById('editMin').value = p.min_stock || 1;
+  document.getElementById('editMax').value = p.max_stock || 10;
+  document.getElementById('editLocation').value = p.storage_location || '';
+  document.getElementById('editPrice').value = p.unit_price || '';
+  document.getElementById('editSupplier').value = p.supplier || '';
+  document.getElementById('editSupplierRef').value = p.supplier_ref || '';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeEditModal() { document.getElementById('editModal').classList.remove('open'); }
+
+async function saveEdit() {
+  if (!currentPart) return;
+  const { error } = await sb.from('parts').update({
+    name: document.getElementById('editName').value.trim(),
+    category: document.getElementById('editCat').value,
+    description: document.getElementById('editDesc').value.trim() || null,
+    unit: document.getElementById('editUnit').value,
+    min_stock: parseFloat(document.getElementById('editMin').value) || 1,
+    max_stock: parseFloat(document.getElementById('editMax').value) || 10,
+    storage_location: document.getElementById('editLocation').value.trim() || null,
+    unit_price: parseFloat(document.getElementById('editPrice').value) || null,
+    supplier: document.getElementById('editSupplier').value.trim() || null,
+    supplier_ref: document.getElementById('editSupplierRef').value.trim() || null
+  }).eq('id', currentPart.id);
+
+  if (error) { alert('Fout bij opslaan: ' + (error.message||JSON.stringify(error))); return; }
+  closeEditModal();
+  await loadParts();
+  currentPart = allParts.find(p => p.id === currentPart.id);
+  if (currentPart) renderDrawer(currentPart);
+}
+
+loadParts();
+</script>
+</body>
+</html>

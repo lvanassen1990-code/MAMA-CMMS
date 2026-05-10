@@ -564,7 +564,7 @@
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
   <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
   <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
-  <a href="#" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
 
@@ -865,6 +865,9 @@
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('plans',this)">
         <i class="ti ti-clipboard-text"></i> Onderhoudsplannen
       </button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('parts',this)">
+        <i class="ti ti-box"></i> Onderdelen
+      </button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)">
         <i class="ti ti-note"></i> Notities
       </button>
@@ -874,6 +877,7 @@
     <div class="drawer-tab-content">
       <div class="drawer-tab-pane active" id="tabHistory"></div>
       <div class="drawer-tab-pane" id="tabPlans"></div>
+      <div class="drawer-tab-pane" id="tabParts"></div>
       <div class="drawer-tab-pane" id="tabNotes"></div>
     </div>
 
@@ -1387,6 +1391,8 @@
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabPlans').innerHTML =
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+    document.getElementById('tabParts').innerHTML =
+      `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabNotes').innerHTML =
       asset.notes
         ? `<p style="font-size:13px;color:var(--text-2);line-height:1.7;">${asset.notes}</p>`
@@ -1394,9 +1400,10 @@
 
     document.getElementById('drawerOverlay').classList.add('open');
 
-    // Async: laad history en plannen
+    // Async: laad history, plannen en onderdelen
     loadDrawerHistory(assetId);
     loadDrawerPlans(assetId);
+    loadDrawerParts(assetId);
   }
 
   async function loadDrawerHistory(assetId) {
@@ -1477,6 +1484,57 @@
       html = `<div class="history-empty"><i class="ti ti-clipboard-off"></i>Geen onderhoudsplannen beschikbaar.</div>`;
     }
     document.getElementById('tabPlans').innerHTML = html;
+  }
+
+  async function loadDrawerParts(assetId) {
+    const pane = document.getElementById('tabParts');
+    try {
+      const { data: werkorders } = await sb.from('werkorders').select('id,wo_number,assigned_to,completed_at').eq('asset_id', assetId);
+      if (!werkorders || !werkorders.length) {
+        pane.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-3);"><i class="ti ti-box" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="font-size:12px;">Geen verbruikte onderdelen voor dit asset</p></div>`;
+        return;
+      }
+      const woIds = werkorders.map(w => w.id);
+
+      let allWp = [];
+      for (const woId of woIds) {
+        const { data: wp } = await sb.from('werkorder_parts').select('*, parts(part_number,name,unit)').eq('wo_id', woId).eq('status', 'Afigeboekt');
+        if (wp && wp.length) {
+          const wo = werkorders.find(w => w.id === woId);
+          allWp.push(...wp.map(r => ({ ...r, wo })));
+        }
+      }
+
+      if (!allWp.length) {
+        pane.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--text-3);"><i class="ti ti-box" style="font-size:32px;display:block;margin-bottom:8px;"></i><p style="font-size:12px;">Geen afigeboekte onderdelen voor dit asset</p></div>`;
+        return;
+      }
+
+      const rows = allWp.map(wp => {
+        const p = wp.parts;
+        const date = wp.wo.completed_at ? new Date(wp.wo.completed_at).toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'}) : '—';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);">
+          <div style="font-size:11px;color:var(--text-3);min-width:80px;">${date}</div>
+          <div style="font-family:monospace;font-size:10px;color:var(--text-3);min-width:100px;">${wp.wo.wo_number}</div>
+          <div style="flex:1;font-size:12px;font-weight:500;">${p?.name||'—'}</div>
+          <div style="font-size:12px;color:var(--text-2);">${wp.qty_used} ${p?.unit||'stuk'}</div>
+          <div style="font-size:11px;color:var(--text-3);">${wp.wo.assigned_to||'—'}</div>
+        </div>`;
+      }).join('');
+
+      pane.innerHTML = `<div style="padding:16px 20px;">
+        <div style="display:grid;grid-template-columns:80px 100px 1fr auto auto;gap:0 10px;padding:6px 0;border-bottom:0.5px solid var(--border);margin-bottom:4px;">
+          <div style="font-size:10px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Datum</div>
+          <div style="font-size:10px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">WO#</div>
+          <div style="font-size:10px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Onderdeel</div>
+          <div style="font-size:10px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Aantal</div>
+          <div style="font-size:10px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Monteur</div>
+        </div>
+        ${rows}
+      </div>`;
+    } catch(e) {
+      pane.innerHTML = `<div style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden onderdelen.</div>`;
+    }
   }
 
   function closeDrawer() {
