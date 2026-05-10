@@ -137,6 +137,11 @@
     .due-late { color: var(--red-text);   font-size: 11px; font-weight: 500; }
     .due-done { color: var(--text-3);     font-size: 11px; }
 
+    thead th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+    thead th.sortable:hover { color: var(--text-2); background: #ececec; }
+    thead th.sort-active { color: var(--text) !important; }
+    .sort-icon { font-size: 10px; margin-left: 3px; color: var(--text-3); display: inline-block; width: 10px; }
+
     .action-btn { padding: 4px 8px; border-radius: 6px; border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 11px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: background 0.1s; }
     .action-btn:hover { background: var(--bg); }
 
@@ -332,14 +337,14 @@
       <table id="woTable">
         <thead>
           <tr>
-            <th>WO#</th>
-            <th>Omschrijving</th>
-            <th>Type</th>
-            <th>Prioriteit</th>
-            <th>Status</th>
-            <th>Toegewezen aan</th>
-            <th>Deadline</th>
-            <th>Aangemaakt</th>
+            <th class="sortable" data-col="wo_number"   onclick="sortBy('wo_number')">WO# <span class="sort-icon" id="si_wo_number"></span></th>
+            <th class="sortable" data-col="description" onclick="sortBy('description')">Omschrijving <span class="sort-icon" id="si_description"></span></th>
+            <th class="sortable" data-col="wo_type"     onclick="sortBy('wo_type')">Type <span class="sort-icon" id="si_wo_type"></span></th>
+            <th class="sortable" data-col="priority"    onclick="sortBy('priority')">Prioriteit <span class="sort-icon" id="si_priority"></span></th>
+            <th class="sortable" data-col="status"      onclick="sortBy('status')">Status <span class="sort-icon" id="si_status"></span></th>
+            <th class="sortable" data-col="assigned_to" onclick="sortBy('assigned_to')">Toegewezen aan <span class="sort-icon" id="si_assigned_to"></span></th>
+            <th class="sortable" data-col="due_date"    onclick="sortBy('due_date')">Deadline <span class="sort-icon" id="si_due_date"></span></th>
+            <th class="sortable" data-col="created_at"  onclick="sortBy('created_at')">Aangemaakt <span class="sort-icon" id="si_created_at"></span></th>
             <th></th>
           </tr>
         </thead>
@@ -589,6 +594,47 @@
 
   function toggleChip(btn) { btn.classList.toggle('active'); filterTable(); }
 
+  /* ── Sortering ── */
+  const prioOrder = { 'Kritiek': 0, 'Hoog': 1, 'Normaal': 2, 'Laag': 3 };
+  const statusOrder = { 'Open': 0, 'In uitvoering': 1, 'Wacht op onderdelen': 2, 'Voltooid': 3, 'Geannuleerd': 4 };
+  let sortCol = 'created_at';
+  let sortDir = 'desc';
+
+  function sortBy(col) {
+    if (sortCol === col) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortCol = col;
+      sortDir = 'asc';
+    }
+    // update iconen
+    document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '');
+    document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-active'));
+    const icon = document.getElementById('si_' + col);
+    if (icon) { icon.textContent = sortDir === 'asc' ? '↑' : '↓'; }
+    const th = document.querySelector(`th[data-col="${col}"]`);
+    if (th) th.classList.add('sort-active');
+    filterTable();
+  }
+
+  function sortData(data) {
+    return [...data].sort((a, b) => {
+      let va = a[sortCol], vb = b[sortCol];
+      if (sortCol === 'priority') { va = prioOrder[va] ?? 99; vb = prioOrder[vb] ?? 99; }
+      else if (sortCol === 'status') { va = statusOrder[va] ?? 99; vb = statusOrder[vb] ?? 99; }
+      else if (sortCol === 'due_date' || sortCol === 'created_at') {
+        va = va ? new Date(va).getTime() : (sortDir === 'asc' ? Infinity : -Infinity);
+        vb = vb ? new Date(vb).getTime() : (sortDir === 'asc' ? Infinity : -Infinity);
+      } else {
+        va = (va || '').toString().toLowerCase();
+        vb = (vb || '').toString().toLowerCase();
+      }
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ?  1 : -1;
+      return 0;
+    });
+  }
+
   function filterTable() {
     const q  = document.getElementById('searchInput').value.toLowerCase();
     const pr = document.getElementById('filterPrio').value;
@@ -602,7 +648,7 @@
         (!pr || w.priority === pr) &&
         (!tp || w.wo_type === tp);
     });
-    renderTable(filtered);
+    renderTable(sortData(filtered));
   }
 
   async function loadData() {
