@@ -157,6 +157,26 @@
       font-size: 12px; color: var(--text-2); cursor: pointer;
       font-family: inherit; outline: none;
     }
+    .status-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .status-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 500; cursor: pointer;
+      border: 1px solid transparent;
+      background: var(--bg); color: var(--text-3);
+      transition: all 0.15s; font-family: inherit;
+    }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.4; transition: opacity 0.15s; }
+    .status-chip.active .chip-dot { opacity: 1; }
+    .status-chip.active { color: var(--text); }
+    .status-chip.chip-ok.active  { background: var(--green-bg);  border-color: var(--green);  color: var(--green-text); }
+    .status-chip.chip-warn.active { background: var(--amber-bg); border-color: var(--amber);  color: var(--amber-text); }
+    .status-chip.chip-crit.active { background: var(--red-bg);   border-color: var(--red);    color: var(--red-text); }
+    .status-chip.chip-blue.active { background: var(--blue-bg);  border-color: var(--blue);   color: var(--blue-text); }
+    .status-chip.chip-off.active  { background: var(--bg);       border-color: var(--border-strong); color: var(--text-2); }
+    .status-chip:not(.active) { opacity: 0.45; }
+    .status-chip:hover { opacity: 1; }
+
     .view-toggle { display: flex; border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; }
     .view-btn {
       padding: 5px 10px; background: var(--bg); border: none; cursor: pointer;
@@ -403,19 +423,17 @@
         <input type="text" id="searchInput" placeholder="Zoek op naam, ID of locatie…" oninput="filterTable()" />
       </div>
       <div class="divider-v"></div>
-      <div class="filter-group">
+      <div class="filter-group" style="flex-wrap:wrap;gap:5px;">
         <span class="filter-label">Status</span>
-        <select class="filter-select" id="filterStatus" onchange="filterTable()">
-          <option value="">Alle</option>
-          <option value="Operationeel">Operationeel</option>
-          <option value="Let op">Let op</option>
-          <option value="Storing">Storing</option>
-          <option value="In onderhoud">In onderhoud</option>
-          <option value="Offline">Offline</option>
-          <option value="Buiten gebruik">Buiten gebruik</option>
-          <option value="Afgeschreven">Afgeschreven</option>
-          <option value="Verkocht">Verkocht</option>
-        </select>
+        <div class="status-chips" id="statusChips">
+          <button type="button" class="status-chip chip-ok active" data-status="Operationeel" onclick="toggleChip(this)"><span class="chip-dot dot-green"></span>Operationeel</button>
+          <button type="button" class="status-chip chip-warn active" data-status="Let op" onclick="toggleChip(this)"><span class="chip-dot dot-amber"></span>Let op</button>
+          <button type="button" class="status-chip chip-crit active" data-status="Storing" onclick="toggleChip(this)"><span class="chip-dot dot-red"></span>Storing</button>
+          <button type="button" class="status-chip chip-blue active" data-status="In onderhoud" onclick="toggleChip(this)"><span class="chip-dot dot-blue"></span>In onderhoud</button>
+          <button type="button" class="status-chip chip-off" data-status="Offline" onclick="toggleChip(this)"><span class="chip-dot dot-grey"></span>Offline</button>
+          <button type="button" class="status-chip chip-off" data-status="Buiten gebruik" onclick="toggleChip(this)"><span class="chip-dot dot-grey"></span>Buiten gebruik</button>
+          <button type="button" class="status-chip chip-off" data-status="Afgeschreven" onclick="toggleChip(this)"><span class="chip-dot dot-grey"></span>Afgeschreven</button>
+        </div>
       </div>
       <div class="filter-group">
         <span class="filter-label">Categorie</span>
@@ -710,14 +728,20 @@
     document.getElementById('footerCount').textContent = `${data.length} assets`;
   }
 
+  function toggleChip(btn) {
+    btn.classList.toggle('active');
+    filterTable();
+  }
+
   function filterTable() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
-    const st = document.getElementById('filterStatus').value;
+    const q  = document.getElementById('searchInput').value.toLowerCase();
     const ct = document.getElementById('filterCat').value;
     const lc = document.getElementById('filterLoc').value;
+    const activeStatuses = [...document.querySelectorAll('#statusChips .status-chip.active')]
+      .map(b => b.dataset.status);
     const filtered = allAssets.filter(a =>
       (!q || (a.asset_id||'').toLowerCase().includes(q) || (a.name||'').toLowerCase().includes(q) || (a.location||'').toLowerCase().includes(q)) &&
-      (!st || a.status === st) &&
+      (activeStatuses.length === 0 || activeStatuses.includes(a.status)) &&
       (!ct || a.category === ct) &&
       (!lc || a.location === lc)
     );
