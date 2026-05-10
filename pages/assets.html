@@ -866,7 +866,7 @@
       const thumb = a.photo_url
         ? `<img src="${a.photo_url}" alt="${a.name}" onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\'></i>'" />`
         : `<i class="ti ${icon}"></i>`;
-      return `<tr class="clickable-row" ondblclick="openDrawer('${a.asset_id}')">
+      return `<tr class="clickable-row" data-assetid="${a.asset_id}">
         <td class="asset-id">${a.asset_id}</td>
         <td><div class="asset-cell">
           <div class="asset-icon">${thumb}</div>
@@ -1210,6 +1210,12 @@
   }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+  // Dubbelklik op tabelrij → open drawer
+  document.getElementById('assetsBody').addEventListener('dblclick', function(e) {
+    const row = e.target.closest('tr[data-assetid]');
+    if (row) openDrawer(row.dataset.assetid);
+  });
 
   loadAssets();
 </script>
