@@ -470,34 +470,51 @@
   async function savePlan() {
     const btn = document.getElementById('savePlanBtn');
     btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
-    const id = document.getElementById('fPlanId').value;
-    const payload = {
-      name: document.getElementById('fPlanName').value.trim(),
-      description: document.getElementById('fPlanDesc').value.trim(),
-      interval_type: document.getElementById('fPlanInterval').value,
-      interval_days: parseInt(document.getElementById('fPlanDays').value) || 90,
-      estimated_duration: parseInt(document.getElementById('fPlanDuration').value) || null,
-    };
-    if (!payload.name) { alert('Vul een naam in.'); btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan'; return; }
 
-    let planId = id;
-    if (id) {
-      await sb.from('maintenance_plans').update(payload).eq('id', id);
-      await sb.from('maintenance_tasks').delete().eq('plan_id', id);
-    } else {
-      const { data } = await sb.from('maintenance_plans').insert(payload).select().single();
-      planId = data.id;
+    try {
+      const id = document.getElementById('fPlanId').value;
+      const payload = {
+        name: document.getElementById('fPlanName').value.trim(),
+        description: document.getElementById('fPlanDesc').value.trim(),
+        interval_type: document.getElementById('fPlanInterval').value,
+        interval_days: parseInt(document.getElementById('fPlanDays').value) || 90,
+        estimated_duration: parseInt(document.getElementById('fPlanDuration').value) || null,
+      };
+      if (!payload.name) {
+        alert('Vul een naam in.');
+        btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan';
+        return;
+      }
+
+      let planId = id;
+      if (id) {
+        const { error: updErr } = await sb.from('maintenance_plans').update(payload).eq('id', id);
+        if (updErr) throw updErr;
+        const { error: delErr } = await sb.from('maintenance_tasks').delete().eq('plan_id', id);
+        if (delErr) throw delErr;
+      } else {
+        const { data, error: insErr } = await sb.from('maintenance_plans').insert(payload).select().single();
+        if (insErr) throw insErr;
+        planId = data.id;
+      }
+
+      const validTasks = taskRows.filter(t => t.trim());
+      if (validTasks.length) {
+        const { error: taskErr } = await sb.from('maintenance_tasks').insert(
+          validTasks.map((t,i) => ({ plan_id: planId, order_nr: i+1, description: t.trim() }))
+        );
+        if (taskErr) throw taskErr;
+      }
+
+      btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan';
+      closeModal('planModal');
+      await loadAll();
+      if (planId) selectPlan(planId);
+
+    } catch (err) {
+      btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan';
+      alert('Fout bij opslaan:\n' + (err.message || JSON.stringify(err)));
     }
-    const validTasks = taskRows.filter(t => t.trim());
-    if (validTasks.length) {
-      await sb.from('maintenance_tasks').insert(
-        validTasks.map((t,i) => ({ plan_id: planId, order_nr: i+1, description: t.trim() }))
-      );
-    }
-    btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan';
-    closeModal('planModal');
-    await loadAll();
-    if (planId) selectPlan(planId);
   }
 
   /* ── Link modal ── */
