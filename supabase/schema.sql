@@ -27,12 +27,20 @@ VALUES ('asset-photos', 'asset-photos', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Iedereen mag foto's lezen (public bucket)
-CREATE POLICY IF NOT EXISTS "Public read asset photos"
-ON storage.objects FOR SELECT USING (bucket_id = 'asset-photos');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public read asset photos') THEN
+    CREATE POLICY "Public read asset photos"
+    ON storage.objects FOR SELECT USING (bucket_id = 'asset-photos');
+  END IF;
+END $$;
 
 -- Iedereen mag foto's uploaden (pas later beperken met auth)
-CREATE POLICY IF NOT EXISTS "Public upload asset photos"
-ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'asset-photos');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public upload asset photos') THEN
+    CREATE POLICY "Public upload asset photos"
+    ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'asset-photos');
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS werkorders (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
