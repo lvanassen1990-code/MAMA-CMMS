@@ -332,6 +332,7 @@
   <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge">7</span></a>
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
   <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
+  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
   <a href="#" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
@@ -527,18 +528,9 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="form-field">
+        <div class="form-field full">
           <label class="form-label">Installatiedatum</label>
           <input class="form-input" id="fInstallDate" type="date" />
-        </div>
-        <div class="form-field">
-          <label class="form-label">Onderhoud interval</label>
-          <select class="form-input" id="fInterval">
-            <option>Maandelijks</option>
-            <option>Kwartaal</option>
-            <option>Halfjaarlijks</option>
-            <option>Jaarlijks</option>
-          </select>
         </div>
       </div>
       <div class="form-row">
@@ -732,7 +724,6 @@
       manufacturer:         document.getElementById('fManufacturer').value.trim(),
       serial_number:        document.getElementById('fSerial').value.trim(),
       installation_date:    document.getElementById('fInstallDate').value || null,
-      maintenance_interval: document.getElementById('fInterval').value,
       responsible_person:   document.getElementById('fPerson').value,
       status:               document.getElementById('fStatus').value,
       notes:                document.getElementById('fNotes').value.trim(),

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Onderhoudsplannen — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f5f7; --surface: #ffffff;
+      --border: rgba(0,0,0,0.08); --border-strong: rgba(0,0,0,0.14);
+      --text: #1d1d1f; --text-2: #6e6e73; --text-3: #aeaeb2;
+      --accent: #1a1a1a;
+      --green: #1D9E75; --green-bg: #E1F5EE; --green-text: #0F6E56;
+      --amber: #EF9F27; --amber-bg: #FAEEDA; --amber-text: #854F0B;
+      --red: #E24B4A; --red-bg: #FCEBEB; --red-text: #A32D2D;
+      --blue: #378ADD; --blue-bg: #E6F1FB; --blue-text: #185FA5;
+      --radius: 10px; --radius-sm: 7px;
+    }
+    body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; height: 100vh; overflow: hidden; display: flex; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; height: 100vh; }
+    .sidebar-logo { padding: 20px 18px 16px; border-bottom: 0.5px solid var(--border); }
+    .logo-mark { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; }
+    .logo-name { font-size: 15px; font-weight: 600; }
+    .logo-sub { font-size: 10px; color: var(--text-3); letter-spacing: 0.6px; text-transform: uppercase; }
+    .sidebar-section { padding: 14px 18px 4px; font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; }
+    .nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 10px; margin: 1px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--text-2); transition: background 0.12s, color 0.12s; text-decoration: none; }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+    .nav-item i { font-size: 16px; }
+    .nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; }
+    .sidebar-bottom { margin-top: auto; padding: 12px 14px; border-top: 0.5px solid var(--border); }
+    .user-row { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--blue-bg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--blue-text); }
+    .user-name { font-size: 12px; font-weight: 500; }
+    .user-role { font-size: 10px; color: var(--text-3); }
+
+    /* Main */
+    .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .topbar { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar-title { font-size: 15px; font-weight: 500; }
+    .topbar-sub { font-size: 12px; color: var(--text-2); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: background 0.12s; font-family: inherit; }
+    .btn:hover { background: var(--bg); }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.primary:hover { background: #333; }
+    .btn i { font-size: 14px; }
+
+    /* Content */
+    .content { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; gap: 20px; }
+
+    /* Plans list (left) */
+    .plans-col { width: 340px; min-width: 340px; display: flex; flex-direction: column; gap: 10px; }
+    .plan-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; transition: border-color 0.12s, box-shadow 0.12s; }
+    .plan-card:hover { border-color: var(--border-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .plan-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,26,26,0.06); }
+    .plan-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .plan-name { font-size: 13px; font-weight: 500; }
+    .plan-desc { font-size: 11px; color: var(--text-2); margin-bottom: 10px; line-height: 1.5; }
+    .plan-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .interval-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--blue-bg); color: var(--blue-text); font-weight: 500; }
+    .duration-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; background: var(--bg); border: 0.5px solid var(--border-strong); color: var(--text-2); }
+    .task-count { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+
+    /* Detail panel (right) */
+    .detail-col { flex: 1; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+    .detail-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-3); }
+    .detail-empty i { font-size: 36px; }
+    .detail-empty p { font-size: 13px; }
+
+    .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); }
+    .card-header { padding: 14px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .card-title i { font-size: 15px; color: var(--text-2); }
+    .card-body { padding: 14px 16px; }
+
+    /* Tasks checklist */
+    .task-list { display: flex; flex-direction: column; gap: 6px; }
+    .task-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--bg); }
+    .task-nr { font-size: 10px; color: var(--text-3); font-weight: 600; min-width: 18px; }
+    .task-text { font-size: 12px; flex: 1; }
+    .task-drag { color: var(--text-3); font-size: 14px; cursor: grab; }
+
+    /* Linked assets */
+    .linked-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+    .linked-row:last-child { border-bottom: none; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: var(--green); }
+    .dot-amber { background: var(--amber); }
+    .dot-red { background: var(--red); }
+    .linked-name { font-size: 12px; font-weight: 500; flex: 1; }
+    .linked-sub { font-size: 11px; color: var(--text-3); }
+    .linked-due { font-size: 11px; }
+    .due-ok { color: var(--green-text); }
+    .due-soon { color: var(--amber-text); }
+    .due-late { color: var(--red-text); }
+
+    /* Plan form info row */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .info-item { }
+    .info-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .info-value { font-size: 13px; font-weight: 500; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.18s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border-radius: 14px; border: 0.5px solid var(--border); width: 560px; max-width: 94vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.12); transform: scale(0.97); transition: transform 0.18s; }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header { padding: 18px 20px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--surface); z-index: 1; }
+    .modal-title { font-size: 14px; font-weight: 600; }
+    .modal-close { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 14px; }
+    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-label { font-size: 11px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input { padding: 8px 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.12s; }
+    .form-input:focus { border-color: var(--blue); background: var(--surface); }
+    .modal-footer { padding: 14px 20px; border-top: 0.5px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; position: sticky; bottom: 0; background: var(--surface); }
+
+    /* Task editor in modal */
+    .task-editor { display: flex; flex-direction: column; gap: 6px; }
+    .task-editor-row { display: flex; align-items: center; gap: 8px; }
+    .task-editor-nr { font-size: 11px; color: var(--text-3); min-width: 20px; }
+    .task-editor-input { flex: 1; padding: 6px 8px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); font-size: 12px; font-family: inherit; background: var(--bg); outline: none; }
+    .task-editor-input:focus { border-color: var(--blue); background: var(--surface); }
+    .task-remove { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 14px; padding: 2px; }
+    .task-remove:hover { color: var(--red); }
+    .add-task-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); background: none; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; font-family: inherit; transition: border-color 0.12s, color 0.12s; width: 100%; }
+    .add-task-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    /* Link modal */
+    .asset-option { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.1s; }
+    .asset-option:hover { background: var(--bg); }
+    .asset-option input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">MA</div>
+      <div><div class="logo-name">MAMA</div><div class="logo-sub">Maintenance Manager</div></div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Machineparken</a>
+  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge">7</span></a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
+  <a href="onderhoudsplannen.html" class="nav-item active"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <a href="#" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div><div class="user-name">Leon</div><div class="user-role">Board / Owner</div></div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Onderhoudsplannen</div>
+      <div class="topbar-sub" id="topbarSub">Laden…</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn primary" onclick="openNewPlanModal()"><i class="ti ti-plus"></i> Nieuw plan</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Plans list -->
+    <div class="plans-col">
+      <div id="plansList" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="text-align:center;padding:40px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>
+      </div>
+    </div>
+
+    <!-- Detail panel -->
+    <div class="detail-col" id="detailCol">
+      <div class="detail-empty">
+        <i class="ti ti-clipboard-text"></i>
+        <p>Selecteer een plan om de details te zien</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nieuw / bewerk plan -->
+<div class="modal-overlay" id="planModal" onclick="handleOverlay(event,'planModal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="planModalTitle">Nieuw onderhoudsplan</div>
+      <button class="modal-close" onclick="closeModal('planModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fPlanId" />
+      <div class="form-row">
+        <div class="form-field full">
+          <label class="form-label">Naam van het plan</label>
+          <input class="form-input" id="fPlanName" placeholder="bijv. Kwartaal groot onderhoud" />
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Omschrijving</label>
+        <textarea class="form-input" id="fPlanDesc" rows="2" placeholder="Wat houdt dit plan in?" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Interval</label>
+          <select class="form-input" id="fPlanInterval" onchange="syncDays()">
+            <option value="Dagelijks">Dagelijks</option>
+            <option value="Wekelijks">Wekelijks</option>
+            <option value="Maandelijks">Maandelijks</option>
+            <option value="Kwartaal" selected>Kwartaal</option>
+            <option value="Halfjaarlijks">Halfjaarlijks</option>
+            <option value="Jaarlijks">Jaarlijks</option>
+            <option value="Aangepast">Aangepast (eigen dagen)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Aantal dagen</label>
+          <input class="form-input" id="fPlanDays" type="number" min="1" value="90" />
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Geschatte uitvoeringstijd (minuten)</label>
+        <input class="form-input" id="fPlanDuration" type="number" min="15" step="15" placeholder="bijv. 120" />
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Taken / checklist</label>
+        <div class="task-editor" id="taskEditor"></div>
+        <button class="add-task-btn" onclick="addTaskRow()"><i class="ti ti-plus"></i> Taak toevoegen</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('planModal')">Annuleren</button>
+      <button class="btn primary" id="savePlanBtn" onclick="savePlan()"><i class="ti ti-check"></i> Plan opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Koppel assets -->
+<div class="modal-overlay" id="linkModal" onclick="handleOverlay(event,'linkModal')">
+  <div class="modal" style="width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">Plan koppelen aan assets</div>
+      <button class="modal-close" onclick="closeModal('linkModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:4px;">Selecteer de assets waaraan je dit plan wilt koppelen:</p>
+      <div id="assetCheckList" style="display:flex;flex-direction:column;gap:2px;max-height:340px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('linkModal')">Annuleren</button>
+      <button class="btn primary" id="saveLinkBtn" onclick="saveLinks()"><i class="ti ti-link"></i> Koppeling opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_pNlLj8UxenKQoWns-iTTNQ_aoe08G49';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let plans = [], allAssets = [], selectedPlan = null;
+
+  const intervalDays = { Dagelijks:1, Wekelijks:7, Maandelijks:30, Kwartaal:90, Halfjaarlijks:182, Jaarlijks:365 };
+
+  function syncDays() {
+    const v = document.getElementById('fPlanInterval').value;
+    if (intervalDays[v]) document.getElementById('fPlanDays').value = intervalDays[v];
+  }
+
+  function dueCls(dateStr) {
+    if (!dateStr) return ['', '—'];
+    const d = new Date(dateStr), now = new Date();
+    const days = Math.ceil((d - now) / 86400000);
+    if (days < 0) return ['due-late', `${Math.abs(days)}d verlopen`];
+    if (days < 30) return ['due-soon', `over ${days}d`];
+    return ['due-ok', d.toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'})];
+  }
+
+  function dotClass(status) {
+    return status === 'Operationeel' ? 'dot-green' : status === 'Let op' ? 'dot-amber' : 'dot-red';
+  }
+
+  /* ── Load ── */
+  async function loadAll() {
+    const [{ data: p }, { data: a }] = await Promise.all([
+      sb.from('maintenance_plans').select('*, maintenance_tasks(*)').order('name'),
+      sb.from('assets').select('asset_id, name, location, status').order('asset_id'),
+    ]);
+    plans = p || [];
+    allAssets = a || [];
+    document.getElementById('topbarSub').textContent = `${plans.length} plannen`;
+    renderPlansList();
+  }
+
+  function renderPlansList() {
+    const el = document.getElementById('plansList');
+    if (!plans.length) {
+      el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-3);">Geen plannen gevonden</div>`;
+      return;
+    }
+    el.innerHTML = plans.map(p => {
+      const taskCount = (p.maintenance_tasks || []).length;
+      const sel = selectedPlan && selectedPlan.id === p.id ? 'selected' : '';
+      return `<div class="plan-card ${sel}" onclick="selectPlan('${p.id}')">
+        <div class="plan-card-header">
+          <div class="plan-name">${p.name}</div>
+          <button class="btn" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();editPlan('${p.id}')"><i class="ti ti-pencil"></i></button>
+        </div>
+        <div class="plan-desc">${p.description || '—'}</div>
+        <div class="plan-meta">
+          <span class="interval-badge"><i class="ti ti-refresh" style="font-size:10px;"></i> ${p.interval_type}</span>
+          ${p.estimated_duration ? `<span class="duration-badge"><i class="ti ti-clock" style="font-size:10px;"></i> ${p.estimated_duration} min</span>` : ''}
+          <span class="task-count"><i class="ti ti-checklist" style="font-size:12px;"></i> ${taskCount} taken</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function selectPlan(id) {
+    selectedPlan = plans.find(p => p.id === id);
+    renderPlansList();
+    await renderDetail();
+  }
+
+  async function renderDetail() {
+    const p = selectedPlan;
+    const dc = document.getElementById('detailCol');
+    dc.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+
+    const { data: links } = await sb
+      .from('asset_maintenance_plans')
+      .select('*, assets(asset_id, name, location, status)')
+      .eq('plan_id', p.id);
+
+    const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
+
+    dc.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-clipboard-text"></i> ${p.name}</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn" onclick="openLinkModal('${p.id}')"><i class="ti ti-link"></i> Assets koppelen</button>
+            <button class="btn" onclick="editPlan('${p.id}')"><i class="ti ti-pencil"></i> Bewerken</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="info-grid" style="margin-bottom:14px;">
+            <div class="info-item"><div class="info-label">Interval</div><div class="info-value">${p.interval_type}</div></div>
+            <div class="info-item"><div class="info-label">Elke N dagen</div><div class="info-value">${p.interval_days}</div></div>
+            <div class="info-item"><div class="info-label">Geschatte tijd</div><div class="info-value">${p.estimated_duration ? p.estimated_duration + ' min' : '—'}</div></div>
+          </div>
+          ${p.description ? `<p style="font-size:12px;color:var(--text-2);margin-bottom:14px;">${p.description}</p>` : ''}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-checklist"></i> Checklist (${tasks.length} taken)</div>
+        </div>
+        <div class="card-body">
+          ${tasks.length ? `<div class="task-list">${tasks.map(t => `
+            <div class="task-item">
+              <span class="task-nr">${t.order_nr}</span>
+              <span class="task-text">${t.description}</span>
+              <i class="ti ti-grip-vertical task-drag"></i>
+            </div>`).join('')}</div>`
+          : `<p style="font-size:12px;color:var(--text-3);">Geen taken in dit plan.</p>`}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-building-factory-2"></i> Gekoppelde assets (${(links||[]).length})</div>
+          <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openLinkModal('${p.id}')"><i class="ti ti-plus"></i> Koppelen</button>
+        </div>
+        <div class="card-body">
+          ${(links||[]).length ? (links||[]).map(l => {
+            const a = l.assets;
+            const [dc2, dt] = dueCls(l.next_due);
+            return `<div class="linked-row">
+              <div class="dot ${dotClass(a.status)}"></div>
+              <div style="flex:1;">
+                <div class="linked-name">${a.name}</div>
+                <div class="linked-sub">${a.asset_id} · ${a.location || '—'}</div>
+              </div>
+              <span class="linked-due ${dc2}">${dt}</span>
+            </div>`;
+          }).join('')
+          : `<p style="font-size:12px;color:var(--text-3);">Nog geen assets gekoppeld. Klik op "Assets koppelen".</p>`}
+        </div>
+      </div>`;
+  }
+
+  /* ── Plan modal ── */
+  let taskRows = [];
+
+  function addTaskRow(desc = '') {
+    taskRows.push(desc);
+    renderTaskEditor();
+  }
+
+  function removeTaskRow(i) {
+    taskRows.splice(i, 1);
+    renderTaskEditor();
+  }
+
+  function renderTaskEditor() {
+    document.getElementById('taskEditor').innerHTML = taskRows.map((t,i) => `
+      <div class="task-editor-row">
+        <span class="task-editor-nr">${i+1}</span>
+        <input class="task-editor-input" value="${t}" placeholder="Omschrijf de taak…"
+          oninput="taskRows[${i}]=this.value" />
+        <button class="task-remove" onclick="removeTaskRow(${i})"><i class="ti ti-x"></i></button>
+      </div>`).join('');
+  }
+
+  function openNewPlanModal() {
+    document.getElementById('fPlanId').value = '';
+    document.getElementById('fPlanName').value = '';
+    document.getElementById('fPlanDesc').value = '';
+    document.getElementById('fPlanInterval').value = 'Kwartaal';
+    document.getElementById('fPlanDays').value = 90;
+    document.getElementById('fPlanDuration').value = '';
+    document.getElementById('planModalTitle').textContent = 'Nieuw onderhoudsplan';
+    taskRows = [''];
+    renderTaskEditor();
+    document.getElementById('planModal').classList.add('open');
+  }
+
+  function editPlan(id) {
+    const p = plans.find(x => x.id === id);
+    document.getElementById('fPlanId').value = p.id;
+    document.getElementById('fPlanName').value = p.name;
+    document.getElementById('fPlanDesc').value = p.description || '';
+    document.getElementById('fPlanInterval').value = p.interval_type;
+    document.getElementById('fPlanDays').value = p.interval_days;
+    document.getElementById('fPlanDuration').value = p.estimated_duration || '';
+    document.getElementById('planModalTitle').textContent = 'Plan bewerken';
+    const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
+    taskRows = tasks.map(t => t.description);
+    if (!taskRows.length) taskRows = [''];
+    renderTaskEditor();
+    document.getElementById('planModal').classList.add('open');
+  }
+
+  async function savePlan() {
+    const btn = document.getElementById('savePlanBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const id = document.getElementById('fPlanId').value;
+    const payload = {
+      name: document.getElementById('fPlanName').value.trim(),
+      description: document.getElementById('fPlanDesc').value.trim(),
+      interval_type: document.getElementById('fPlanInterval').value,
+      interval_days: parseInt(document.getElementById('fPlanDays').value) || 90,
+      estimated_duration: parseInt(document.getElementById('fPlanDuration').value) || null,
+    };
+    if (!payload.name) { alert('Vul een naam in.'); btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan'; return; }
+
+    let planId = id;
+    if (id) {
+      await sb.from('maintenance_plans').update(payload).eq('id', id);
+      await sb.from('maintenance_tasks').delete().eq('plan_id', id);
+    } else {
+      const { data } = await sb.from('maintenance_plans').insert(payload).select().single();
+      planId = data.id;
+    }
+    const validTasks = taskRows.filter(t => t.trim());
+    if (validTasks.length) {
+      await sb.from('maintenance_tasks').insert(
+        validTasks.map((t,i) => ({ plan_id: planId, order_nr: i+1, description: t.trim() }))
+      );
+    }
+    btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan';
+    closeModal('planModal');
+    await loadAll();
+    if (planId) selectPlan(planId);
+  }
+
+  /* ── Link modal ── */
+  let linkPlanId = null;
+
+  async function openLinkModal(planId) {
+    linkPlanId = planId;
+    const { data: existing } = await sb.from('asset_maintenance_plans').select('asset_id').eq('plan_id', planId);
+    const linkedIds = (existing || []).map(l => l.asset_id);
+    document.getElementById('assetCheckList').innerHTML = allAssets.map(a => `
+      <label class="asset-option">
+        <input type="checkbox" value="${a.asset_id}" ${linkedIds.includes(a.asset_id) ? 'checked' : ''} />
+        <div>
+          <div style="font-size:12px;font-weight:500;">${a.name}</div>
+          <div style="font-size:11px;color:var(--text-3);">${a.asset_id} · ${a.location || '—'}</div>
+        </div>
+      </label>`).join('');
+    document.getElementById('linkModal').classList.add('open');
+  }
+
+  async function saveLinks() {
+    const btn = document.getElementById('saveLinkBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const checked = [...document.querySelectorAll('#assetCheckList input:checked')].map(i => i.value);
+    await sb.from('asset_maintenance_plans').delete().eq('plan_id', linkPlanId);
+    if (checked.length) {
+      const now = new Date();
+      const plan = plans.find(p => p.id === linkPlanId);
+      const nextDue = new Date(now.getTime() + (plan.interval_days * 86400000));
+      await sb.from('asset_maintenance_plans').insert(
+        checked.map(assetId => ({
+          plan_id: linkPlanId, asset_id: assetId,
+          next_due: nextDue.toISOString().split('T')[0],
+        }))
+      );
+    }
+    btn.disabled=false; btn.innerHTML='<i class="ti ti-link"></i> Koppeling opslaan';
+    closeModal('linkModal');
+    if (selectedPlan && selectedPlan.id === linkPlanId) await renderDetail();
+  }
+
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+  function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+
+  loadAll();
+</script>
+</body>
+</html>
