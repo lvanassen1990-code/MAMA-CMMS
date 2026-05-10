@@ -33,7 +33,7 @@ MAMA helpt bedrijven hun machines, apparatuur en technische installaties profess
 MAMA hanteert een strikte no-delete policy op alle operationele data:
 
 - **Assets worden nooit verwijderd.** Een machine die buiten gebruik gaat, krijgt een nieuwe status (bijv. *Buiten gebruik*, *Afgeschreven*, *Verkocht*). De volledige historie blijft altijd raadpleegbaar.
-- **Werkorders worden nooit verwijderd.** Afgeronde en geannuleerde orders blijven zichtbaar in de historie.
+- **Werkorders worden nooit verwijderd.** Afgeronde en geannuleerde orders blijven altijd volledig traceerbaar in de historie. Een werkorder die niet doorgaat krijgt status *Geannuleerd*. Het WO-nummer wordt oplopend gegenereerd op basis van de laatste aanmaak in de database — nooit opnieuw gebruikt.
 - **Storingen worden nooit verwijderd.** Opgeloste storingen krijgen status *Opgelost* met datum en verantwoordelijke.
 - **Onderhoudslogboeken zijn onveranderlijk.** Uitgevoerd onderhoud wordt geregistreerd en kan niet worden aangepast — alleen aangevuld.
 - **Alle wijzigingen worden gelogd** met tijdstempel en gebruiker (audit trail).

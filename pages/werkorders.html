@@ -775,14 +775,26 @@
   }
 
   /* ── Nieuwe werkorder ── */
-  async function openModal() {
-    // Genereer WO nummer
+  async function openModal(preAssetId = null) {
+    // Haal het hoogste WO-nummer op uit de database (niet uit de lokale array — die kan gefilterd zijn)
+    const { data: last } = await sb
+      .from('werkorders')
+      .select('wo_number')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    let nextSeq = 1;
+    if (last && last.length > 0) {
+      const match = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
+      if (match) nextSeq = parseInt(match[1], 10) + 1;
+    }
     const year = new Date().getFullYear();
-    const num = String(allWerkorders.length + 1).padStart(4, '0');
-    document.getElementById('fWoNum').value = `WO-${year}-${num}`;
+    document.getElementById('fWoNum').value = `WO-${year}-${String(nextSeq).padStart(4, '0')}`;
+
     document.getElementById('fDesc').value = '';
     document.getElementById('fNotes').value = '';
     document.getElementById('fDue').value = '';
+    document.getElementById('fAsset').value = preAssetId || '';
     document.getElementById('modalOverlay').classList.add('open');
   }
 
