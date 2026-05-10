@@ -370,6 +370,20 @@ body {
 .form-input:focus   { border-color: var(--blue); background: var(--surface); }
 .form-input::placeholder { color: var(--text-3); }
 
+/* ── Stable scroll containers ───────────────────────────────── */
+/* overflow-y: scroll zorgt dat de scrollbalk-track er altijd is,
+   zodat de layout nooit verschuift als inhoud de container vult. */
+.content-scroll {
+  overflow-y: scroll;
+  overflow-x: clip;
+  scrollbar-gutter: stable;
+}
+/* Dunne, subtiele scrollbalk (webkit) */
+.content-scroll::-webkit-scrollbar          { width: 6px; }
+.content-scroll::-webkit-scrollbar-track    { background: transparent; }
+.content-scroll::-webkit-scrollbar-thumb    { background: var(--border-strong); border-radius: 3px; }
+.content-scroll::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
 /* ── Utilities ─────────────────────────────────────────────── */
 .divider-v { width: var(--border-width); height: 20px; background: var(--border-strong); }
 .muted     { color: var(--text-3); }

@@ -10,7 +10,11 @@
   <link rel="stylesheet" href="../assets/mama.css" />
   <style>
     /* Content */
-    .content { padding: 20px 24px; overflow-y: auto; overflow-x: clip; scrollbar-gutter: stable; flex: 1; display: flex; gap: 20px; }
+    .content { padding: 20px 24px; overflow-y: scroll; overflow-x: clip; scrollbar-gutter: stable; flex: 1; display: flex; gap: 20px; }
+    .content::-webkit-scrollbar          { width: 6px; }
+    .content::-webkit-scrollbar-track    { background: transparent; }
+    .content::-webkit-scrollbar-thumb    { background: rgba(0,0,0,0.14); border-radius: 3px; }
+    .content::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); }
 
     /* Plans list (left) */
     .plans-col { width: 340px; min-width: 340px; display: flex; flex-direction: column; gap: 10px; }
