@@ -559,7 +559,25 @@
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
   function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
-  loadAll();
+  async function testConnection() {
+    const { data, error } = await sb.from('maintenance_plans').select('id').limit(1);
+    if (error) {
+      document.getElementById('plansList').innerHTML =
+        `<div style="background:var(--red-bg);border:0.5px solid var(--red);border-radius:var(--radius);padding:14px 16px;color:var(--red-text);font-size:12px;">
+          <strong>Verbindingsfout:</strong><br>${error.message}<br><br>
+          Zorg dat je het SQL-schema hebt uitgevoerd in Supabase (SQL Editor → schema.sql → Run).
+        </div>`;
+      return false;
+    }
+    return true;
+  }
+
+  async function init() {
+    const ok = await testConnection();
+    if (ok) loadAll();
+  }
+
+  init();
 </script>
 </body>
 </html>

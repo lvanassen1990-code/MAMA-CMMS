@@ -41,68 +41,6 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- ── Onderhoudsplannen ──────────────────────────────────────────
--- Een plan is een herbruikbare template met taken en interval.
--- Het kan aan meerdere assets gekoppeld worden.
-
-CREATE TABLE IF NOT EXISTS maintenance_plans (
-  id                  uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  name                text NOT NULL,
-  description         text,
-  interval_type       text NOT NULL DEFAULT 'Kwartaal',
-  interval_days       int  NOT NULL DEFAULT 90,
-  estimated_duration  int,                      -- in minuten
-  created_at          timestamptz DEFAULT now()
-);
-
--- Taken binnen een plan (geordende checklist)
-CREATE TABLE IF NOT EXISTS maintenance_tasks (
-  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  plan_id     uuid NOT NULL REFERENCES maintenance_plans(id) ON DELETE CASCADE,
-  order_nr    int  NOT NULL DEFAULT 0,
-  description text NOT NULL
-);
-
--- Koppeling: welk plan hoort bij welk asset
-CREATE TABLE IF NOT EXISTS asset_maintenance_plans (
-  id              uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  asset_id        text NOT NULL REFERENCES assets(asset_id) ON DELETE CASCADE,
-  plan_id         uuid NOT NULL REFERENCES maintenance_plans(id) ON DELETE CASCADE,
-  assigned_to     text,
-  last_executed   date,
-  next_due        date,
-  active          boolean DEFAULT true,
-  created_at      timestamptz DEFAULT now(),
-  UNIQUE (asset_id, plan_id)
-);
-
--- Voorbeeldplannen
-INSERT INTO maintenance_plans (id, name, description, interval_type, interval_days, estimated_duration) VALUES
-('00000000-0000-0000-0000-000000000001', 'Maandelijkse inspectie',     'Visuele controle en smering',              'Maandelijks',    30,  60),
-('00000000-0000-0000-0000-000000000002', 'Kwartaal groot onderhoud',   'Filters, riemen, vloeistoffen controleren', 'Kwartaal',       90, 180),
-('00000000-0000-0000-0000-000000000003', 'Jaarlijkse revisie',         'Volledige revisie en keuring',              'Jaarlijks',     365, 480),
-('00000000-0000-0000-0000-000000000004', 'Wekelijkse veiligheidscheck','Noodstop, beveiliging en alarmen testen',   'Wekelijks',       7,  30)
-ON CONFLICT (id) DO NOTHING;
-
--- Taken per plan
-INSERT INTO maintenance_tasks (plan_id, order_nr, description) VALUES
-('00000000-0000-0000-0000-000000000001', 1, 'Visuele inspectie op lekkages'),
-('00000000-0000-0000-0000-000000000001', 2, 'Smering lagerpunten controleren'),
-('00000000-0000-0000-0000-000000000001', 3, 'Geluids- en trillingsniveau noteren'),
-('00000000-0000-0000-0000-000000000002', 1, 'Luchtfilter reinigen of vervangen'),
-('00000000-0000-0000-0000-000000000002', 2, 'Riemspanning controleren'),
-('00000000-0000-0000-0000-000000000002', 3, 'Koelvloeistofpeil controleren'),
-('00000000-0000-0000-0000-000000000002', 4, 'Veiligheidskleppen testen'),
-('00000000-0000-0000-0000-000000000002', 5, 'Meetwaarden loggen in systeem'),
-('00000000-0000-0000-0000-000000000003', 1, 'Volledige demontage en reiniging'),
-('00000000-0000-0000-0000-000000000003', 2, 'Slijtageonderdelen vervangen'),
-('00000000-0000-0000-0000-000000000003', 3, 'Electrische aansluitingen controleren'),
-('00000000-0000-0000-0000-000000000003', 4, 'Eindkeuring en testrun uitvoeren'),
-('00000000-0000-0000-0000-000000000004', 1, 'Noodstopknoppen testen'),
-('00000000-0000-0000-0000-000000000004', 2, 'Alarmmelding simuleren'),
-('00000000-0000-0000-0000-000000000004', 3, 'Beveiligingskappen controleren')
-ON CONFLICT DO NOTHING;
-
 CREATE TABLE IF NOT EXISTS werkorders (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   wo_number   text NOT NULL UNIQUE,
