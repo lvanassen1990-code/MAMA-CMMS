@@ -97,6 +97,52 @@ INSERT INTO assets (asset_id, name, model, category, location, status, manufactu
 ('EL-02', 'UPS Systeem kantoor',      'APC Smart-UPS',         'Elektrisch', 'Kantoor',      'Operationeel', 'APC',               '2026-04-01', '2026-10-01', 'R. Smit')
 ON CONFLICT (asset_id) DO NOTHING;
 
+-- Extra assets tot 50+
+INSERT INTO assets (asset_id, name, model, category, location, status, manufacturer, last_maintenance, next_maintenance, responsible_person) VALUES
+('C-05',  'Compressor Lijn 3',           'Atlas Copco GA37',      'Compressor', 'Hal C',        'Operationeel', 'Atlas Copco',  '2026-03-15', '2026-09-15', 'J. de Vries'),
+('C-06',  'Compressor Reserve Hal B',    'Kaeser SM 15',          'Compressor', 'Hal B',        'Offline',      'Kaeser',       '2025-11-20', '2026-02-20', 'M. Bakker'),
+('C-07',  'Compressor Lijn 4A',          'Atlas Copco GA75',      'Compressor', 'Hal C',        'Operationeel', 'Atlas Copco',  '2026-04-22', '2026-07-22', 'J. de Vries'),
+('C-08',  'Compressor Lijn 4B',          'Atlas Copco GA75',      'Compressor', 'Hal C',        'Let op',       'Atlas Copco',  '2026-02-28', '2026-05-28', 'J. de Vries'),
+('HP-01', 'Hydrauliekpomp Lijn 1',       'Bosch Rexroth A7V',     'Hydrauliek', 'Hal A',        'Operationeel', 'Bosch Rexroth','2026-04-08', '2026-10-08', 'P. Jansen'),
+('HP-02', 'Hydrauliekpomp Lijn 1B',      'Bosch Rexroth A7V',     'Hydrauliek', 'Hal A',        'Operationeel', 'Bosch Rexroth','2026-04-08', '2026-10-08', 'P. Jansen'),
+('HP-03', 'Hydrauliekunit Pers 1',       'Parker PV046',          'Hydrauliek', 'Hal A',        'Let op',       'Parker',       '2026-01-30', '2026-04-30', 'P. Jansen'),
+('HP-04', 'Hydrauliekunit Pers 2',       'Parker PV046',          'Hydrauliek', 'Hal B',        'Operationeel', 'Parker',       '2026-03-20', '2026-09-20', 'P. Jansen'),
+('HP-05', 'Hydrauliekpomp CNC 2',        'Parker VOAC F11',       'Hydrauliek', 'Hal C',        'Operationeel', 'Parker',       '2026-04-01', '2026-10-01', 'P. Jansen'),
+('HP-06', 'Hydrauliekunit Spuitgiet',    'Bosch Rexroth A10V',    'Hydrauliek', 'Hal B',        'Storing',      'Bosch Rexroth','2026-01-05', '2026-04-05', 'P. Jansen'),
+('V-03',  'Ventilatiesysteem Hal C',     'Systemair DVNI',        'Ventilatie', 'Hal C',        'Operationeel', 'Systemair',    '2026-02-15', '2026-08-15', 'R. Smit'),
+('V-04',  'Rookafzuiging Lijn 1',        'Nederman MF-E',         'Ventilatie', 'Hal A',        'Operationeel', 'Nederman',     '2026-03-25', '2026-09-25', 'R. Smit'),
+('V-05',  'Rookafzuiging Lijn 2',        'Nederman MF-E',         'Ventilatie', 'Hal B',        'Operationeel', 'Nederman',     '2026-03-25', '2026-09-25', 'R. Smit'),
+('V-06',  'Luchtbehandeling kantoor',    'Daikin VRV IV',         'Ventilatie', 'Kantoor',      'Operationeel', 'Daikin',       '2026-01-10', '2027-01-10', 'R. Smit'),
+('V-07',  'Overdrukventilatie magazijn', 'Systemair TUNE-S',      'Ventilatie', 'Buitenterrein','Let op',       'Systemair',    '2025-12-01', '2026-03-01', 'R. Smit'),
+('TB-03', 'Transportband Lijn 3',        'Hytrol E24',            'Transport',  'Hal C',        'Operationeel', 'Hytrol',       '2026-04-10', '2026-07-10', 'K. van Dam'),
+('TB-04', 'Transportband Lijn 4',        'Hytrol E24',            'Transport',  'Hal C',        'In onderhoud', 'Hytrol',       '2026-03-01', '2026-06-01', 'K. van Dam'),
+('TB-05', 'Rollenband magazijn in',      'Hytrol TS',             'Transport',  'Buitenterrein','Operationeel', 'Hytrol',       '2026-02-20', '2026-08-20', 'K. van Dam'),
+('TB-06', 'Rollenband magazijn uit',     'Hytrol TS',             'Transport',  'Buitenterrein','Operationeel', 'Hytrol',       '2026-02-20', '2026-08-20', 'K. van Dam'),
+('TB-07', 'Hefplatform dock 1',          'Stertil ST 1085',       'Transport',  'Buitenterrein','Operationeel', 'Stertil',      '2026-01-15', '2027-01-15', 'K. van Dam'),
+('TB-08', 'Hefplatform dock 2',          'Stertil ST 1085',       'Transport',  'Buitenterrein','Let op',       'Stertil',      '2025-10-15', '2026-01-15', 'K. van Dam'),
+('EL-03', 'Transformator 1',             'ABB TM315',             'Elektrisch', 'Hal A',        'Operationeel', 'ABB',          '2026-01-20', '2027-01-20', 'R. Smit'),
+('EL-04', 'Transformator 2',             'ABB TM315',             'Elektrisch', 'Hal B',        'Operationeel', 'ABB',          '2026-01-20', '2027-01-20', 'R. Smit'),
+('EL-05', 'Schakelkast Hal B',           'Schneider XW+',         'Elektrisch', 'Hal B',        'Operationeel', 'Schneider',    '2026-04-15', '2026-10-15', 'R. Smit'),
+('EL-06', 'Schakelkast Hal C',           'Schneider XW+',         'Elektrisch', 'Hal C',        'Operationeel', 'Schneider',    '2026-04-15', '2026-10-15', 'R. Smit'),
+('EL-07', 'Generator noodstroom',        'Caterpillar C9',        'Elektrisch', 'Buitenterrein','Operationeel', 'Caterpillar',  '2026-03-01', '2026-09-01', 'R. Smit'),
+('EL-08', 'Zonnepaneelomvormer 1',       'SMA Sunny Tripower',    'Elektrisch', 'Buitenterrein','Operationeel', 'SMA',          '2026-02-01', '2027-02-01', 'R. Smit'),
+('EL-09', 'Zonnepaneelomvormer 2',       'SMA Sunny Tripower',    'Elektrisch', 'Buitenterrein','Operationeel', 'SMA',          '2026-02-01', '2027-02-01', 'R. Smit'),
+('KO-03', 'Chiller productie',           'Trane CGAM 30',         'Koeling',    'Buitenterrein','Operationeel', 'Trane',        '2026-04-01', '2026-10-01', 'M. Bakker'),
+('KO-04', 'Koelcel grondstoffen',        'Carrier 30RBS',         'Koeling',    'Hal A',        'Operationeel', 'Carrier',      '2026-03-10', '2026-09-10', 'M. Bakker'),
+('KO-05', 'Koelcel eindproduct',         'Carrier 30RBS',         'Koeling',    'Hal C',        'Operationeel', 'Carrier',      '2026-03-10', '2026-09-10', 'M. Bakker'),
+('KO-06', 'Vrieskist archief',           'Liebherr GTP 2756',     'Koeling',    'Kantoor',      'Operationeel', 'Liebherr',     '2025-12-15', '2026-06-15', 'M. Bakker'),
+('KO-07', 'Waterkoeler CNC-centrum',     'Frigel Microgel R',     'Koeling',    'Hal B',        'Let op',       'Frigel',       '2026-02-01', '2026-05-01', 'M. Bakker'),
+('HP-10', 'Hydrauliekpomp Lijn 5',       'Bosch Rexroth A10V',    'Hydrauliek', 'Hal A',        'Operationeel', 'Bosch Rexroth','2026-04-12', '2026-10-12', 'P. Jansen'),
+('C-09',  'Persluchtdroger Hal A',       'Kaeser TE 141',         'Compressor', 'Hal A',        'Operationeel', 'Kaeser',       '2026-03-05', '2026-09-05', 'J. de Vries'),
+('C-10',  'Persluchtdroger Hal B',       'Kaeser TE 141',         'Compressor', 'Hal B',        'Operationeel', 'Kaeser',       '2026-03-05', '2026-09-05', 'M. Bakker'),
+('C-11',  'Persluchtdroger Hal C',       'Atlas Copco FD 370',    'Compressor', 'Hal C',        'Buiten gebruik','Atlas Copco', '2024-08-01', null,          'J. de Vries'),
+('TB-09', 'Kraan magazijn 5T',           'Stahl CraneSystems',    'Transport',  'Buitenterrein','Operationeel', 'Stahl',        '2026-01-08', '2027-01-08', 'K. van Dam'),
+('TB-10', 'Vorklifter elektrisch',       'Toyota 8FBET15',        'Transport',  'Buitenterrein','Operationeel', 'Toyota',       '2026-04-18', '2026-07-18', 'K. van Dam'),
+('TB-11', 'Vorklifter diesel',           'Toyota 8FDF15',         'Transport',  'Buitenterrein','Afgeschreven',  'Toyota',       '2023-01-01', null,          'K. van Dam'),
+('EL-10', 'Laadpalen elektrisch (4x)',   'Alfen Eve Double',      'Elektrisch', 'Buitenterrein','Operationeel', 'Alfen',        '2026-04-01', '2027-04-01', 'R. Smit'),
+('V-08',  'Spuitcabine afzuiging',       'Coral Sprint',          'Ventilatie', 'Hal B',        'Operationeel', 'Coral',        '2026-03-15', '2026-09-15', 'R. Smit')
+ON CONFLICT (asset_id) DO NOTHING;
+
 -- Onderhoudshistorie per asset (onveranderlijk logboek)
 CREATE TABLE IF NOT EXISTS maintenance_history (
   id               uuid DEFAULT gen_random_uuid() PRIMARY KEY,

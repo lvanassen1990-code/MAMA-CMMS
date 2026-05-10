@@ -697,16 +697,19 @@
         </tbody>
       </table>
       <div class="table-footer">
-        <span class="footer-count" id="footerCount">148 assets</span>
-        <div class="pagination">
-          <div class="page-btn"><i class="ti ti-chevron-left" style="font-size:12px;"></i></div>
-          <div class="page-btn active">1</div>
-          <div class="page-btn">2</div>
-          <div class="page-btn">3</div>
-          <div class="page-btn">…</div>
-          <div class="page-btn">15</div>
-          <div class="page-btn"><i class="ti ti-chevron-right" style="font-size:12px;"></i></div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="footer-count" id="footerCount">—</span>
+          <div class="divider-v"></div>
+          <span class="filter-label">Rijen per pagina</span>
+          <select class="filter-select" id="pageSizeSelect" onchange="setPageSize(this.value)">
+            <option value="10">10</option>
+            <option value="25" selected>25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="9999">Alle</option>
+          </select>
         </div>
+        <div class="pagination" id="pagination"></div>
       </div>
     </div>
 
@@ -1023,11 +1026,37 @@
     document.querySelector('.topbar-sub').textContent = `${data.length} assets · geladen uit database`;
   }
 
-  function renderTable(data) {
+  let currentPage = 1;
+  let pageSize    = 25;
+  let filteredCache = [];
+
+  function setPageSize(val) {
+    pageSize = parseInt(val);
+    currentPage = 1;
+    applyPage();
+  }
+
+  function goToPage(p) {
+    currentPage = p;
+    applyPage();
+    document.querySelector('.content-scroll').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function applyPage() {
+    const total = filteredCache.length;
+    const pages = Math.max(1, Math.ceil(total / pageSize));
+    if (currentPage > pages) currentPage = pages;
+    const start = (currentPage - 1) * pageSize;
+    const slice = filteredCache.slice(start, start + pageSize);
+
+    renderTablePage(slice);
+    renderPagination(total, pages);
+  }
+
+  function renderTablePage(data) {
     const tbody = document.getElementById('assetsBody');
-    if (data.length === 0) {
+    if (!filteredCache.length) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Geen assets gevonden</td></tr>`;
-      document.getElementById('footerCount').textContent = '0 assets';
       return;
     }
     tbody.innerHTML = data.map(a => {
@@ -1054,7 +1083,36 @@
         <td><button type="button" class="action-btn" onclick="event.stopPropagation();openStatusModal('${a.asset_id}','${a.status}','${a.name.replace(/'/g,"\\'")}')"><i class="ti ti-refresh" style="font-size:12px;"></i> Status</button></td>
       </tr>`;
     }).join('');
-    document.getElementById('footerCount').textContent = `${data.length} assets`;
+  }
+
+  function renderPagination(total, pages) {
+    const start = (currentPage - 1) * pageSize + 1;
+    const end   = Math.min(currentPage * pageSize, total);
+    document.getElementById('footerCount').textContent =
+      total === 0 ? '0 assets' : `${start}–${end} van ${total} assets`;
+
+    if (pages <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+
+    let btns = `<div class="page-btn" onclick="goToPage(${currentPage-1})" ${currentPage===1?'style="opacity:.35;pointer-events:none;"':''}><i class="ti ti-chevron-left" style="font-size:12px;"></i></div>`;
+
+    const range = new Set([1, pages, currentPage-1, currentPage, currentPage+1].filter(p => p >= 1 && p <= pages));
+    const sorted = [...range].sort((a,b) => a-b);
+    let prev = 0;
+    for (const p of sorted) {
+      if (prev && p - prev > 1) btns += `<div class="page-btn" style="pointer-events:none;border:none;">…</div>`;
+      btns += `<div class="page-btn${p===currentPage?' active':''}" onclick="goToPage(${p})">${p}</div>`;
+      prev = p;
+    }
+
+    btns += `<div class="page-btn" onclick="goToPage(${currentPage+1})" ${currentPage===pages?'style="opacity:.35;pointer-events:none;"':''}><i class="ti ti-chevron-right" style="font-size:12px;"></i></div>`;
+    document.getElementById('pagination').innerHTML = btns;
+  }
+
+  // renderTable is nu een alias die filterCache vult en pagineert
+  function renderTable(data) {
+    filteredCache = data;
+    currentPage = 1;
+    applyPage();
   }
 
   let currentView = 'list';
