@@ -402,15 +402,19 @@
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title">Nieuwe werkorder aanmaken</div>
+      <div>
+        <div class="modal-title">Nieuwe werkorder aanmaken</div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Nummer</span>
+          <span id="fWoNumDisplay" style="font-family:monospace;font-size:12px;font-weight:600;color:var(--text-2);background:var(--bg);padding:2px 8px;border-radius:6px;border:0.5px solid var(--border-strong);">…</span>
+          <span style="font-size:10px;color:var(--text-3);">— automatisch gegenereerd</span>
+        </div>
+      </div>
       <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
     </div>
+    <input type="hidden" id="fWoNum" />
     <div class="modal-body">
       <div class="form-row">
-        <div class="form-field">
-          <label class="form-label">WO Nummer</label>
-          <input class="form-input" id="fWoNum" type="text" placeholder="Wordt automatisch gegenereerd" readonly style="color:var(--text-3);" />
-        </div>
         <div class="form-field">
           <label class="form-label">Type</label>
           <select class="form-input" id="fType">
@@ -419,25 +423,25 @@
             <option value="Inspectie">Inspectie</option>
           </select>
         </div>
+        <div class="form-field">
+          <label class="form-label">Prioriteit</label>
+          <select class="form-input" id="fPrioTop">
+            <option value="Laag">Laag</option>
+            <option value="Normaal" selected>Normaal</option>
+            <option value="Hoog">Hoog</option>
+            <option value="Kritiek">Kritiek</option>
+          </select>
+        </div>
       </div>
       <div class="form-field full">
         <label class="form-label">Omschrijving</label>
         <textarea class="form-input" id="fDesc" rows="3" placeholder="Omschrijf de werkzaamheden…" style="resize:vertical;"></textarea>
       </div>
       <div class="form-row">
-        <div class="form-field">
+        <div class="form-field full">
           <label class="form-label">Gekoppeld asset</label>
           <select class="form-input" id="fAsset">
             <option value="">— Geen asset —</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Prioriteit</label>
-          <select class="form-input" id="fPrio">
-            <option value="Laag">Laag</option>
-            <option value="Normaal" selected>Normaal</option>
-            <option value="Hoog">Hoog</option>
-            <option value="Kritiek">Kritiek</option>
           </select>
         </div>
       </div>
@@ -789,7 +793,9 @@
       if (match) nextSeq = parseInt(match[1], 10) + 1;
     }
     const year = new Date().getFullYear();
-    document.getElementById('fWoNum').value = `WO-${year}-${String(nextSeq).padStart(4, '0')}`;
+    const woNum = `WO-${year}-${String(nextSeq).padStart(4, '0')}`;
+    document.getElementById('fWoNum').value = woNum;
+    document.getElementById('fWoNumDisplay').textContent = woNum;
 
     document.getElementById('fDesc').value = '';
     document.getElementById('fNotes').value = '';
@@ -810,7 +816,7 @@
       description: desc,
       asset_id:    document.getElementById('fAsset').value || null,
       wo_type:     document.getElementById('fType').value,
-      priority:    document.getElementById('fPrio').value,
+      priority:    document.getElementById('fPrioTop').value,
       assigned_to: document.getElementById('fAssigned').value,
       due_date:    document.getElementById('fDue').value || null,
       notes:       document.getElementById('fNotes').value.trim() || null,
