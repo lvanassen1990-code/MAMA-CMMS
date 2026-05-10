@@ -121,7 +121,9 @@
     .btn i { font-size: 14px; }
 
     /* ── Content ── */
-    .content { padding: 20px 24px; overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; scrollbar-gutter: stable; }
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-top { display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; padding-bottom: 4px; }
+    .content-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 20px; scrollbar-gutter: stable; display: flex; flex-direction: column; gap: 12px; }
 
     /* KPI row */
     .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
@@ -434,6 +436,7 @@
   </div>
 
   <div class="content">
+  <div class="content-top">
 
     <!-- KPI's -->
     <div class="kpi-row">
@@ -508,6 +511,9 @@
       </div>
     </div>
 
+  </div><!-- /content-top -->
+  <div class="content-scroll">
+
     <!-- Table -->
     <div class="table-wrap">
       <table id="assetsTable">
@@ -549,7 +555,8 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- /content-scroll -->
+  </div><!-- /content -->
 </div>
 
 <!-- Modal: Nieuw asset -->
