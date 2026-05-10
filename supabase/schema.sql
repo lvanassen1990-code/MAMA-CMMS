@@ -17,8 +17,22 @@ CREATE TABLE IF NOT EXISTS assets (
   next_maintenance    date,
   responsible_person  text,
   notes               text,
+  photo_url           text,
   created_at          timestamptz DEFAULT now()
 );
+
+-- Foto-opslag bucket (eenmalig aanmaken)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('asset-photos', 'asset-photos', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Iedereen mag foto's lezen (public bucket)
+CREATE POLICY IF NOT EXISTS "Public read asset photos"
+ON storage.objects FOR SELECT USING (bucket_id = 'asset-photos');
+
+-- Iedereen mag foto's uploaden (pas later beperken met auth)
+CREATE POLICY IF NOT EXISTS "Public upload asset photos"
+ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'asset-photos');
 
 CREATE TABLE IF NOT EXISTS werkorders (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,

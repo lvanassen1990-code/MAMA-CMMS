@@ -188,11 +188,13 @@
     .asset-id { font-family: monospace; font-size: 11px; color: var(--text-3); }
     .asset-cell { display: flex; align-items: center; gap: 9px; }
     .asset-icon {
-      width: 28px; height: 28px; border-radius: 7px;
+      width: 36px; height: 36px; border-radius: 7px;
       background: var(--bg); border: 0.5px solid var(--border);
       display: flex; align-items: center; justify-content: center;
       color: var(--text-2); font-size: 13px; flex-shrink: 0;
+      overflow: hidden;
     }
+    .asset-icon img { width: 100%; height: 100%; object-fit: cover; }
     .asset-name-main { font-size: 12px; font-weight: 500; }
     .asset-name-sub { font-size: 11px; color: var(--text-3); }
 
@@ -293,6 +295,20 @@
       padding: 14px 20px;
       border-top: 0.5px solid var(--border);
       display: flex; justify-content: flex-end; gap: 8px;
+    }
+    .photo-upload-area {
+      border: 1.5px dashed var(--border-strong);
+      border-radius: var(--radius);
+      cursor: pointer; overflow: hidden;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .photo-upload-area:hover { border-color: var(--blue); background: var(--blue-bg); }
+    .photo-placeholder {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; gap: 2px;
+    }
+    .photo-preview-img {
+      width: 100%; max-height: 180px; object-fit: cover; display: block;
     }
   </style>
 </head>
@@ -547,6 +563,17 @@
         </div>
       </div>
       <div class="form-field full">
+        <label class="form-label">Foto van machine</label>
+        <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('fPhoto').click()">
+          <input type="file" id="fPhoto" accept="image/*" style="display:none" onchange="previewPhoto(event)" />
+          <div id="photoPreview" class="photo-placeholder">
+            <i class="ti ti-camera" style="font-size:22px;color:var(--text-3);"></i>
+            <span style="font-size:12px;color:var(--text-3);margin-top:6px;">Klik om foto te uploaden</span>
+            <span style="font-size:10px;color:var(--text-3);">JPG, PNG of WEBP · max 5MB</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-field full">
         <label class="form-label">Notities</label>
         <textarea class="form-input" id="fNotes" rows="3" placeholder="Aanvullende informatie over dit asset…" style="resize:vertical;"></textarea>
       </div>
@@ -611,10 +638,13 @@
       const lastDate = a.last_maintenance
         ? new Date(a.last_maintenance).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' })
         : '—';
+      const thumb = a.photo_url
+        ? `<img src="${a.photo_url}" alt="${a.name}" onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\'></i>'" />`
+        : `<i class="ti ${icon}"></i>`;
       return `<tr>
         <td class="asset-id">${a.asset_id}</td>
         <td><div class="asset-cell">
-          <div class="asset-icon"><i class="ti ${icon}"></i></div>
+          <div class="asset-icon">${thumb}</div>
           <div><div class="asset-name-main">${a.name}</div><div class="asset-name-sub">${a.model || ''}</div></div>
         </div></td>
         <td><span class="cat-badge">${a.category || '—'}</span></td>
@@ -656,13 +686,47 @@
     renderTable(data);
   }
 
+  function previewPhoto(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('photoPreview').innerHTML =
+        `<img class="photo-preview-img" src="${e.target.result}" alt="Preview" />
+         <div style="text-align:center;padding:6px 0 8px;font-size:11px;color:var(--text-3);">${file.name}</div>`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadPhoto(assetId) {
+    const file = document.getElementById('fPhoto').files[0];
+    if (!file) return null;
+    const ext = file.name.split('.').pop();
+    const path = `${assetId}-${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from('asset-photos').upload(path, file, { upsert: true });
+    if (error) { console.error('Foto upload fout:', error.message); return null; }
+    const { data } = sb.storage.from('asset-photos').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async function saveAsset() {
     const btn = document.getElementById('saveBtn');
     btn.disabled = true;
     btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const assetId = document.getElementById('fAssetId').value.trim();
+    const name    = document.getElementById('fName').value.trim();
+    if (!assetId || !name) {
+      alert('Vul minimaal Asset ID en Naam in.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
+      return;
+    }
+    btn.innerHTML = '<i class="ti ti-loader"></i> Foto uploaden…';
+    const photoUrl = await uploadPhoto(assetId);
+    btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
     const payload = {
-      asset_id:             document.getElementById('fAssetId').value.trim(),
-      name:                 document.getElementById('fName').value.trim(),
+      asset_id:             assetId,
+      name,
       category:             document.getElementById('fCategory').value,
       location:             document.getElementById('fLocation').value,
       manufacturer:         document.getElementById('fManufacturer').value.trim(),
@@ -672,13 +736,8 @@
       responsible_person:   document.getElementById('fPerson').value,
       status:               document.getElementById('fStatus').value,
       notes:                document.getElementById('fNotes').value.trim(),
+      photo_url:            photoUrl,
     };
-    if (!payload.asset_id || !payload.name) {
-      alert('Vul minimaal Asset ID en Naam in.');
-      btn.disabled = false;
-      btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
-      return;
-    }
     const { error } = await sb.from('assets').insert(payload);
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
@@ -687,7 +746,14 @@
     loadAssets();
   }
 
-  function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+  function openModal() {
+    document.getElementById('fPhoto').value = '';
+    document.getElementById('photoPreview').innerHTML =
+      `<i class="ti ti-camera" style="font-size:22px;color:var(--text-3);"></i>
+       <span style="font-size:12px;color:var(--text-3);margin-top:6px;">Klik om foto te uploaden</span>
+       <span style="font-size:10px;color:var(--text-3);">JPG, PNG of WEBP · max 5MB</span>`;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
