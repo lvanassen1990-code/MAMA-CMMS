@@ -335,16 +335,16 @@
       display: flex; flex-direction: column;
       transform: translateX(100%);
       transition: transform 0.26s cubic-bezier(0.4,0,0.2,1);
-      z-index: 201;
-      overflow: hidden;
+      z-index: 201; overflow: hidden;
     }
     .drawer-overlay.open .drawer { transform: translateX(0); }
 
+    /* Header */
     .drawer-header {
-      padding: 16px 20px;
+      padding: 14px 20px;
       border-bottom: 0.5px solid var(--border);
       display: flex; align-items: center; gap: 12px;
-      flex-shrink: 0;
+      flex-shrink: 0; background: var(--surface);
     }
     .drawer-close {
       width: 28px; height: 28px; border-radius: 50%;
@@ -353,49 +353,117 @@
       color: var(--text-2); font-size: 14px; flex-shrink: 0;
     }
     .drawer-close:hover { background: var(--border-strong); }
-    .drawer-title { font-size: 14px; font-weight: 600; flex: 1; }
-    .drawer-body { flex: 1; overflow-y: auto; padding: 0; }
+    .drawer-title { font-size: 15px; font-weight: 600; flex: 1; }
 
-    .drawer-photo {
-      width: 100%; height: 240px;
+    /* Top hero: foto + info naast elkaar */
+    .drawer-hero {
+      display: flex; flex-shrink: 0;
+      border-bottom: 0.5px solid var(--border);
+      height: 260px;
+    }
+    .drawer-hero-photo {
+      width: 340px; flex-shrink: 0;
       background: var(--bg);
       display: flex; align-items: center; justify-content: center;
-      overflow: hidden; position: relative; flex-shrink: 0;
+      overflow: hidden; position: relative;
+      border-right: 0.5px solid var(--border);
     }
-    .drawer-photo img { width: 100%; height: 100%; object-fit: cover; }
-    .drawer-photo i { font-size: 48px; color: var(--text-3); }
-    .drawer-photo-badge {
-      position: absolute; bottom: 12px; left: 14px;
-    }
+    .drawer-hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .drawer-hero-photo i { font-size: 56px; color: var(--text-3); }
+    .drawer-hero-photo-badge { position: absolute; bottom: 12px; left: 14px; }
 
-    .drawer-section { padding: 16px 20px; border-bottom: 0.5px solid var(--border); }
-    .drawer-section:last-child { border-bottom: none; }
-    .drawer-section-title {
-      font-size: 10px; font-weight: 500; color: var(--text-3);
-      text-transform: uppercase; letter-spacing: 0.7px;
-      margin-bottom: 12px;
+    .drawer-hero-info {
+      flex: 1; padding: 20px 24px;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
     }
-    .drawer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 20px; }
+    .drawer-info-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 20px;
+    }
     .drawer-field { display: flex; flex-direction: column; gap: 3px; }
     .drawer-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
-    .drawer-value { font-size: 13px; font-weight: 500; }
+    .drawer-value { font-size: 13px; font-weight: 500; color: var(--text); }
     .drawer-value.mono { font-family: monospace; font-size: 12px; }
     .drawer-value.muted { color: var(--text-2); font-weight: 400; }
 
+    /* Tabs */
+    .drawer-tabs {
+      display: flex; flex-shrink: 0;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--surface); padding: 0 20px; gap: 0;
+    }
+    .drawer-tab {
+      padding: 10px 16px; font-size: 12px; font-weight: 500;
+      color: var(--text-3); border: none; background: transparent;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -0.5px; font-family: inherit;
+      transition: color 0.12s, border-color 0.12s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .drawer-tab i { font-size: 14px; }
+    .drawer-tab:hover { color: var(--text-2); }
+    .drawer-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    /* Tab content */
+    .drawer-tab-content { flex: 1; overflow-y: auto; }
+    .drawer-tab-pane { display: none; padding: 20px 24px; }
+    .drawer-tab-pane.active { display: block; }
+
+    /* Onderhoudshistorie */
+    .history-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .history-title { font-size: 11px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; }
+    .history-empty {
+      text-align: center; padding: 40px 20px;
+      color: var(--text-3); font-size: 12px;
+    }
+    .history-empty i { font-size: 32px; display: block; margin-bottom: 10px; }
+    .history-item {
+      display: flex; gap: 14px; padding: 12px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-date-col {
+      width: 80px; flex-shrink: 0; text-align: right;
+      font-size: 11px; color: var(--text-3); padding-top: 2px;
+    }
+    .history-dot-col {
+      display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
+    }
+    .history-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); margin-top: 4px; flex-shrink: 0;
+    }
+    .history-line { width: 1px; flex: 1; background: var(--border); margin-top: 4px; }
+    .history-content { flex: 1; }
+    .history-desc { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+    .history-meta { font-size: 11px; color: var(--text-3); display: flex; gap: 12px; flex-wrap: wrap; }
+    .history-parts {
+      margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px;
+    }
+    .part-chip {
+      font-size: 10px; padding: 2px 8px; border-radius: 10px;
+      background: var(--bg); border: 0.5px solid var(--border-strong);
+      color: var(--text-2);
+    }
+
+    /* Plan rows */
     .drawer-plan-row {
       display: flex; align-items: center; gap: 10px;
-      padding: 9px 12px; border-radius: var(--radius-sm);
+      padding: 10px 14px; border-radius: var(--radius-sm);
       background: var(--bg); margin-bottom: 6px;
+      border: 0.5px solid var(--border);
     }
     .drawer-plan-row:last-child { margin-bottom: 0; }
-    .drawer-plan-icon { font-size: 16px; color: var(--text-2); }
     .drawer-plan-name { font-size: 12px; font-weight: 500; flex: 1; }
     .drawer-plan-due { font-size: 11px; }
+    .drawer-plan-interval { font-size: 11px; color: var(--text-3); }
 
     .drawer-footer {
-      padding: 14px 20px;
+      padding: 12px 20px;
       border-top: 0.5px solid var(--border);
-      display: flex; gap: 8px; flex-shrink: 0;
+      display: flex; gap: 8px; flex-shrink: 0; background: var(--surface);
     }
 
     tbody tr.clickable-row { cursor: default; }
@@ -750,15 +818,47 @@
 <!-- Detail drawer -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeDrawer()">
   <div class="drawer">
+
+    <!-- Header -->
     <div class="drawer-header">
       <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
       <div class="drawer-title" id="drawerTitle">Asset details</div>
-      <button type="button" class="btn" id="drawerStatusBtn" onclick="openStatusFromDrawer()"><i class="ti ti-refresh"></i> Status</button>
+      <button type="button" class="btn" onclick="openStatusFromDrawer()"><i class="ti ti-refresh"></i> Status wijzigen</button>
     </div>
-    <div class="drawer-body" id="drawerBody">
+
+    <!-- Hero: foto links + info rechts -->
+    <div class="drawer-hero">
+      <div class="drawer-hero-photo" id="drawerPhoto">
+        <i class="ti ti-building-factory-2"></i>
+      </div>
+      <div class="drawer-hero-info" id="drawerInfo">
+        <!-- ingevuld via JS -->
+      </div>
     </div>
+
+    <!-- Tabs -->
+    <div class="drawer-tabs">
+      <button type="button" class="drawer-tab active" onclick="switchDrawerTab('history',this)">
+        <i class="ti ti-tools"></i> Onderhoudshistorie
+      </button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('plans',this)">
+        <i class="ti ti-clipboard-text"></i> Onderhoudsplannen
+      </button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)">
+        <i class="ti ti-note"></i> Notities
+      </button>
+    </div>
+
+    <!-- Tab content -->
+    <div class="drawer-tab-content">
+      <div class="drawer-tab-pane active" id="tabHistory"></div>
+      <div class="drawer-tab-pane" id="tabPlans"></div>
+      <div class="drawer-tab-pane" id="tabNotes"></div>
+    </div>
+
     <div class="drawer-footer">
-      <button type="button" class="btn" onclick="closeDrawer()">Sluiten</button>
+      <button type="button" class="btn" onclick="closeDrawer()"><i class="ti ti-x"></i> Sluiten</button>
+      <button type="button" class="btn primary" onclick="openAddHistoryModal()"><i class="ti ti-plus"></i> Onderhoud registreren</button>
     </div>
   </div>
 </div>
@@ -800,6 +900,61 @@
     <div class="modal-footer">
       <button type="button" class="btn" onclick="closeStatusModal()">Annuleren</button>
       <button type="button" class="btn primary" id="saveStatusBtn" onclick="saveStatus()"><i class="ti ti-check"></i> Status opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Onderhoud registreren -->
+<div class="modal-overlay" id="historyModalOverlay" onclick="if(event.target===this)closeAddHistoryModal()">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">Onderhoud registreren</div>
+      <button class="modal-close" onclick="closeAddHistoryModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Datum</label>
+          <input class="form-input" id="hDate" type="date" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Technicus</label>
+          <select class="form-input" id="hTechnician">
+            <option>J. de Vries</option>
+            <option>M. Bakker</option>
+            <option>P. Jansen</option>
+            <option>R. Smit</option>
+            <option>K. van Dam</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Omschrijving werkzaamheden</label>
+        <textarea class="form-input" id="hDesc" rows="3" placeholder="Beschrijf de uitgevoerde werkzaamheden…" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Gebruikte onderdelen <span style="color:var(--text-3);font-weight:400;">(komma-gescheiden)</span></label>
+        <input class="form-input" id="hParts" type="text" placeholder="bijv. Oliefilter, V-snaar, Pakking" />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Kosten (€)</label>
+          <input class="form-input" id="hCost" type="number" min="0" step="0.01" placeholder="0.00" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Type onderhoud</label>
+          <select class="form-input" id="hType">
+            <option value="Preventief">Preventief</option>
+            <option value="Correctief">Correctief</option>
+            <option value="Inspectie">Inspectie</option>
+            <option value="Vervanging">Vervanging onderdeel</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeAddHistoryModal()">Annuleren</button>
+      <button type="button" class="btn primary" id="saveHistoryBtn" onclick="saveHistoryEntry()"><i class="ti ti-check"></i> Opslaan</button>
     </div>
   </div>
 </div>
@@ -1066,40 +1221,35 @@
   /* ── Detail drawer ── */
   let drawerAsset = null;
 
+  function switchDrawerTab(tab, btn) {
+    document.querySelectorAll('.drawer-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.drawer-tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  }
+
   async function openDrawer(assetId) {
     const asset = allAssets.find(a => a.asset_id === assetId);
     if (!asset) return;
     drawerAsset = asset;
 
     document.getElementById('drawerTitle').textContent = asset.name;
-    document.getElementById('drawerBody').innerHTML =
-      `<div style="text-align:center;padding:40px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
-    document.getElementById('drawerOverlay').classList.add('open');
 
-    // Fetch linked maintenance plans (two-step: junction → plans)
-    let plans = [];
-    try {
-      const { data: links, error: linkErr } = await sb
-        .from('asset_maintenance_plans')
-        .select('plan_id, next_due')
-        .eq('asset_id', assetId);
-      if (!linkErr && links && links.length > 0) {
-        const planIds = links.map(l => l.plan_id);
-        const { data: planRows } = await sb
-          .from('maintenance_plans')
-          .select('id, name, interval_type, interval_days')
-          .in('id', planIds);
-        plans = (planRows || []).map(p => {
-          const link = links.find(l => l.plan_id === p.id);
-          return { ...p, next_due: link ? link.next_due : null };
-        });
-      }
-    } catch(e) { /* tabel bestaat nog niet */ }
+    // Reset tabs to first
+    document.querySelectorAll('.drawer-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+    document.querySelectorAll('.drawer-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
 
+    // Toon placeholder content direct
     const icon = catIcons[asset.category] || 'ti-tool';
-    const photoHtml = asset.photo_url
-      ? `<img src="${asset.photo_url}" alt="${asset.name}" onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\' style=\'font-size:48px;color:var(--text-3);\'></i>'" />`
-      : `<i class="ti ${icon}"></i>`;
+    const photoEl = document.getElementById('drawerPhoto');
+    if (asset.photo_url) {
+      photoEl.innerHTML = `<img src="${asset.photo_url}" alt="${asset.name}"
+        onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\' style=\'font-size:56px;color:var(--text-3);\'></i>'" />
+        <div class="drawer-hero-photo-badge">${statusBadge(asset.status)}</div>`;
+    } else {
+      photoEl.innerHTML = `<i class="ti ${icon}"></i>
+        <div class="drawer-hero-photo-badge">${statusBadge(asset.status)}</div>`;
+    }
 
     const installDate = asset.installation_date
       ? new Date(asset.installation_date).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' })
@@ -1109,85 +1259,148 @@
       : '—';
     const [dc, dt] = dueCls(asset.next_maintenance);
 
-    const plansHtml = plans.length === 0
-      ? `<p style="font-size:12px;color:var(--text-3);">Geen onderhoudsplannen gekoppeld.</p>`
-      : plans.map(p => {
+    document.getElementById('drawerInfo').innerHTML = `
+      <div class="drawer-info-grid">
+        <div class="drawer-field">
+          <div class="drawer-label">Asset ID</div>
+          <div class="drawer-value mono">${asset.asset_id}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Categorie</div>
+          <div class="drawer-value">${asset.category || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Status</div>
+          <div class="drawer-value">${statusBadge(asset.status)}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Fabrikant</div>
+          <div class="drawer-value">${asset.manufacturer || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Model</div>
+          <div class="drawer-value">${asset.model || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Serienummer</div>
+          <div class="drawer-value mono">${asset.serial_number || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Locatie</div>
+          <div class="drawer-value">${asset.location || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Verantwoordelijke</div>
+          <div class="drawer-value">${asset.responsible_person || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Installatiedatum</div>
+          <div class="drawer-value">${installDate}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Laatste onderhoud</div>
+          <div class="drawer-value">${lastDate}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Volgend onderhoud</div>
+          <div class="drawer-value ${dc}">${dt}</div>
+        </div>
+      </div>`;
+
+    document.getElementById('tabHistory').innerHTML =
+      `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+    document.getElementById('tabPlans').innerHTML =
+      `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+    document.getElementById('tabNotes').innerHTML =
+      asset.notes
+        ? `<p style="font-size:13px;color:var(--text-2);line-height:1.7;">${asset.notes}</p>`
+        : `<div class="history-empty"><i class="ti ti-note-off"></i>Geen notities beschikbaar.</div>`;
+
+    document.getElementById('drawerOverlay').classList.add('open');
+
+    // Async: laad history en plannen
+    loadDrawerHistory(assetId);
+    loadDrawerPlans(assetId);
+  }
+
+  async function loadDrawerHistory(assetId) {
+    let html = '';
+    try {
+      const { data, error } = await sb
+        .from('maintenance_history')
+        .select('*')
+        .eq('asset_id', assetId)
+        .order('date', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        html = `<div class="history-header">
+          <span class="history-title">Onderhoudshistorie</span>
+        </div>
+        <div class="history-empty">
+          <i class="ti ti-tools"></i>
+          Nog geen onderhoud geregistreerd voor dit asset.
+        </div>`;
+      } else {
+        html = `<div class="history-header">
+          <span class="history-title">${data.length} registratie${data.length !== 1 ? 's' : ''}</span>
+        </div>`;
+        html += data.map(h => {
+          const d = new Date(h.date).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
+          const parts = h.parts_used ? h.parts_used.split(',').map(p => `<span class="part-chip">${p.trim()}</span>`).join('') : '';
+          return `<div class="history-item">
+            <div class="history-date-col">${d}</div>
+            <div class="history-dot-col"><div class="history-dot"></div><div class="history-line"></div></div>
+            <div class="history-content">
+              <div class="history-desc">${h.description || '—'}</div>
+              <div class="history-meta">
+                <span><i class="ti ti-user" style="font-size:11px;"></i> ${h.technician || '—'}</span>
+                <span><i class="ti ti-tag" style="font-size:11px;"></i> ${h.maintenance_type || '—'}</span>
+                ${h.cost ? `<span><i class="ti ti-currency-euro" style="font-size:11px;"></i> ${parseFloat(h.cost).toFixed(2)}</span>` : ''}
+              </div>
+              ${parts ? `<div class="history-parts">${parts}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+      }
+    } catch(e) {
+      html = `<div class="history-empty"><i class="ti ti-tools"></i>Nog geen onderhoud geregistreerd voor dit asset.</div>`;
+    }
+    document.getElementById('tabHistory').innerHTML = html;
+  }
+
+  async function loadDrawerPlans(assetId) {
+    let html = '';
+    try {
+      const { data: links } = await sb
+        .from('asset_maintenance_plans')
+        .select('plan_id, next_due')
+        .eq('asset_id', assetId);
+
+      if (!links || links.length === 0) {
+        html = `<div class="history-empty"><i class="ti ti-clipboard-off"></i>Geen onderhoudsplannen gekoppeld aan dit asset.</div>`;
+      } else {
+        const planIds = links.map(l => l.plan_id);
+        const { data: planRows } = await sb
+          .from('maintenance_plans')
+          .select('id, name, interval_type, interval_days')
+          .in('id', planIds);
+        const plans = (planRows || []).map(p => ({ ...p, next_due: links.find(l => l.plan_id === p.id)?.next_due }));
+        html = plans.map(p => {
           const [pdc, pdt] = dueCls(p.next_due);
           return `<div class="drawer-plan-row">
-            <i class="ti ti-clipboard-text drawer-plan-icon"></i>
-            <div class="drawer-plan-name">${p.name}</div>
+            <i class="ti ti-clipboard-text" style="font-size:16px;color:var(--text-2);"></i>
+            <div style="flex:1;">
+              <div class="drawer-plan-name">${p.name}</div>
+              <div class="drawer-plan-interval">Elke ${p.interval_days} dagen · ${p.interval_type || ''}</div>
+            </div>
             <span class="${pdc} drawer-plan-due">${pdt}</span>
           </div>`;
         }).join('');
-
-    document.getElementById('drawerBody').innerHTML = `
-      <div class="drawer-photo">
-        ${photoHtml}
-        <div class="drawer-photo-badge">${statusBadge(asset.status)}</div>
-      </div>
-
-      <div class="drawer-section">
-        <div class="drawer-section-title">Algemene informatie</div>
-        <div class="drawer-grid">
-          <div class="drawer-field">
-            <div class="drawer-label">Asset ID</div>
-            <div class="drawer-value mono">${asset.asset_id}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Categorie</div>
-            <div class="drawer-value">${asset.category || '—'}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Fabrikant</div>
-            <div class="drawer-value">${asset.manufacturer || '—'}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Model</div>
-            <div class="drawer-value">${asset.model || '—'}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Serienummer</div>
-            <div class="drawer-value mono">${asset.serial_number || '—'}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Installatiedatum</div>
-            <div class="drawer-value">${installDate}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Locatie</div>
-            <div class="drawer-value">${asset.location || '—'}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Verantwoordelijke</div>
-            <div class="drawer-value">${asset.responsible_person || '—'}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="drawer-section">
-        <div class="drawer-section-title">Onderhoud</div>
-        <div class="drawer-grid">
-          <div class="drawer-field">
-            <div class="drawer-label">Laatste onderhoud</div>
-            <div class="drawer-value">${lastDate}</div>
-          </div>
-          <div class="drawer-field">
-            <div class="drawer-label">Volgend onderhoud</div>
-            <div class="drawer-value ${dc}">${dt}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="drawer-section">
-        <div class="drawer-section-title">Gekoppelde onderhoudsplannen</div>
-        ${plansHtml}
-      </div>
-
-      ${asset.notes ? `<div class="drawer-section">
-        <div class="drawer-section-title">Notities</div>
-        <p style="font-size:12px;color:var(--text-2);line-height:1.6;">${asset.notes}</p>
-      </div>` : ''}
-    `;
+      }
+    } catch(e) {
+      html = `<div class="history-empty"><i class="ti ti-clipboard-off"></i>Geen onderhoudsplannen beschikbaar.</div>`;
+    }
+    document.getElementById('tabPlans').innerHTML = html;
   }
 
   function closeDrawer() {
@@ -1198,6 +1411,42 @@
   function openStatusFromDrawer() {
     if (!drawerAsset) return;
     openStatusModal(drawerAsset.asset_id, drawerAsset.status, drawerAsset.name);
+  }
+
+  /* ── Onderhoudshistorie modal ── */
+  function openAddHistoryModal() {
+    if (!drawerAsset) return;
+    document.getElementById('hDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('hDesc').value = '';
+    document.getElementById('hParts').value = '';
+    document.getElementById('hCost').value = '';
+    document.getElementById('historyModalOverlay').classList.add('open');
+  }
+
+  function closeAddHistoryModal() {
+    document.getElementById('historyModalOverlay').classList.remove('open');
+  }
+
+  async function saveHistoryEntry() {
+    const btn = document.getElementById('saveHistoryBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const payload = {
+      asset_id:         drawerAsset.asset_id,
+      date:             document.getElementById('hDate').value,
+      technician:       document.getElementById('hTechnician').value,
+      description:      document.getElementById('hDesc').value.trim(),
+      parts_used:       document.getElementById('hParts').value.trim() || null,
+      cost:             parseFloat(document.getElementById('hCost').value) || null,
+      maintenance_type: document.getElementById('hType').value,
+    };
+    if (!payload.description) {
+      alert('Vul een omschrijving in.'); btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Opslaan'; return;
+    }
+    const { error } = await sb.from('maintenance_history').insert(payload);
+    btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Opslaan';
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeAddHistoryModal();
+    loadDrawerHistory(drawerAsset.asset_id);
   }
 
   function openModal() {

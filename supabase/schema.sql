@@ -82,3 +82,16 @@ INSERT INTO assets (asset_id, name, model, category, location, status, manufactu
 ('HP-09', 'Hydrauliekunit CNC',       'Parker VOAC',           'Hydrauliek', 'Hal B',        'Storing',      'Parker',            '2026-01-10', '2026-04-10', 'P. Jansen'),
 ('EL-02', 'UPS Systeem kantoor',      'APC Smart-UPS',         'Elektrisch', 'Kantoor',      'Operationeel', 'APC',               '2026-04-01', '2026-10-01', 'R. Smit')
 ON CONFLICT (asset_id) DO NOTHING;
+
+-- Onderhoudshistorie per asset (onveranderlijk logboek)
+CREATE TABLE IF NOT EXISTS maintenance_history (
+  id               uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  asset_id         text NOT NULL REFERENCES assets(asset_id),
+  date             date NOT NULL,
+  maintenance_type text DEFAULT 'Preventief',
+  description      text NOT NULL,
+  technician       text,
+  parts_used       text,
+  cost             numeric(10,2),
+  created_at       timestamptz DEFAULT now()
+);
