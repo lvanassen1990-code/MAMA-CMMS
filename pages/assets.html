@@ -206,7 +206,10 @@
     .badge-ok { background: var(--green-bg); color: var(--green-text); }
     .badge-warn { background: var(--amber-bg); color: var(--amber-text); }
     .badge-crit { background: var(--red-bg); color: var(--red-text); }
+    .badge-progress { background: var(--blue-bg); color: var(--blue-text); }
     .badge-off { background: var(--bg); color: var(--text-3); border: 0.5px solid var(--border-strong); }
+    .badge-inactive { background: var(--bg); color: var(--text-3); border: 0.5px solid var(--border-strong); text-decoration: line-through; }
+    .dot-blue { background: var(--blue); }
 
     .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
     .dot-green { background: var(--green); }
@@ -407,7 +410,11 @@
           <option value="Operationeel">Operationeel</option>
           <option value="Let op">Let op</option>
           <option value="Storing">Storing</option>
+          <option value="In onderhoud">In onderhoud</option>
           <option value="Offline">Offline</option>
+          <option value="Buiten gebruik">Buiten gebruik</option>
+          <option value="Afgeschreven">Afgeschreven</option>
+          <option value="Verkocht">Verkocht</option>
         </select>
       </div>
       <div class="filter-group">
@@ -550,7 +557,12 @@
             <option>Operationeel</option>
             <option>Let op</option>
             <option>Storing</option>
+            <option>In onderhoud</option>
             <option>Offline</option>
+            <option disabled>──────────</option>
+            <option>Buiten gebruik</option>
+            <option>Afgeschreven</option>
+            <option>Verkocht</option>
           </select>
         </div>
       </div>
@@ -593,8 +605,14 @@
 
   function statusBadge(s) {
     const map = {
-      'Operationeel': ['badge-ok','dot-green'], 'Let op': ['badge-warn','dot-amber'],
-      'Storing': ['badge-crit','dot-red'], 'Offline': ['badge-off','dot-grey'],
+      'Operationeel':  ['badge-ok',   'dot-green'],
+      'Let op':        ['badge-warn',  'dot-amber'],
+      'Storing':       ['badge-crit',  'dot-red'],
+      'In onderhoud':  ['badge-progress','dot-blue'],
+      'Offline':       ['badge-off',   'dot-grey'],
+      'Buiten gebruik':['badge-inactive','dot-grey'],
+      'Afgeschreven':  ['badge-inactive','dot-grey'],
+      'Verkocht':      ['badge-inactive','dot-grey'],
     };
     const [bc, dc] = map[s] || ['badge-off','dot-grey'];
     return `<span class="badge ${bc}"><span class="dot ${dc}"></span>${s}</span>`;

@@ -26,6 +26,22 @@ MAMA helpt bedrijven hun machines, apparatuur en technische installaties profess
 
 ---
 
+## Kernprincipes & dataregels
+
+> **⚠️ Data mag nooit worden gewist.**
+
+MAMA hanteert een strikte no-delete policy op alle operationele data:
+
+- **Assets worden nooit verwijderd.** Een machine die buiten gebruik gaat, krijgt een nieuwe status (bijv. *Buiten gebruik*, *Afgeschreven*, *Verkocht*). De volledige historie blijft altijd raadpleegbaar.
+- **Werkorders worden nooit verwijderd.** Afgeronde en geannuleerde orders blijven zichtbaar in de historie.
+- **Storingen worden nooit verwijderd.** Opgeloste storingen krijgen status *Opgelost* met datum en verantwoordelijke.
+- **Onderhoudslogboeken zijn onveranderlijk.** Uitgevoerd onderhoud wordt geregistreerd en kan niet worden aangepast — alleen aangevuld.
+- **Alle wijzigingen worden gelogd** met tijdstempel en gebruiker (audit trail).
+
+Deze regel geldt voor alle lagen van het systeem: frontend, API en database. Soft-delete (een `deleted_at` veld of statuswijziging) is de enige toegestane manier om data "te verwijderen".
+
+---
+
 ## Platform
 
 | Platform | Gebruiker | Beschrijving |
