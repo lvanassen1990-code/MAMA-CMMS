@@ -469,6 +469,19 @@
     tbody tr.clickable-row { cursor: default; }
     tbody tr.clickable-row:hover { cursor: default; }
 
+    /* Edit mode in drawer */
+    .drawer-edit-input {
+      padding: 5px 8px; border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border-strong);
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      color: var(--text); background: var(--surface); outline: none;
+      width: 100%; transition: border-color 0.12s;
+    }
+    .drawer-edit-input:focus { border-color: var(--blue); background: #fff; }
+    .drawer-edit-select { appearance: auto; }
+    .drawer-hero.edit-mode { background: #fafafa; }
+    .drawer-hero.edit-mode .drawer-hero-info { background: #fafafa; }
+
     /* Modal */
     .modal-overlay {
       position: fixed; inset: 0;
@@ -823,7 +836,12 @@
     <div class="drawer-header">
       <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
       <div class="drawer-title" id="drawerTitle">Asset details</div>
-      <button type="button" class="btn" onclick="openStatusFromDrawer()"><i class="ti ti-refresh"></i> Status wijzigen</button>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn" id="drawerStatusBtn" onclick="openStatusFromDrawer()"><i class="ti ti-refresh"></i> Status wijzigen</button>
+        <button type="button" class="btn" id="drawerEditBtn" onclick="enterEditMode()"><i class="ti ti-pencil"></i> Bewerken</button>
+        <button type="button" class="btn primary" id="drawerSaveBtn" style="display:none;" onclick="saveEditedAsset()"><i class="ti ti-check"></i> Opslaan</button>
+        <button type="button" class="btn" id="drawerCancelBtn" style="display:none;" onclick="cancelEdit()"><i class="ti ti-x"></i> Annuleren</button>
+      </div>
     </div>
 
     <!-- Hero: foto links + info rechts -->
@@ -1411,6 +1429,114 @@
   function openStatusFromDrawer() {
     if (!drawerAsset) return;
     openStatusModal(drawerAsset.asset_id, drawerAsset.status, drawerAsset.name);
+  }
+
+  /* ── Inline bewerken ── */
+  function enterEditMode() {
+    if (!drawerAsset) return;
+    const a = drawerAsset;
+    document.getElementById('drawerEditBtn').style.display = 'none';
+    document.getElementById('drawerStatusBtn').style.display = 'none';
+    document.getElementById('drawerSaveBtn').style.display = '';
+    document.getElementById('drawerCancelBtn').style.display = '';
+    document.querySelector('.drawer-hero').classList.add('edit-mode');
+
+    const cats = ['Compressor','Hydrauliek','Ventilatie','Transport','Elektrisch','Koeling'];
+    const locs = ['Hal A','Hal B','Hal C','Buitenterrein','Kantoor'];
+    const persons = ['J. de Vries','M. Bakker','P. Jansen','R. Smit','K. van Dam'];
+
+    function sel(opts, val) {
+      return `<select class="drawer-edit-input drawer-edit-select">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
+    }
+    function inp(val, placeholder='', type='text') {
+      return `<input class="drawer-edit-input" type="${type}" value="${val||''}" placeholder="${placeholder}" />`;
+    }
+
+    document.getElementById('drawerTitle').innerHTML =
+      `<input class="drawer-edit-input" id="editName" type="text" value="${a.name}" style="font-size:15px;font-weight:600;width:300px;" />`;
+
+    document.getElementById('drawerInfo').innerHTML = `
+      <div class="drawer-info-grid" id="editGrid">
+        <div class="drawer-field">
+          <div class="drawer-label">Asset ID</div>
+          <div class="drawer-value mono" style="color:var(--text-3);">${a.asset_id} <span style="font-size:10px;">(vast)</span></div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Categorie</div>
+          ${sel(cats, a.category)}
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Status</div>
+          <div class="drawer-value">${statusBadge(a.status)} <span style="font-size:10px;color:var(--text-3);">(via Status wijzigen)</span></div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Fabrikant</div>
+          ${inp(a.manufacturer, 'bijv. Atlas Copco')}
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Model</div>
+          ${inp(a.model, 'bijv. GA55')}
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Serienummer</div>
+          ${inp(a.serial_number, 'bijv. SN-2024-001')}
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Locatie</div>
+          ${sel(locs, a.location)}
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Verantwoordelijke</div>
+          ${sel(persons, a.responsible_person)}
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Installatiedatum</div>
+          ${inp(a.installation_date, '', 'date')}
+        </div>
+      </div>`;
+  }
+
+  function cancelEdit() {
+    document.getElementById('drawerEditBtn').style.display = '';
+    document.getElementById('drawerStatusBtn').style.display = '';
+    document.getElementById('drawerSaveBtn').style.display = 'none';
+    document.getElementById('drawerCancelBtn').style.display = 'none';
+    document.querySelector('.drawer-hero').classList.remove('edit-mode');
+    // herstel view
+    openDrawer(drawerAsset.asset_id);
+  }
+
+  async function saveEditedAsset() {
+    const btn = document.getElementById('drawerSaveBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+
+    const inputs = document.querySelectorAll('#editGrid .drawer-edit-input');
+    // volgorde: categorie(0), fabrikant(1), model(2), serienummer(3), locatie(4), verantwoordelijke(5), installatiedatum(6)
+    const name = document.getElementById('editName').value.trim();
+    const vals = [...inputs].map(i => i.value);
+    const payload = {
+      name:               name,
+      category:           vals[0],
+      manufacturer:       vals[1],
+      model:              vals[2],
+      serial_number:      vals[3],
+      location:           vals[4],
+      responsible_person: vals[5],
+      installation_date:  vals[6] || null,
+    };
+
+    const { error } = await sb.from('assets').update(payload).eq('asset_id', drawerAsset.asset_id);
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Opslaan';
+
+    if (error) { alert('Fout: ' + error.message); return; }
+
+    // update lokale cache
+    const idx = allAssets.findIndex(a => a.asset_id === drawerAsset.asset_id);
+    if (idx !== -1) allAssets[idx] = { ...allAssets[idx], ...payload };
+    drawerAsset = { ...drawerAsset, ...payload };
+
+    cancelEdit();
+    filterTable();
   }
 
   /* ── Onderhoudshistorie modal ── */
