@@ -356,22 +356,22 @@
     <div class="kpi-row">
       <div class="kpi-card">
         <div class="kpi-label"><i class="ti ti-building-factory-2"></i> Totaal assets</div>
-        <div class="kpi-value">148</div>
-        <div class="kpi-sub">Verspreid over 12 locaties</div>
+        <div class="kpi-value" id="kpiTotal">—</div>
+        <div class="kpi-sub">Laden uit database…</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label" style="color:var(--green-text);"><i class="ti ti-circle-check"></i> Operationeel</div>
-        <div class="kpi-value" style="color:var(--green);">131</div>
-        <div class="kpi-sub">88.5% beschikbaar</div>
+        <div class="kpi-value" style="color:var(--green);" id="kpiOk">—</div>
+        <div class="kpi-sub">Beschikbaar</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label" style="color:var(--amber-text);"><i class="ti ti-alert-circle"></i> Let op</div>
-        <div class="kpi-value" style="color:var(--amber);">12</div>
+        <div class="kpi-value" style="color:var(--amber);" id="kpiWarn">—</div>
         <div class="kpi-sub">Onderhoud binnenkort</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label" style="color:var(--red-text);"><i class="ti ti-alert-triangle"></i> Storing</div>
-        <div class="kpi-value" style="color:var(--red);">5</div>
+        <div class="kpi-value" style="color:var(--red);" id="kpiCrit">—</div>
         <div class="kpi-sub">Directe actie vereist</div>
       </div>
     </div>
@@ -470,17 +470,17 @@
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Asset ID</label>
-          <input class="form-input" type="text" placeholder="bijv. C-15" />
+          <input class="form-input" id="fAssetId" type="text" placeholder="bijv. C-15" />
         </div>
         <div class="form-field">
           <label class="form-label">Naam</label>
-          <input class="form-input" type="text" placeholder="bijv. Compressor Noord" />
+          <input class="form-input" id="fName" type="text" placeholder="bijv. Compressor Noord" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Categorie</label>
-          <select class="form-input">
+          <select class="form-input" id="fCategory">
             <option>Compressor</option>
             <option>Hydrauliek</option>
             <option>Ventilatie</option>
@@ -491,7 +491,7 @@
         </div>
         <div class="form-field">
           <label class="form-label">Locatie</label>
-          <select class="form-input">
+          <select class="form-input" id="fLocation">
             <option>Hal A</option>
             <option>Hal B</option>
             <option>Hal C</option>
@@ -503,21 +503,21 @@
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Fabrikant</label>
-          <input class="form-input" type="text" placeholder="bijv. Atlas Copco" />
+          <input class="form-input" id="fManufacturer" type="text" placeholder="bijv. Atlas Copco" />
         </div>
         <div class="form-field">
           <label class="form-label">Serienummer</label>
-          <input class="form-input" type="text" placeholder="bijv. SN-2024-00441" />
+          <input class="form-input" id="fSerial" type="text" placeholder="bijv. SN-2024-00441" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Installatiedatum</label>
-          <input class="form-input" type="date" />
+          <input class="form-input" id="fInstallDate" type="date" />
         </div>
         <div class="form-field">
           <label class="form-label">Onderhoud interval</label>
-          <select class="form-input">
+          <select class="form-input" id="fInterval">
             <option>Maandelijks</option>
             <option>Kwartaal</option>
             <option>Halfjaarlijks</option>
@@ -528,7 +528,7 @@
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Verantwoordelijke monteur</label>
-          <select class="form-input">
+          <select class="form-input" id="fPerson">
             <option>J. de Vries</option>
             <option>M. Bakker</option>
             <option>P. Jansen</option>
@@ -538,7 +538,7 @@
         </div>
         <div class="form-field">
           <label class="form-label">Status</label>
-          <select class="form-input">
+          <select class="form-input" id="fStatus">
             <option>Operationeel</option>
             <option>Let op</option>
             <option>Storing</option>
@@ -548,82 +548,81 @@
       </div>
       <div class="form-field full">
         <label class="form-label">Notities</label>
-        <textarea class="form-input" rows="3" placeholder="Aanvullende informatie over dit asset…" style="resize:vertical;"></textarea>
+        <textarea class="form-input" id="fNotes" rows="3" placeholder="Aanvullende informatie over dit asset…" style="resize:vertical;"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Annuleren</button>
-      <button class="btn primary"><i class="ti ti-check"></i> Asset opslaan</button>
+      <button class="btn primary" id="saveBtn" onclick="saveAsset()"><i class="ti ti-check"></i> Asset opslaan</button>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const assets = [
-    { id: 'C-01', name: 'Compressor Noord', sub: 'Atlas Copco GA55', cat: 'Compressor', loc: 'Hal A', status: 'Operationeel', lastMaint: '2026-04-10', nextMaint: '2026-07-10', person: 'J. de Vries' },
-    { id: 'C-02', name: 'Compressor Zuid', sub: 'Atlas Copco GA55', cat: 'Compressor', loc: 'Hal A', status: 'Operationeel', lastMaint: '2026-03-22', nextMaint: '2026-06-22', person: 'J. de Vries' },
-    { id: 'C-03', name: 'Compressor Lijn 2', sub: 'Kaeser SK 25', cat: 'Compressor', loc: 'Hal B', status: 'Operationeel', lastMaint: '2026-04-01', nextMaint: '2026-07-01', person: 'M. Bakker' },
-    { id: 'C-04', name: 'Compressor Lijn 2B', sub: 'Kaeser SK 25', cat: 'Compressor', loc: 'Hal B', status: 'Let op', lastMaint: '2026-02-15', nextMaint: '2026-05-15', person: 'M. Bakker' },
-    { id: 'HP-07', name: 'Hydrauliekpomp Lijn 3', sub: 'Bosch Rexroth A10V', cat: 'Hydrauliek', loc: 'Hal C', status: 'Storing', lastMaint: '2026-01-20', nextMaint: '2026-04-20', person: 'P. Jansen' },
-    { id: 'HP-08', name: 'Hydrauliekpomp Reserve', sub: 'Bosch Rexroth A10V', cat: 'Hydrauliek', loc: 'Hal C', status: 'Operationeel', lastMaint: '2026-04-05', nextMaint: '2026-10-05', person: 'P. Jansen' },
-    { id: 'V-01', name: 'Ventilatiesysteem Hal A', sub: 'Systemair MUB', cat: 'Ventilatie', loc: 'Hal A', status: 'Operationeel', lastMaint: '2026-03-10', nextMaint: '2026-09-10', person: 'R. Smit' },
-    { id: 'V-02', name: 'Ventilatiesysteem Hal B', sub: 'Systemair MUB', cat: 'Ventilatie', loc: 'Hal B', status: 'Operationeel', lastMaint: '2026-03-10', nextMaint: '2026-09-10', person: 'R. Smit' },
-    { id: 'TB-01', name: 'Transportband Lijn 1', sub: 'Hytrol E24', cat: 'Transport', loc: 'Hal A', status: 'Operationeel', lastMaint: '2026-04-20', nextMaint: '2026-07-20', person: 'K. van Dam' },
-    { id: 'TB-02', name: 'Transportband Lijn 2', sub: 'Hytrol E24', cat: 'Transport', loc: 'Hal B', status: 'Let op', lastMaint: '2026-02-01', nextMaint: '2026-05-01', person: 'K. van Dam' },
-    { id: 'EL-01', name: 'Schakelkast Hal A', sub: 'Schneider XW+', cat: 'Elektrisch', loc: 'Hal A', status: 'Operationeel', lastMaint: '2026-04-15', nextMaint: '2026-10-15', person: 'R. Smit' },
-    { id: 'KO-01', name: 'Koelunit productielijn', sub: 'Danfoss Optyma', cat: 'Koeling', loc: 'Hal C', status: 'Let op', lastMaint: '2026-03-05', nextMaint: '2026-06-05', person: 'M. Bakker' },
-    { id: 'KO-02', name: 'Koelunit magazijn', sub: 'Danfoss Optyma', cat: 'Koeling', loc: 'Buitenterrein', status: 'Operationeel', lastMaint: '2026-04-18', nextMaint: '2026-10-18', person: 'M. Bakker' },
-    { id: 'HP-09', name: 'Hydrauliekunit CNC', sub: 'Parker VOAC', cat: 'Hydrauliek', loc: 'Hal B', status: 'Storing', person: 'P. Jansen', lastMaint: '2026-01-10', nextMaint: '2026-04-10' },
-    { id: 'EL-02', name: 'UPS Systeem kantoor', sub: 'APC Smart-UPS', cat: 'Elektrisch', loc: 'Kantoor', status: 'Operationeel', lastMaint: '2026-04-01', nextMaint: '2026-10-01', person: 'R. Smit' },
-  ];
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_pNlLj8UxenKQoWns-iTTNQ_aoe08G49';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let allAssets = [];
 
   const catIcons = {
-    'Compressor': 'ti-wind',
-    'Hydrauliek': 'ti-droplet',
-    'Ventilatie': 'ti-air-conditioning',
-    'Transport': 'ti-arrows-right-left',
-    'Elektrisch': 'ti-bolt',
-    'Koeling': 'ti-snowflake',
+    'Compressor': 'ti-wind', 'Hydrauliek': 'ti-droplet',
+    'Ventilatie': 'ti-air-conditioning', 'Transport': 'ti-arrows-right-left',
+    'Elektrisch': 'ti-bolt', 'Koeling': 'ti-snowflake',
   };
 
   function statusBadge(s) {
     const map = {
-      'Operationeel': ['badge-ok', 'dot-green'],
-      'Let op': ['badge-warn', 'dot-amber'],
-      'Storing': ['badge-crit', 'dot-red'],
-      'Offline': ['badge-off', 'dot-grey'],
+      'Operationeel': ['badge-ok','dot-green'], 'Let op': ['badge-warn','dot-amber'],
+      'Storing': ['badge-crit','dot-red'], 'Offline': ['badge-off','dot-grey'],
     };
-    const [bc, dc] = map[s] || ['badge-off', 'dot-grey'];
+    const [bc, dc] = map[s] || ['badge-off','dot-grey'];
     return `<span class="badge ${bc}"><span class="dot ${dc}"></span>${s}</span>`;
   }
 
   function dueCls(dateStr) {
-    const d = new Date(dateStr);
-    const now = new Date();
+    if (!dateStr) return ['due-ok', '—'];
+    const d = new Date(dateStr), now = new Date();
     const days = Math.ceil((d - now) / 86400000);
     if (days < 0) return ['due-late', `${Math.abs(days)}d verlopen`];
     if (days < 30) return ['due-soon', `over ${days}d`];
     return ['due-ok', d.toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' })];
   }
 
+  function updateKPIs(data) {
+    document.getElementById('kpiTotal').textContent = data.length;
+    document.getElementById('kpiOk').textContent = data.filter(a => a.status === 'Operationeel').length;
+    document.getElementById('kpiWarn').textContent = data.filter(a => a.status === 'Let op').length;
+    document.getElementById('kpiCrit').textContent = data.filter(a => a.status === 'Storing').length;
+    document.querySelector('.topbar-sub').textContent = `${data.length} assets · geladen uit database`;
+  }
+
   function renderTable(data) {
     const tbody = document.getElementById('assetsBody');
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Geen assets gevonden</td></tr>`;
+      document.getElementById('footerCount').textContent = '0 assets';
+      return;
+    }
     tbody.innerHTML = data.map(a => {
-      const icon = catIcons[a.cat] || 'ti-tool';
-      const [dc, dt] = dueCls(a.nextMaint);
-      const lastDate = new Date(a.lastMaint).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
+      const icon = catIcons[a.category] || 'ti-tool';
+      const [dc, dt] = dueCls(a.next_maintenance);
+      const lastDate = a.last_maintenance
+        ? new Date(a.last_maintenance).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' })
+        : '—';
       return `<tr>
-        <td class="asset-id">${a.id}</td>
+        <td class="asset-id">${a.asset_id}</td>
         <td><div class="asset-cell">
           <div class="asset-icon"><i class="ti ${icon}"></i></div>
-          <div><div class="asset-name-main">${a.name}</div><div class="asset-name-sub">${a.sub}</div></div>
+          <div><div class="asset-name-main">${a.name}</div><div class="asset-name-sub">${a.model || ''}</div></div>
         </div></td>
-        <td><span class="cat-badge">${a.cat}</span></td>
-        <td style="font-size:12px;color:var(--text-2);">${a.loc}</td>
+        <td><span class="cat-badge">${a.category || '—'}</span></td>
+        <td style="font-size:12px;color:var(--text-2);">${a.location || '—'}</td>
         <td>${statusBadge(a.status)}</td>
         <td style="font-size:11px;color:var(--text-3);">${lastDate}</td>
         <td><span class="${dc}">${dt}</span></td>
-        <td style="font-size:11px;color:var(--text-2);">${a.person}</td>
+        <td style="font-size:11px;color:var(--text-2);">${a.responsible_person || '—'}</td>
         <td><button class="action-btn">Details</button></td>
       </tr>`;
     }).join('');
@@ -635,26 +634,65 @@
     const st = document.getElementById('filterStatus').value;
     const ct = document.getElementById('filterCat').value;
     const lc = document.getElementById('filterLoc').value;
-    const filtered = assets.filter(a =>
-      (!q || a.id.toLowerCase().includes(q) || a.name.toLowerCase().includes(q) || a.loc.toLowerCase().includes(q)) &&
+    const filtered = allAssets.filter(a =>
+      (!q || (a.asset_id||'').toLowerCase().includes(q) || (a.name||'').toLowerCase().includes(q) || (a.location||'').toLowerCase().includes(q)) &&
       (!st || a.status === st) &&
-      (!ct || a.cat === ct) &&
-      (!lc || a.loc === lc)
+      (!ct || a.category === ct) &&
+      (!lc || a.location === lc)
     );
     renderTable(filtered);
   }
 
-  function openModal() {
-    document.getElementById('modalOverlay').classList.add('open');
-  }
-  function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('open');
-  }
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  async function loadAssets() {
+    const tbody = document.getElementById('assetsBody');
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Laden…</td></tr>`;
+    const { data, error } = await sb.from('assets').select('*').order('asset_id');
+    if (error) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden: ${error.message}</td></tr>`;
+      return;
+    }
+    allAssets = data;
+    updateKPIs(data);
+    renderTable(data);
   }
 
-  renderTable(assets);
+  async function saveAsset() {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const payload = {
+      asset_id:             document.getElementById('fAssetId').value.trim(),
+      name:                 document.getElementById('fName').value.trim(),
+      category:             document.getElementById('fCategory').value,
+      location:             document.getElementById('fLocation').value,
+      manufacturer:         document.getElementById('fManufacturer').value.trim(),
+      serial_number:        document.getElementById('fSerial').value.trim(),
+      installation_date:    document.getElementById('fInstallDate').value || null,
+      maintenance_interval: document.getElementById('fInterval').value,
+      responsible_person:   document.getElementById('fPerson').value,
+      status:               document.getElementById('fStatus').value,
+      notes:                document.getElementById('fNotes').value.trim(),
+    };
+    if (!payload.asset_id || !payload.name) {
+      alert('Vul minimaal Asset ID en Naam in.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
+      return;
+    }
+    const { error } = await sb.from('assets').insert(payload);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeModal();
+    loadAssets();
+  }
+
+  function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+  function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+  loadAssets();
 </script>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 </body>
 </html>
