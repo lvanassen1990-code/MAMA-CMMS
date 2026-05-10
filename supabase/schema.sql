@@ -187,13 +187,103 @@ CREATE TABLE IF NOT EXISTS werkorder_parts (
   created_at   timestamptz DEFAULT now()
 );
 
+-- Onderhoudsplannen (template voor terugkerend onderhoud)
+CREATE TABLE IF NOT EXISTS maintenance_plans (
+  id                 uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name               text NOT NULL,
+  description        text,
+  interval_type      text NOT NULL DEFAULT 'Maandelijks',
+  interval_days      integer NOT NULL DEFAULT 30,
+  estimated_duration integer,
+  created_at         timestamptz DEFAULT now()
+);
+
+-- Taken per onderhoudsplan (checklist)
+CREATE TABLE IF NOT EXISTS maintenance_tasks (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  plan_id     uuid NOT NULL REFERENCES maintenance_plans(id) ON DELETE CASCADE,
+  order_nr    integer NOT NULL DEFAULT 1,
+  description text NOT NULL,
+  created_at  timestamptz DEFAULT now()
+);
+
+-- Koppeling plan ↔ asset (M:N met volgende vervaldatum)
+CREATE TABLE IF NOT EXISTS asset_maintenance_plans (
+  id        uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  plan_id   uuid NOT NULL REFERENCES maintenance_plans(id) ON DELETE CASCADE,
+  asset_id  text NOT NULL REFERENCES assets(asset_id) ON DELETE CASCADE,
+  next_due  date,
+  UNIQUE(plan_id, asset_id)
+);
+
 -- RLS uitschakelen (prototype fase — geen auth vereist)
-ALTER TABLE parts              DISABLE ROW LEVEL SECURITY;
-ALTER TABLE werkorder_parts    DISABLE ROW LEVEL SECURITY;
-ALTER TABLE assets             DISABLE ROW LEVEL SECURITY;
-ALTER TABLE werkorders         DISABLE ROW LEVEL SECURITY;
-ALTER TABLE storingen          DISABLE ROW LEVEL SECURITY;
-ALTER TABLE maintenance_history DISABLE ROW LEVEL SECURITY;
+ALTER TABLE parts                   DISABLE ROW LEVEL SECURITY;
+ALTER TABLE werkorder_parts         DISABLE ROW LEVEL SECURITY;
+ALTER TABLE assets                  DISABLE ROW LEVEL SECURITY;
+ALTER TABLE werkorders              DISABLE ROW LEVEL SECURITY;
+ALTER TABLE storingen               DISABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_history     DISABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_plans       DISABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_tasks       DISABLE ROW LEVEL SECURITY;
+ALTER TABLE asset_maintenance_plans DISABLE ROW LEVEL SECURITY;
+
+-- Voorbeelddata onderhoudsplannen
+INSERT INTO maintenance_plans (id, name, description, interval_type, interval_days, estimated_duration) VALUES
+('a1b2c3d4-0001-0001-0001-000000000001', 'Kwartaal groot onderhoud compressoren', 'Volledige inspectie en service van alle compressoren inclusief filter- en oliewissel', 'Kwartaal', 90, 240),
+('a1b2c3d4-0002-0002-0002-000000000002', 'Maandelijkse veiligheidsronde', 'Visuele inspectie van alle machines, noodstops, brandblussers en vluchtwegen', 'Maandelijks', 30, 90),
+('a1b2c3d4-0003-0003-0003-000000000003', 'Jaarlijkse hydrauliekservice', 'Complete hydrauliekservice: oliewissel, filters, slangen, koppelingen en druktest', 'Jaarlijks', 365, 480),
+('a1b2c3d4-0004-0004-0004-000000000004', 'Wekelijkse transportband check', 'Visuele controle spanning, slijtage en uitlijning transportbanden', 'Wekelijks', 7, 60),
+('a1b2c3d4-0005-0005-0005-000000000005', 'Halfjaarlijkse elektroservice', 'Inspectie schakelkasten, verbindingen, aardlekschakelaars en thermische relais', 'Halfjaarlijks', 182, 180)
+ON CONFLICT (id) DO NOTHING;
+
+-- Taken per plan
+INSERT INTO maintenance_tasks (plan_id, order_nr, description) VALUES
+('a1b2c3d4-0001-0001-0001-000000000001', 1, 'Oliefilter vervangen'),
+('a1b2c3d4-0001-0001-0001-000000000001', 2, 'Luchtfilter reinigen / vervangen'),
+('a1b2c3d4-0001-0001-0001-000000000001', 3, 'Separatorfilter controleren en vervangen indien nodig'),
+('a1b2c3d4-0001-0001-0001-000000000001', 4, 'Olieniveau controleren en aanvullen'),
+('a1b2c3d4-0001-0001-0001-000000000001', 5, 'Persluchtdroger reinigen en controleren'),
+('a1b2c3d4-0001-0001-0001-000000000001', 6, 'Veiligheidsventiel testen'),
+('a1b2c3d4-0002-0002-0002-000000000002', 1, 'Visuele inspectie alle machines (lekkages, beschadigingen)'),
+('a1b2c3d4-0002-0002-0002-000000000002', 2, 'Noodstops testen op alle productielijnen'),
+('a1b2c3d4-0002-0002-0002-000000000002', 3, 'Brandblussers controleren (druk, label, toegankelijkheid)'),
+('a1b2c3d4-0002-0002-0002-000000000002', 4, 'Vluchtwegen vrijhouden en verlichting controleren'),
+('a1b2c3d4-0002-0002-0002-000000000002', 5, 'Onregelmatigheden registreren in werkorderssysteem'),
+('a1b2c3d4-0003-0003-0003-000000000003', 1, 'Hydrauliekolie aftappen en nieuw vullen (HLP 46)'),
+('a1b2c3d4-0003-0003-0003-000000000003', 2, 'Alle hydrauliekfilters vervangen'),
+('a1b2c3d4-0003-0003-0003-000000000003', 3, 'Hydrauliekslangen visueel inspecteren op slijtage'),
+('a1b2c3d4-0003-0003-0003-000000000003', 4, 'Snelkoppelingen controleren op lekkage'),
+('a1b2c3d4-0003-0003-0003-000000000003', 5, 'Drukregelaars instellen en testen'),
+('a1b2c3d4-0003-0003-0003-000000000003', 6, 'Systeemdruktest uitvoeren bij werkdruk'),
+('a1b2c3d4-0004-0004-0004-000000000004', 1, 'Spanning transportband controleren en afstellen'),
+('a1b2c3d4-0004-0004-0004-000000000004', 2, 'Riem visueel inspecteren op scheuren en slijtage'),
+('a1b2c3d4-0004-0004-0004-000000000004', 3, 'Uitlijning riem controleren'),
+('a1b2c3d4-0004-0004-0004-000000000004', 4, 'Looprol en keerlager smeren'),
+('a1b2c3d4-0005-0005-0005-000000000005', 1, 'Schakelkasten openen en reinigen'),
+('a1b2c3d4-0005-0005-0005-000000000005', 2, 'Alle kabelverbindingen controleren op aansluitdruk'),
+('a1b2c3d4-0005-0005-0005-000000000005', 3, 'Aardlekschakelaars testen'),
+('a1b2c3d4-0005-0005-0005-000000000005', 4, 'Thermische relais instelling controleren'),
+('a1b2c3d4-0005-0005-0005-000000000005', 5, 'Temperatuur schakelkasten meten en documenteren')
+ON CONFLICT DO NOTHING;
+
+-- Plan-asset koppelingen (voorbeelden)
+INSERT INTO asset_maintenance_plans (plan_id, asset_id, next_due) VALUES
+('a1b2c3d4-0001-0001-0001-000000000001', 'C-01', '2026-07-10'),
+('a1b2c3d4-0001-0001-0001-000000000001', 'C-02', '2026-06-22'),
+('a1b2c3d4-0001-0001-0001-000000000001', 'C-03', '2026-07-01'),
+('a1b2c3d4-0002-0002-0002-000000000002', 'C-01', '2026-06-01'),
+('a1b2c3d4-0002-0002-0002-000000000002', 'HP-07', '2026-06-01'),
+('a1b2c3d4-0002-0002-0002-000000000002', 'TB-01', '2026-06-01'),
+('a1b2c3d4-0003-0003-0003-000000000003', 'HP-07', '2027-01-20'),
+('a1b2c3d4-0003-0003-0003-000000000003', 'HP-08', '2027-04-05'),
+('a1b2c3d4-0003-0003-0003-000000000003', 'HP-09', '2027-01-10'),
+('a1b2c3d4-0004-0004-0004-000000000004', 'TB-01', '2026-05-18'),
+('a1b2c3d4-0004-0004-0004-000000000004', 'TB-02', '2026-05-18'),
+('a1b2c3d4-0004-0004-0004-000000000004', 'TB-03', '2026-05-18'),
+('a1b2c3d4-0005-0005-0005-000000000005', 'EL-01', '2026-10-15'),
+('a1b2c3d4-0005-0005-0005-000000000005', 'EL-05', '2026-10-15'),
+('a1b2c3d4-0005-0005-0005-000000000005', 'EL-06', '2026-10-15')
+ON CONFLICT (plan_id, asset_id) DO NOTHING;
 
 -- Voorbeelddata onderdelen
 INSERT INTO parts (part_number, name, description, category, unit, stock_qty, min_stock, max_stock, storage_location, supplier, supplier_ref, unit_price) VALUES
