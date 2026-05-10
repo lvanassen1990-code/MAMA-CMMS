@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Werkorders — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border-strong: rgba(0,0,0,0.14);
+      --text: #1d1d1f;
+      --text-2: #6e6e73;
+      --text-3: #aeaeb2;
+      --accent: #1a1a1a;
+      --green: #1D9E75;   --green-bg: #E1F5EE;   --green-text: #0F6E56;
+      --amber: #EF9F27;   --amber-bg: #FAEEDA;   --amber-text: #854F0B;
+      --red: #E24B4A;     --red-bg: #FCEBEB;     --red-text: #A32D2D;
+      --blue: #378ADD;    --blue-bg: #E6F1FB;    --blue-text: #185FA5;
+      --purple: #8B5CF6;  --purple-bg: #EDE9FE;  --purple-text: #5B21B6;
+      --radius: 10px;
+      --radius-sm: 7px;
+    }
+
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; height: 100vh; overflow: hidden; display: flex; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 0.5px solid var(--border); display: flex; flex-direction: column; height: 100vh; }
+    .sidebar-logo { padding: 20px 18px 16px; border-bottom: 0.5px solid var(--border); }
+    .logo-mark { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 600; letter-spacing: -0.5px; }
+    .logo-name { font-size: 15px; font-weight: 600; }
+    .logo-sub { font-size: 10px; color: var(--text-3); letter-spacing: 0.6px; text-transform: uppercase; }
+    .sidebar-section { padding: 14px 18px 4px; font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.8px; }
+    .nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 10px; margin: 1px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--text-2); transition: background 0.12s, color 0.12s; text-decoration: none; }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+    .nav-item i { font-size: 16px; }
+    .nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; }
+    .sidebar-bottom { margin-top: auto; padding: 12px 14px; border-top: 0.5px solid var(--border); }
+    .user-row { display: flex; align-items: center; gap: 10px; }
+    .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--blue-bg); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--blue-text); }
+    .user-name { font-size: 12px; font-weight: 500; }
+    .user-role { font-size: 10px; color: var(--text-3); }
+
+    /* ── Main ── */
+    .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    .topbar { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+    .topbar-title { font-size: 15px; font-weight: 500; }
+    .topbar-sub { font-size: 12px; color: var(--text-2); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: background 0.12s; font-family: inherit; }
+    .btn:hover { background: var(--bg); }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.primary:hover { background: #333; }
+    .btn i { font-size: 14px; }
+
+    /* ── Content ── */
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-top { display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; padding-bottom: 4px; }
+    .content-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-bottom: 20px; scrollbar-gutter: stable; display: flex; flex-direction: column; gap: 12px; }
+
+    /* KPI row */
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .kpi-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .kpi-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .kpi-label i { font-size: 13px; }
+    .kpi-value { font-size: 26px; font-weight: 500; line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    /* Filter bar */
+    .filter-bar { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px; }
+    .search-wrap i { color: var(--text-3); font-size: 15px; }
+    .search-wrap input { border: none; outline: none; background: transparent; font-size: 13px; color: var(--text); width: 100%; font-family: inherit; }
+    .search-wrap input::placeholder { color: var(--text-3); }
+    .divider-v { width: 0.5px; height: 20px; background: var(--border-strong); }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-label { font-size: 11px; color: var(--text-3); }
+    select.filter-select { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg); padding: 4px 8px; font-size: 12px; color: var(--text-2); cursor: pointer; font-family: inherit; outline: none; }
+
+    .status-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid transparent; background: var(--bg); color: var(--text-3); transition: all 0.15s; font-family: inherit; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.4; transition: opacity 0.15s; }
+    .status-chip.active .chip-dot { opacity: 1; }
+    .status-chip.active { color: var(--text); }
+    .status-chip.chip-open.active    { background: var(--blue-bg);   border-color: var(--blue);   color: var(--blue-text); }
+    .status-chip.chip-bezig.active   { background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber-text); }
+    .status-chip.chip-wacht.active   { background: var(--purple-bg); border-color: var(--purple); color: var(--purple-text); }
+    .status-chip.chip-done.active    { background: var(--green-bg);  border-color: var(--green);  color: var(--green-text); }
+    .status-chip.chip-off.active     { background: var(--bg);        border-color: var(--border-strong); color: var(--text-2); }
+    .status-chip:not(.active) { opacity: 0.45; }
+    .status-chip:hover { opacity: 1; }
+
+    /* Table */
+    .table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: clip; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 0.5px solid var(--border); background: var(--bg); white-space: nowrap; }
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    tbody tr.clickable-row { cursor: default; }
+    tbody td { padding: 10px 14px; font-size: 12px; vertical-align: middle; }
+
+    .wo-number { font-family: monospace; font-size: 11px; color: var(--text-3); }
+    .wo-desc { font-size: 12px; font-weight: 500; }
+    .wo-asset { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+    .badge-open     { background: var(--blue-bg);   color: var(--blue-text); }
+    .badge-bezig    { background: var(--amber-bg);  color: var(--amber-text); }
+    .badge-wacht    { background: var(--purple-bg); color: var(--purple-text); }
+    .badge-done     { background: var(--green-bg);  color: var(--green-text); }
+    .badge-off      { background: var(--bg);        color: var(--text-3); border: 0.5px solid var(--border-strong); }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot-blue   { background: var(--blue); }
+    .dot-amber  { background: var(--amber); }
+    .dot-purple { background: var(--purple); }
+    .dot-green  { background: var(--green); }
+    .dot-grey   { background: var(--text-3); }
+
+    .prio-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; }
+    .prio-kritiek { background: var(--red-bg);   color: var(--red-text); }
+    .prio-hoog    { background: var(--amber-bg); color: var(--amber-text); }
+    .prio-normaal { background: var(--bg);       color: var(--text-2); border: 0.5px solid var(--border-strong); }
+    .prio-laag    { background: var(--bg);       color: var(--text-3); border: 0.5px solid var(--border-strong); }
+
+    .due-ok   { color: var(--green-text); font-size: 11px; }
+    .due-soon { color: var(--amber-text); font-size: 11px; }
+    .due-late { color: var(--red-text);   font-size: 11px; font-weight: 500; }
+    .due-done { color: var(--text-3);     font-size: 11px; }
+
+    .action-btn { padding: 4px 8px; border-radius: 6px; border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 11px; color: var(--text-2); cursor: pointer; font-family: inherit; transition: background 0.1s; }
+    .action-btn:hover { background: var(--bg); }
+
+    .table-footer { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-top: 0.5px solid var(--border); background: var(--bg); }
+    .footer-count { font-size: 11px; color: var(--text-3); }
+
+    /* ── Drawer ── */
+    .drawer-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.18); opacity: 0; pointer-events: none; transition: opacity 0.22s; }
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+    .drawer { position: fixed; top: 0; left: 220px; right: 0; bottom: 0; background: var(--surface); border-left: 0.5px solid var(--border); box-shadow: -8px 0 32px rgba(0,0,0,0.10); display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.26s cubic-bezier(0.4,0,0.2,1); z-index: 201; overflow: hidden; }
+    .drawer-overlay.open .drawer { transform: translateX(0); }
+
+    .drawer-header { padding: 14px 20px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .drawer-close { width: 28px; height: 28px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 14px; flex-shrink: 0; }
+    .drawer-close:hover { background: var(--border-strong); }
+    .drawer-title { font-size: 15px; font-weight: 600; flex: 1; }
+
+    .drawer-hero { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
+    .drawer-hero-left { width: 300px; flex-shrink: 0; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; }
+    .drawer-asset-photo { flex: 1; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; min-height: 160px; }
+    .drawer-asset-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .drawer-asset-photo i { font-size: 48px; color: var(--text-3); }
+    .drawer-asset-info { padding: 12px 16px; border-top: 0.5px solid var(--border); }
+    .drawer-asset-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .drawer-asset-id { font-size: 10px; font-family: monospace; color: var(--text-3); }
+
+    .drawer-hero-right { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .drawer-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 20px; }
+    .drawer-field { display: flex; flex-direction: column; gap: 3px; }
+    .drawer-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .drawer-value { font-size: 13px; font-weight: 500; }
+    .drawer-value.muted { color: var(--text-2); font-weight: 400; }
+    .drawer-notes-box { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-2); line-height: 1.6; border: 0.5px solid var(--border); }
+
+    .drawer-tabs { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); background: var(--surface); padding: 0 20px; }
+    .drawer-tab { padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--text-3); border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; font-family: inherit; transition: color 0.12s, border-color 0.12s; display: flex; align-items: center; gap: 6px; }
+    .drawer-tab i { font-size: 14px; }
+    .drawer-tab:hover { color: var(--text-2); }
+    .drawer-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+    .drawer-tab-content { flex: 1; overflow-y: auto; }
+    .drawer-tab-pane { display: none; padding: 20px 24px; }
+    .drawer-tab-pane.active { display: block; }
+
+    .activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 4px; flex-shrink: 0; }
+    .activity-body { flex: 1; }
+    .activity-text { font-size: 12px; font-weight: 500; }
+    .activity-time { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+    .drawer-footer { padding: 12px 20px; border-top: 0.5px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; background: var(--surface); }
+
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.18s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border-radius: 14px; border: 0.5px solid var(--border); width: 560px; max-width: 94vw; box-shadow: 0 24px 64px rgba(0,0,0,0.12); transform: scale(0.97); transition: transform 0.18s; }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header { padding: 18px 20px 16px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 14px; font-weight: 600; }
+    .modal-close { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 14px; }
+    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-label { font-size: 11px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input { padding: 8px 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); font-size: 13px; font-family: inherit; color: var(--text); background: var(--bg); outline: none; transition: border-color 0.12s; }
+    .form-input:focus { border-color: var(--blue); background: var(--surface); }
+    .modal-footer { padding: 14px 20px; border-top: 0.5px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">MA</div>
+      <div>
+        <div class="logo-name">MAMA</div>
+        <div class="logo-sub">Maintenance Manager</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="werkorders.html" class="nav-item active"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="sidebarBadge"></span></a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
+  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <a href="#" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div>
+        <div class="user-name">Leon</div>
+        <div class="user-role">Board / Owner</div>
+      </div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Werkorders</div>
+      <div class="topbar-sub" id="topbarSub">Laden…</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn"><i class="ti ti-download"></i> Exporteer</button>
+      <button class="btn primary" onclick="openModal()"><i class="ti ti-plus"></i> Nieuwe werkorder</button>
+    </div>
+  </div>
+
+  <div class="content">
+  <div class="content-top">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-clipboard-list"></i> Open</div>
+        <div class="kpi-value" style="color:var(--blue);" id="kpiOpen">—</div>
+        <div class="kpi-sub">Wacht op uitvoering</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="color:var(--amber-text);"><i class="ti ti-player-play"></i> In uitvoering</div>
+        <div class="kpi-value" style="color:var(--amber);" id="kpiBezig">—</div>
+        <div class="kpi-sub">Actief bezig</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="color:var(--red-text);"><i class="ti ti-alert-circle"></i> Verlopen</div>
+        <div class="kpi-value" style="color:var(--red);" id="kpiLate">—</div>
+        <div class="kpi-sub">Deadline overschreden</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="color:var(--green-text);"><i class="ti ti-circle-check"></i> Voltooid</div>
+        <div class="kpi-value" style="color:var(--green);" id="kpiDone">—</div>
+        <div class="kpi-sub">Afgerond</div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="searchInput" placeholder="Zoek op WO-nummer, omschrijving of asset…" oninput="filterTable()" />
+      </div>
+      <div class="divider-v"></div>
+      <div class="filter-group" style="flex-wrap:wrap;gap:5px;">
+        <span class="filter-label">Status</span>
+        <div class="status-chips" id="statusChips">
+          <button type="button" class="status-chip chip-open active"  data-status="Open"                onclick="toggleChip(this)"><span class="chip-dot dot-blue"></span>Open</button>
+          <button type="button" class="status-chip chip-bezig active" data-status="In uitvoering"       onclick="toggleChip(this)"><span class="chip-dot dot-amber"></span>In uitvoering</button>
+          <button type="button" class="status-chip chip-wacht active" data-status="Wacht op onderdelen" onclick="toggleChip(this)"><span class="chip-dot dot-purple"></span>Wacht op onderdelen</button>
+          <button type="button" class="status-chip chip-done"        data-status="Voltooid"             onclick="toggleChip(this)"><span class="chip-dot dot-green"></span>Voltooid</button>
+          <button type="button" class="status-chip chip-off"         data-status="Geannuleerd"          onclick="toggleChip(this)"><span class="chip-dot dot-grey"></span>Geannuleerd</button>
+        </div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="filter-group">
+        <span class="filter-label">Prioriteit</span>
+        <select class="filter-select" id="filterPrio" onchange="filterTable()">
+          <option value="">Alle</option>
+          <option value="Kritiek">Kritiek</option>
+          <option value="Hoog">Hoog</option>
+          <option value="Normaal">Normaal</option>
+          <option value="Laag">Laag</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Type</span>
+        <select class="filter-select" id="filterType" onchange="filterTable()">
+          <option value="">Alle</option>
+          <option value="Correctief">Correctief</option>
+          <option value="Preventief">Preventief</option>
+          <option value="Inspectie">Inspectie</option>
+        </select>
+      </div>
+    </div>
+
+  </div><!-- /content-top -->
+  <div class="content-scroll">
+
+    <div class="table-wrap">
+      <table id="woTable">
+        <thead>
+          <tr>
+            <th>WO#</th>
+            <th>Omschrijving</th>
+            <th>Type</th>
+            <th>Prioriteit</th>
+            <th>Status</th>
+            <th>Toegewezen aan</th>
+            <th>Deadline</th>
+            <th>Aangemaakt</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="woBody"></tbody>
+      </table>
+      <div class="table-footer">
+        <span class="footer-count" id="footerCount">—</span>
+      </div>
+    </div>
+
+  </div><!-- /content-scroll -->
+  </div><!-- /content -->
+</div>
+
+<!-- Detail drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      <div class="drawer-title" id="drawerTitle">Werkorder</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn" id="drawerStatusBtn" onclick="openStatusFromDrawer()"><i class="ti ti-refresh"></i> Status wijzigen</button>
+      </div>
+    </div>
+
+    <div class="drawer-hero">
+      <!-- Links: gekoppeld asset -->
+      <div class="drawer-hero-left">
+        <div class="drawer-asset-photo" id="drawerAssetPhoto">
+          <i class="ti ti-building-factory-2"></i>
+        </div>
+        <div class="drawer-asset-info">
+          <div class="drawer-asset-name" id="drawerAssetName">—</div>
+          <div class="drawer-asset-id" id="drawerAssetId">—</div>
+        </div>
+      </div>
+      <!-- Rechts: WO info -->
+      <div class="drawer-hero-right" id="drawerInfo"></div>
+    </div>
+
+    <div class="drawer-tabs">
+      <button type="button" class="drawer-tab active" onclick="switchDrawerTab('activity',this)"><i class="ti ti-list-details"></i> Activiteit</button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)"><i class="ti ti-note"></i> Notities</button>
+    </div>
+
+    <div class="drawer-tab-content">
+      <div class="drawer-tab-pane active" id="tabActivity"></div>
+      <div class="drawer-tab-pane" id="tabNotes"></div>
+    </div>
+
+    <div class="drawer-footer">
+      <button type="button" class="btn" onclick="closeDrawer()"><i class="ti ti-x"></i> Sluiten</button>
+      <button type="button" class="btn primary" onclick="markInProgress()"><i class="ti ti-player-play"></i> Start uitvoering</button>
+      <button type="button" class="btn" id="btnComplete" onclick="markComplete()" style="background:var(--green);color:#fff;border-color:var(--green);"><i class="ti ti-check"></i> Markeer voltooid</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nieuwe werkorder -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nieuwe werkorder aanmaken</div>
+      <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">WO Nummer</label>
+          <input class="form-input" id="fWoNum" type="text" placeholder="Wordt automatisch gegenereerd" readonly style="color:var(--text-3);" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Type</label>
+          <select class="form-input" id="fType">
+            <option value="Correctief">Correctief</option>
+            <option value="Preventief">Preventief</option>
+            <option value="Inspectie">Inspectie</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Omschrijving</label>
+        <textarea class="form-input" id="fDesc" rows="3" placeholder="Omschrijf de werkzaamheden…" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Gekoppeld asset</label>
+          <select class="form-input" id="fAsset">
+            <option value="">— Geen asset —</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Prioriteit</label>
+          <select class="form-input" id="fPrio">
+            <option value="Laag">Laag</option>
+            <option value="Normaal" selected>Normaal</option>
+            <option value="Hoog">Hoog</option>
+            <option value="Kritiek">Kritiek</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Toegewezen aan</label>
+          <select class="form-input" id="fAssigned">
+            <option>J. de Vries</option>
+            <option>M. Bakker</option>
+            <option>P. Jansen</option>
+            <option>R. Smit</option>
+            <option>K. van Dam</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Deadline</label>
+          <input class="form-input" id="fDue" type="date" />
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Notities</label>
+        <textarea class="form-input" id="fNotes" rows="2" placeholder="Aanvullende informatie…" style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Annuleren</button>
+      <button class="btn primary" id="saveBtn" onclick="saveWerkorder()"><i class="ti ti-check"></i> Aanmaken</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Status wijzigen -->
+<div class="modal-overlay" id="statusModalOverlay" onclick="if(event.target===this)closeStatusModal()">
+  <div class="modal" style="width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">Status wijzigen</div>
+      <button class="modal-close" onclick="closeStatusModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;">Werkorder: <strong id="statusWoNum"></strong></p>
+      <div class="form-field full">
+        <label class="form-label">Nieuwe status</label>
+        <select class="form-input" id="statusSelect">
+          <option value="Open">Open</option>
+          <option value="In uitvoering">In uitvoering</option>
+          <option value="Wacht op onderdelen">Wacht op onderdelen</option>
+          <option value="Voltooid">Voltooid</option>
+          <option value="Geannuleerd">Geannuleerd</option>
+        </select>
+      </div>
+      <div class="form-field full" style="margin-top:4px;">
+        <label class="form-label">Opmerking</label>
+        <textarea class="form-input" id="statusNote" rows="2" placeholder="Optioneel" style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeStatusModal()">Annuleren</button>
+      <button type="button" class="btn primary" id="saveStatusBtn" onclick="saveStatus()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let allWerkorders = [];
+  let allAssets = [];
+
+  const catIcons = { 'Compressor':'ti-wind','Hydrauliek':'ti-droplet','Ventilatie':'ti-air-conditioning','Transport':'ti-arrows-right-left','Elektrisch':'ti-bolt','Koeling':'ti-snowflake' };
+
+  function statusBadge(s) {
+    const map = {
+      'Open':                ['badge-open',  'dot-blue'],
+      'In uitvoering':       ['badge-bezig', 'dot-amber'],
+      'Wacht op onderdelen': ['badge-wacht', 'dot-purple'],
+      'Voltooid':            ['badge-done',  'dot-green'],
+      'Geannuleerd':         ['badge-off',   'dot-grey'],
+    };
+    const [bc, dc] = map[s] || ['badge-off','dot-grey'];
+    return `<span class="badge ${bc}"><span class="dot ${dc}"></span>${s}</span>`;
+  }
+
+  function prioBadge(p) {
+    const cls = { 'Kritiek':'prio-kritiek','Hoog':'prio-hoog','Normaal':'prio-normaal','Laag':'prio-laag' };
+    return `<span class="prio-badge ${cls[p]||'prio-normaal'}">${p}</span>`;
+  }
+
+  function dueCls(dateStr, status) {
+    if (status === 'Voltooid' || status === 'Geannuleerd') return ['due-done', status === 'Voltooid' ? 'Afgerond' : 'Geannuleerd'];
+    if (!dateStr) return ['due-ok', '—'];
+    const d = new Date(dateStr), now = new Date();
+    const days = Math.ceil((d - now) / 86400000);
+    if (days < 0)  return ['due-late', `${Math.abs(days)}d verlopen`];
+    if (days < 7)  return ['due-soon', `over ${days}d`];
+    return ['due-ok', d.toLocaleDateString('nl-NL', { day:'numeric', month:'short' })];
+  }
+
+  function updateKPIs(data) {
+    const open   = data.filter(w => w.status === 'Open').length;
+    const bezig  = data.filter(w => w.status === 'In uitvoering').length;
+    const done   = data.filter(w => w.status === 'Voltooid').length;
+    const now    = new Date();
+    const late   = data.filter(w => w.due_date && new Date(w.due_date) < now && w.status !== 'Voltooid' && w.status !== 'Geannuleerd').length;
+    document.getElementById('kpiOpen').textContent  = open;
+    document.getElementById('kpiBezig').textContent = bezig;
+    document.getElementById('kpiDone').textContent  = done;
+    document.getElementById('kpiLate').textContent  = late;
+    document.getElementById('topbarSub').textContent = `${data.length} werkorders geladen`;
+    const badge = document.getElementById('sidebarBadge');
+    badge.textContent = open + bezig || '';
+    badge.style.display = (open + bezig) ? '' : 'none';
+  }
+
+  function renderTable(data) {
+    const tbody = document.getElementById('woBody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Geen werkorders gevonden</td></tr>`;
+      document.getElementById('footerCount').textContent = '0 werkorders';
+      return;
+    }
+    tbody.innerHTML = data.map(w => {
+      const asset = allAssets.find(a => a.asset_id === w.asset_id);
+      const [dc, dt] = dueCls(w.due_date, w.status);
+      const created = new Date(w.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short' });
+      return `<tr class="clickable-row" data-woid="${w.id}">
+        <td class="wo-number">${w.wo_number}</td>
+        <td>
+          <div class="wo-desc">${w.description}</div>
+          ${asset ? `<div class="wo-asset"><i class="ti ti-building-factory-2" style="font-size:10px;"></i> ${asset.name} · ${asset.asset_id}</div>` : ''}
+        </td>
+        <td><span style="font-size:11px;color:var(--text-2);">${w.wo_type||'—'}</span></td>
+        <td>${prioBadge(w.priority)}</td>
+        <td>${statusBadge(w.status)}</td>
+        <td style="font-size:12px;">${w.assigned_to||'—'}</td>
+        <td><span class="${dc}">${dt}</span></td>
+        <td style="font-size:11px;color:var(--text-3);">${created}</td>
+        <td><button type="button" class="action-btn" onclick="event.stopPropagation();openStatusModal(event,'${w.id}')"><i class="ti ti-refresh" style="font-size:12px;"></i> Status</button></td>
+      </tr>`;
+    }).join('');
+    document.getElementById('footerCount').textContent = `${data.length} werkorder${data.length !== 1 ? 's' : ''}`;
+  }
+
+  function toggleChip(btn) { btn.classList.toggle('active'); filterTable(); }
+
+  function filterTable() {
+    const q  = document.getElementById('searchInput').value.toLowerCase();
+    const pr = document.getElementById('filterPrio').value;
+    const tp = document.getElementById('filterType').value;
+    const activeStatuses = [...document.querySelectorAll('#statusChips .status-chip.active')].map(b => b.dataset.status);
+    const filtered = allWerkorders.filter(w => {
+      const asset = allAssets.find(a => a.asset_id === w.asset_id);
+      const matchQ = !q || w.wo_number.toLowerCase().includes(q) || w.description.toLowerCase().includes(q) || (asset && asset.name.toLowerCase().includes(q));
+      return matchQ &&
+        (!activeStatuses.length || activeStatuses.includes(w.status)) &&
+        (!pr || w.priority === pr) &&
+        (!tp || w.wo_type === tp);
+    });
+    renderTable(filtered);
+  }
+
+  async function loadData() {
+    const tbody = document.getElementById('woBody');
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Laden…</td></tr>`;
+
+    const [{ data: wos, error: woErr }, { data: assets }] = await Promise.all([
+      sb.from('werkorders').select('*').order('created_at', { ascending: false }),
+      sb.from('assets').select('asset_id,name,category,location,photo_url'),
+    ]);
+
+    if (woErr) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden: ${woErr.message}</td></tr>`;
+      return;
+    }
+    allWerkorders = wos || [];
+    allAssets = assets || [];
+    updateKPIs(allWerkorders);
+    filterTable();
+    populateAssetSelect();
+  }
+
+  function populateAssetSelect() {
+    const sel = document.getElementById('fAsset');
+    sel.innerHTML = '<option value="">— Geen asset —</option>' +
+      allAssets.map(a => `<option value="${a.asset_id}">${a.name} (${a.asset_id})</option>`).join('');
+  }
+
+  /* ── Drawer ── */
+  let drawerWO = null;
+
+  function switchDrawerTab(tab, btn) {
+    document.querySelectorAll('.drawer-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.drawer-tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  }
+
+  function openDrawer(woId) {
+    const wo = allWerkorders.find(w => w.id === woId);
+    if (!wo) return;
+    drawerWO = wo;
+    const asset = allAssets.find(a => a.asset_id === wo.asset_id);
+    const icon = asset ? (catIcons[asset.category] || 'ti-tool') : 'ti-building-factory-2';
+
+    document.getElementById('drawerTitle').textContent = wo.wo_number;
+
+    // Asset foto links
+    const photoEl = document.getElementById('drawerAssetPhoto');
+    if (asset?.photo_url) {
+      photoEl.innerHTML = `<img src="${asset.photo_url}" alt="${asset.name}" onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\'></i>'" />`;
+    } else {
+      photoEl.innerHTML = `<i class="ti ${icon}"></i>`;
+    }
+    document.getElementById('drawerAssetName').textContent = asset ? asset.name : '— Geen asset —';
+    document.getElementById('drawerAssetId').textContent   = asset ? `${asset.asset_id} · ${asset.location || ''}` : '';
+
+    // WO info rechts
+    const [dc, dt] = dueCls(wo.due_date, wo.status);
+    const created = new Date(wo.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' });
+    document.getElementById('drawerInfo').innerHTML = `
+      <div class="drawer-meta-grid">
+        <div class="drawer-field">
+          <div class="drawer-label">WO Nummer</div>
+          <div class="drawer-value" style="font-family:monospace;">${wo.wo_number}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Status</div>
+          <div class="drawer-value">${statusBadge(wo.status)}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Prioriteit</div>
+          <div class="drawer-value">${prioBadge(wo.priority)}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Type</div>
+          <div class="drawer-value muted">${wo.wo_type || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Toegewezen aan</div>
+          <div class="drawer-value muted">${wo.assigned_to || '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Deadline</div>
+          <div class="drawer-value ${dc}">${dt}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Aangemaakt op</div>
+          <div class="drawer-value muted">${created}</div>
+        </div>
+      </div>
+      ${wo.notes ? `<div class="drawer-notes-box">${wo.notes}</div>` : ''}`;
+
+    // Activiteit tab
+    document.getElementById('tabActivity').innerHTML = `
+      <div class="activity-item">
+        <div class="activity-dot"></div>
+        <div class="activity-body">
+          <div class="activity-text">Werkorder aangemaakt</div>
+          <div class="activity-time">${new Date(wo.created_at).toLocaleString('nl-NL')}</div>
+        </div>
+      </div>
+      ${wo.status !== 'Open' ? `<div class="activity-item">
+        <div class="activity-dot" style="background:var(--amber);"></div>
+        <div class="activity-body">
+          <div class="activity-text">Status gewijzigd naar "${wo.status}"</div>
+          <div class="activity-time">—</div>
+        </div>
+      </div>` : ''}`;
+
+    // Notities tab
+    document.getElementById('tabNotes').innerHTML = wo.notes
+      ? `<p style="font-size:13px;color:var(--text-2);line-height:1.7;">${wo.notes}</p>`
+      : `<p style="font-size:12px;color:var(--text-3);text-align:center;padding:32px 0;">Geen notities.</p>`;
+
+    // Footer knoppen tonen/verbergen
+    document.getElementById('btnComplete').style.display = ['Voltooid','Geannuleerd'].includes(wo.status) ? 'none' : '';
+
+    // Reset tabs
+    document.querySelectorAll('.drawer-tab').forEach((b,i) => b.classList.toggle('active', i===0));
+    document.querySelectorAll('.drawer-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
+
+    document.getElementById('drawerOverlay').classList.add('open');
+  }
+
+  function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); drawerWO = null; }
+
+  async function markInProgress() {
+    if (!drawerWO || drawerWO.status === 'In uitvoering') return;
+    await sb.from('werkorders').update({ status: 'In uitvoering' }).eq('id', drawerWO.id);
+    await loadData();
+    openDrawer(drawerWO.id);
+  }
+
+  async function markComplete() {
+    if (!drawerWO) return;
+    await sb.from('werkorders').update({ status: 'Voltooid', completed_at: new Date().toISOString() }).eq('id', drawerWO.id);
+    await loadData();
+    closeDrawer();
+  }
+
+  /* ── Status modal ── */
+  let statusWoId = null;
+
+  function openStatusModal(event, woId) {
+    const wo = allWerkorders.find(w => w.id === woId);
+    if (!wo) return;
+    statusWoId = woId;
+    document.getElementById('statusWoNum').textContent = wo.wo_number;
+    document.getElementById('statusSelect').value = wo.status;
+    document.getElementById('statusNote').value = '';
+    document.getElementById('statusModalOverlay').classList.add('open');
+  }
+
+  function openStatusFromDrawer() {
+    if (!drawerWO) return;
+    openStatusModal(null, drawerWO.id);
+  }
+
+  function closeStatusModal() { document.getElementById('statusModalOverlay').classList.remove('open'); }
+
+  async function saveStatus() {
+    const btn = document.getElementById('saveStatusBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const newStatus = document.getElementById('statusSelect').value;
+    const payload = { status: newStatus };
+    if (newStatus === 'Voltooid') payload.completed_at = new Date().toISOString();
+    const { error } = await sb.from('werkorders').update(payload).eq('id', statusWoId);
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Opslaan';
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeStatusModal();
+    await loadData();
+    if (drawerWO?.id === statusWoId) openDrawer(statusWoId);
+  }
+
+  /* ── Nieuwe werkorder ── */
+  async function openModal() {
+    // Genereer WO nummer
+    const year = new Date().getFullYear();
+    const num = String(allWerkorders.length + 1).padStart(4, '0');
+    document.getElementById('fWoNum').value = `WO-${year}-${num}`;
+    document.getElementById('fDesc').value = '';
+    document.getElementById('fNotes').value = '';
+    document.getElementById('fDue').value = '';
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+  async function saveWerkorder() {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const desc = document.getElementById('fDesc').value.trim();
+    if (!desc) { alert('Vul een omschrijving in.'); btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Aanmaken'; return; }
+    const payload = {
+      wo_number:   document.getElementById('fWoNum').value,
+      description: desc,
+      asset_id:    document.getElementById('fAsset').value || null,
+      wo_type:     document.getElementById('fType').value,
+      priority:    document.getElementById('fPrio').value,
+      assigned_to: document.getElementById('fAssigned').value,
+      due_date:    document.getElementById('fDue').value || null,
+      notes:       document.getElementById('fNotes').value.trim() || null,
+      status:      'Open',
+    };
+    const { error } = await sb.from('werkorders').insert(payload);
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Aanmaken';
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeModal();
+    loadData();
+  }
+
+  /* ── Init ── */
+  document.getElementById('woBody').addEventListener('dblclick', function(e) {
+    const row = e.target.closest('tr[data-woid]');
+    if (row) openDrawer(row.dataset.woid);
+  });
+
+  loadData();
+</script>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+</body>
+</html>

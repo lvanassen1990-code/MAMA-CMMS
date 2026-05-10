@@ -42,17 +42,31 @@ DO $$ BEGIN
 END $$;
 
 CREATE TABLE IF NOT EXISTS werkorders (
-  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  wo_number   text NOT NULL UNIQUE,
-  description text NOT NULL,
-  asset_id    text REFERENCES assets(asset_id),
-  status      text DEFAULT 'Open',
-  priority    text DEFAULT 'Normaal',
-  assigned_to text,
-  due_date    date,
+  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  wo_number    text NOT NULL UNIQUE,
+  description  text NOT NULL,
+  asset_id     text REFERENCES assets(asset_id),
+  wo_type      text DEFAULT 'Correctief',
+  status       text DEFAULT 'Open',
+  priority     text DEFAULT 'Normaal',
+  assigned_to  text,
+  due_date     date,
+  notes        text,
   completed_at timestamptz,
-  created_at  timestamptz DEFAULT now()
+  created_at   timestamptz DEFAULT now()
 );
+
+-- Voorbeelddata werkorders
+INSERT INTO werkorders (wo_number, description, asset_id, wo_type, status, priority, assigned_to, due_date, notes) VALUES
+('WO-2026-0001', 'Periodieke oliewissel en filtervervanging',  'C-01',  'Preventief',  'Open',          'Normaal', 'J. de Vries', '2026-05-20', null),
+('WO-2026-0002', 'Storing hydrauliekpomp onderzoeken',         'HP-07', 'Correctief',  'In uitvoering', 'Hoog',    'P. Jansen',   '2026-05-12', 'Drukval gemeten op circuit B'),
+('WO-2026-0003', 'Jaarlijkse ventilatiecontrole Hal A',        'V-01',  'Inspectie',   'Open',          'Normaal', 'R. Smit',     '2026-06-01', null),
+('WO-2026-0004', 'V-snaar vervangen transportband lijn 2',     'TB-02', 'Correctief',  'Open',          'Hoog',    'K. van Dam',  '2026-05-15', 'Let op! Snaar vertoont scheuren'),
+('WO-2026-0005', 'Koeling productielijn bijvullen koudemiddel','KO-01', 'Correctief',  'In uitvoering', 'Normaal', 'M. Bakker',   '2026-05-18', null),
+('WO-2026-0006', 'Hydrauliekunit CNC spoelen en testen',       'HP-09', 'Correctief',  'Open',          'Kritiek', 'P. Jansen',   '2026-05-11', 'Machine ligt stil wegens lekkage'),
+('WO-2026-0007', 'UPS batterijtest en capaciteitsmeting',      'EL-02', 'Inspectie',   'Voltooid',      'Laag',    'R. Smit',     '2026-05-05', null),
+('WO-2026-0008', 'Compressor lijn 2B naregelen drukinstelling','C-04',  'Correctief',  'Open',          'Normaal', 'M. Bakker',   '2026-05-19', null)
+ON CONFLICT (wo_number) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS storingen (
   id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
