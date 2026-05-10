@@ -274,6 +274,49 @@
     .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
     .page-btn:hover:not(.active) { background: var(--bg); }
 
+    /* Card grid */
+    .assets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .asset-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: box-shadow 0.15s, border-color 0.15s;
+      cursor: default;
+    }
+    .asset-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: var(--border-strong); }
+    .asset-card-photo {
+      width: 100%; height: 120px;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; position: relative;
+    }
+    .asset-card-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .asset-card-photo i { font-size: 32px; color: var(--text-3); }
+    .asset-card-status {
+      position: absolute; top: 8px; right: 8px;
+    }
+    .asset-card-body { padding: 12px 14px; }
+    .asset-card-id { font-size: 10px; color: var(--text-3); font-family: monospace; margin-bottom: 2px; }
+    .asset-card-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .asset-card-model { font-size: 11px; color: var(--text-3); margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .asset-card-meta { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .asset-card-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-2); }
+    .asset-card-row i { font-size: 13px; color: var(--text-3); }
+    .asset-card-footer {
+      padding: 8px 14px;
+      border-top: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .card-footer {
+      padding: 10px 2px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
     /* Modal */
     .modal-overlay {
       position: fixed; inset: 0;
@@ -460,8 +503,8 @@
       </div>
       <div class="divider-v"></div>
       <div class="view-toggle">
-        <button class="view-btn active" title="Tabelweergave"><i class="ti ti-list"></i></button>
-        <button class="view-btn" title="Kaartweergave"><i class="ti ti-layout-grid"></i></button>
+        <button type="button" class="view-btn active" id="btnList" title="Tabelweergave" onclick="setView('list')"><i class="ti ti-list"></i></button>
+        <button type="button" class="view-btn" id="btnGrid" title="Kaartweergave" onclick="setView('grid')"><i class="ti ti-layout-grid"></i></button>
       </div>
     </div>
 
@@ -495,6 +538,14 @@
           <div class="page-btn">15</div>
           <div class="page-btn"><i class="ti ti-chevron-right" style="font-size:12px;"></i></div>
         </div>
+      </div>
+    </div>
+
+    <!-- Card grid (verborgen by default) -->
+    <div id="cardsWrap" style="display:none;">
+      <div id="assetsGrid" class="assets-grid"></div>
+      <div class="card-footer">
+        <span class="footer-count" id="footerCountGrid">— assets</span>
       </div>
     </div>
 
@@ -728,6 +779,57 @@
     document.getElementById('footerCount').textContent = `${data.length} assets`;
   }
 
+  let currentView = 'list';
+
+  function setView(v) {
+    currentView = v;
+    document.getElementById('btnList').classList.toggle('active', v === 'list');
+    document.getElementById('btnGrid').classList.toggle('active', v === 'grid');
+    document.querySelector('.table-wrap').style.display = v === 'list' ? '' : 'none';
+    document.getElementById('cardsWrap').style.display  = v === 'grid' ? '' : 'none';
+    filterTable();
+  }
+
+  function renderCards(data) {
+    const grid = document.getElementById('assetsGrid');
+    if (!data.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-3);">Geen assets gevonden</div>`;
+      document.getElementById('footerCountGrid').textContent = '0 assets';
+      return;
+    }
+    grid.innerHTML = data.map(a => {
+      const icon = catIcons[a.category] || 'ti-tool';
+      const thumb = a.photo_url
+        ? `<img src="${a.photo_url}" alt="${a.name}" onerror="this.style.display='none'" /><i class="ti ${icon}" style="display:none;"></i>`
+        : `<i class="ti ${icon}"></i>`;
+      const [dc, dt] = dueCls(a.next_maintenance);
+      const nameSafe = (a.name||'').replace(/'/g,"\\'");
+      return `<div class="asset-card">
+        <div class="asset-card-photo">
+          ${thumb}
+          <div class="asset-card-status">${statusBadge(a.status)}</div>
+        </div>
+        <div class="asset-card-body">
+          <div class="asset-card-id">${a.asset_id}</div>
+          <div class="asset-card-name">${a.name}</div>
+          <div class="asset-card-model">${a.model || '—'}</div>
+          <div class="asset-card-meta">
+            <div class="asset-card-row"><i class="ti ti-map-pin"></i>${a.location || '—'}</div>
+            <div class="asset-card-row"><i class="ti ti-tag"></i>${a.category || '—'}</div>
+            <div class="asset-card-row"><i class="ti ti-user"></i>${a.responsible_person || '—'}</div>
+          </div>
+        </div>
+        <div class="asset-card-footer">
+          <span class="${dc}" style="font-size:11px;"><i class="ti ti-calendar-event" style="font-size:12px;margin-right:3px;"></i>${dt}</span>
+          <button type="button" class="action-btn" onclick="openStatusModal('${a.asset_id}','${a.status}','${nameSafe}')">
+            <i class="ti ti-refresh" style="font-size:12px;"></i> Status
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('footerCountGrid').textContent = `${data.length} assets`;
+  }
+
   function toggleChip(btn) {
     btn.classList.toggle('active');
     filterTable();
@@ -745,7 +847,8 @@
       (!ct || a.category === ct) &&
       (!lc || a.location === lc)
     );
-    renderTable(filtered);
+    if (currentView === 'grid') renderCards(filtered);
+    else renderTable(filtered);
   }
 
   async function loadAssets() {
