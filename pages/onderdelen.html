@@ -84,8 +84,6 @@
     .drawer { position:fixed; top:0; left:220px; right:0; bottom:0; transform:translateX(100%); transition:transform .26s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; overflow:hidden; background:var(--surface); border-left:.5px solid var(--border); box-shadow:-8px 0 32px rgba(0,0,0,.1); z-index:50; }
     .drawer-overlay.open .drawer { transform:translateX(0); }
 
-    .drawer-header { padding: 14px 20px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-
     .drawer-hero { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
     .drawer-hero-left { width: 280px; flex-shrink: 0; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; }
     .drawer-part-photo { flex: 1; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; min-height: 160px; max-height: 200px; }
@@ -109,16 +107,6 @@
     .drawer-value { font-size: 13px; font-weight: 500; }
     .drawer-value.muted { color: var(--text-2); font-weight: 400; }
 
-    .drawer-tabs { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); background: var(--surface); padding: 0 20px; }
-    .drawer-tab { padding: 10px 16px; font-size: 12px; font-weight: 500; color: var(--text-3); border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -0.5px; font-family: inherit; transition: color 0.12s, border-color 0.12s; display: flex; align-items: center; gap: 6px; }
-    .drawer-tab i { font-size: 14px; }
-    .drawer-tab:hover { color: var(--text-2); }
-    .drawer-tab.active { color: var(--text); border-bottom-color: var(--accent); }
-
-    .drawer-tab-content { flex: 1; overflow-y: auto; }
-    .drawer-tab-pane { display: none; padding: 20px 24px; }
-    .drawer-tab-pane.active { display: block; }
-
     .timeline-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
     .timeline-item:last-child { border-bottom: none; }
     .timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
@@ -141,8 +129,6 @@
     .wo-link-num { font-family: monospace; font-size: 11px; color: var(--text-3); min-width: 110px; }
     .wo-link-desc { flex: 1; font-size: 12px; font-weight: 500; }
     .wo-link-qty { font-size: 12px; font-weight: 500; color: var(--text-2); }
-
-    .drawer-footer { padding: 12px 20px; border-top: 0.5px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; background: var(--surface); }
 
     /* ── Stock update modal ── */
     .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; max-height: 62vh; overflow-y: auto; }
