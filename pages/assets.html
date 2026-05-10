@@ -589,6 +589,47 @@
   </div>
 </div>
 
+<!-- Modal: Status wijzigen -->
+<div class="modal-overlay" id="statusModalOverlay" onclick="if(event.target===this)closeStatusModal()">
+  <div class="modal" style="width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">Status wijzigen</div>
+      <button class="modal-close" onclick="closeStatusModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;">Asset: <strong id="statusAssetName"></strong></p>
+      <div class="form-field full">
+        <label class="form-label">Nieuwe status</label>
+        <select class="form-input" id="statusSelect">
+          <optgroup label="Actief">
+            <option value="Operationeel">Operationeel</option>
+            <option value="Let op">Let op</option>
+            <option value="Storing">Storing</option>
+            <option value="In onderhoud">In onderhoud</option>
+            <option value="Offline">Offline</option>
+          </optgroup>
+          <optgroup label="Inactief (onomkeerbaar zichtbaar in historie)">
+            <option value="Buiten gebruik">Buiten gebruik</option>
+            <option value="Afgeschreven">Afgeschreven</option>
+            <option value="Verkocht">Verkocht</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-field full" style="margin-top:4px;">
+        <label class="form-label">Reden van wijziging</label>
+        <textarea class="form-input" id="statusReden" rows="2" placeholder="Optioneel — wordt opgeslagen in de historie" style="resize:vertical;"></textarea>
+      </div>
+      <div id="statusWaarschuwing" style="display:none;background:var(--amber-bg);border:0.5px solid var(--amber);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--amber-text);margin-top:4px;">
+        <strong>Let op:</strong> Deze status markeert de machine als permanent inactief. De machine blijft zichtbaar in de historie maar wordt niet meer meegeteld in actieve assets.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" onclick="closeStatusModal()">Annuleren</button>
+      <button type="button" class="btn primary" id="saveStatusBtn" onclick="saveStatus()"><i class="ti ti-check"></i> Status opslaan</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
@@ -663,7 +704,7 @@
         <td style="font-size:11px;color:var(--text-3);">${lastDate}</td>
         <td><span class="${dc}">${dt}</span></td>
         <td style="font-size:11px;color:var(--text-2);">${a.responsible_person || '—'}</td>
-        <td><button class="action-btn">Details</button></td>
+        <td><button type="button" class="action-btn" onclick="openStatusModal('${a.asset_id}','${a.status}','${a.name.replace(/'/g,"\\'")}')"><i class="ti ti-refresh" style="font-size:12px;"></i> Status</button></td>
       </tr>`;
     }).join('');
     document.getElementById('footerCount').textContent = `${data.length} assets`;
@@ -752,6 +793,41 @@
     btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
     if (error) { alert('Fout: ' + error.message); return; }
     closeModal();
+    loadAssets();
+  }
+
+  const inactiveStatuses = ['Buiten gebruik', 'Afgeschreven', 'Verkocht'];
+  let statusAssetId = null;
+
+  function openStatusModal(assetId, currentStatus, assetName) {
+    statusAssetId = assetId;
+    document.getElementById('statusAssetName').textContent = assetName;
+    document.getElementById('statusSelect').value = currentStatus;
+    document.getElementById('statusReden').value = '';
+    document.getElementById('statusWaarschuwing').style.display = 'none';
+    document.getElementById('statusSelect').onchange = function() {
+      document.getElementById('statusWaarschuwing').style.display =
+        inactiveStatuses.includes(this.value) ? 'block' : 'none';
+    };
+    document.getElementById('statusModalOverlay').classList.add('open');
+  }
+
+  function closeStatusModal() {
+    document.getElementById('statusModalOverlay').classList.remove('open');
+  }
+
+  async function saveStatus() {
+    const btn = document.getElementById('saveStatusBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const newStatus = document.getElementById('statusSelect').value;
+    const reden = document.getElementById('statusReden').value.trim();
+    const { error } = await sb.from('assets').update({
+      status: newStatus,
+      notes: reden ? `[${new Date().toLocaleDateString('nl-NL')}] Status → ${newStatus}${reden ? ': ' + reden : ''}` : undefined,
+    }).eq('asset_id', statusAssetId);
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Status opslaan';
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeStatusModal();
     loadAssets();
   }
 
