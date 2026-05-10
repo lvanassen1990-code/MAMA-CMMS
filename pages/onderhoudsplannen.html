@@ -248,7 +248,7 @@
       <div class="form-field full">
         <label class="form-label">Taken / checklist</label>
         <div class="task-editor" id="taskEditor"></div>
-        <button class="add-task-btn" onclick="addTaskRow()"><i class="ti ti-plus"></i> Taak toevoegen</button>
+        <button type="button" class="add-task-btn" onclick="addTaskRow()"><i class="ti ti-plus"></i> Taak toevoegen</button>
       </div>
     </div>
     <div class="modal-footer">
@@ -434,7 +434,7 @@
         <span class="task-editor-nr">${i+1}</span>
         <input class="task-editor-input" value="${t}" placeholder="Omschrijf de taak…"
           oninput="taskRows[${i}]=this.value" />
-        <button class="task-remove" onclick="removeTaskRow(${i})"><i class="ti ti-x"></i></button>
+        <button type="button" class="task-remove" onclick="removeTaskRow(${i})"><i class="ti ti-x" style="pointer-events:none;"></i></button>
       </div>`).join('');
   }
 
