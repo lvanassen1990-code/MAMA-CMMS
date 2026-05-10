@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAMA — Maintenance Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border-strong: rgba(0,0,0,0.14);
+      --text: #1d1d1f;
+      --text-2: #6e6e73;
+      --text-3: #aeaeb2;
+      --accent: #1a1a1a;
+      --green: #1D9E75;
+      --green-bg: #E1F5EE;
+      --green-text: #0F6E56;
+      --amber: #EF9F27;
+      --amber-bg: #FAEEDA;
+      --amber-text: #854F0B;
+      --red: #E24B4A;
+      --red-bg: #FCEBEB;
+      --red-text: #A32D2D;
+      --blue: #378ADD;
+      --blue-bg: #E6F1FB;
+      --blue-text: #185FA5;
+      --radius: 10px;
+      --radius-sm: 7px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--surface);
+      border-right: 0.5px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .sidebar-logo {
+      padding: 20px 18px 16px;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .logo-mark { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 12px; font-weight: 600; letter-spacing: -0.5px;
+    }
+    .logo-name { font-size: 15px; font-weight: 600; }
+    .logo-sub { font-size: 10px; color: var(--text-3); letter-spacing: 0.6px; text-transform: uppercase; }
+
+    .sidebar-section {
+      padding: 14px 18px 4px;
+      font-size: 10px; font-weight: 500;
+      color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 10px; margin: 1px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer; font-size: 13px;
+      color: var(--text-2);
+      transition: background 0.12s, color 0.12s;
+      text-decoration: none;
+    }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--bg); color: var(--text); font-weight: 500; }
+    .nav-item i { font-size: 16px; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--red); color: #fff;
+      font-size: 10px; padding: 1px 6px;
+      border-radius: 10px; font-weight: 500;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 12px 14px;
+      border-top: 0.5px solid var(--border);
+    }
+    .user-row { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--blue-bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: var(--blue-text);
+    }
+    .user-name { font-size: 12px; font-weight: 500; }
+    .user-role { font-size: 10px; color: var(--text-3); }
+
+    /* ── Main ── */
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden;
+    }
+
+    .topbar {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .topbar-title { font-size: 15px; font-weight: 500; }
+    .topbar-date { font-size: 12px; color: var(--text-2); }
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border-strong);
+      background: var(--surface);
+      font-size: 12px; font-weight: 500;
+      color: var(--text-2); cursor: pointer;
+      transition: background 0.12s;
+    }
+    .btn:hover { background: var(--bg); }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.primary:hover { background: #333; }
+    .btn i { font-size: 14px; }
+
+    /* ── Content ── */
+    .content {
+      padding: 20px 24px;
+      overflow-y: auto; flex: 1;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* AI Panel */
+    .ai-panel {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .ai-icon {
+      width: 30px; height: 30px;
+      background: var(--accent); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 11px; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .ai-title { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+    .ai-msg { font-size: 12px; color: var(--text-2); line-height: 1.55; }
+    .ai-chips { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+    .chip {
+      font-size: 11px; padding: 3px 10px;
+      border-radius: 10px;
+      border: 0.5px solid var(--border-strong);
+      background: var(--bg);
+      color: var(--text-2); cursor: pointer;
+      transition: background 0.12s;
+    }
+    .chip:hover { background: #e8e8ed; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .kpi-label {
+      font-size: 11px; color: var(--text-2);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .kpi-label i { font-size: 13px; }
+    .kpi-value { font-size: 26px; font-weight: 500; line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+    .kpi-trend { font-size: 11px; margin-top: 4px; }
+    .up { color: var(--green-text); }
+    .down { color: var(--red-text); }
+
+    /* Two-col grid */
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+    .grid-2b { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .card-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-title { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+    .card-title i { font-size: 15px; color: var(--text-2); }
+    .card-action { font-size: 11px; color: var(--text-3); cursor: pointer; }
+    .card-action:hover { color: var(--text); }
+
+    /* Werkorder rows */
+    .wo-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .wo-row:last-child { border-bottom: none; }
+    .wo-id { font-size: 10px; color: var(--text-3); font-family: monospace; min-width: 46px; }
+    .wo-desc { font-size: 12px; flex: 1; }
+    .wo-person { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+    .badge {
+      font-size: 10px; padding: 2px 8px;
+      border-radius: 10px; font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-open { background: var(--blue-bg); color: var(--blue-text); }
+    .badge-progress { background: var(--amber-bg); color: var(--amber-text); }
+    .badge-done { background: var(--green-bg); color: var(--green-text); }
+
+    /* Bar rows */
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-row:last-child { margin-bottom: 0; }
+    .bar-label { font-size: 11px; color: var(--text-2); min-width: 76px; }
+    .bar-track { flex: 1; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; }
+    .bar-val { font-size: 11px; font-weight: 500; min-width: 30px; text-align: right; }
+
+    /* Asset rows */
+    .asset-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .asset-row:last-child { border-bottom: none; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: var(--green); }
+    .dot-amber { background: var(--amber); }
+    .dot-red { background: var(--red); }
+    .asset-info { flex: 1; }
+    .asset-name { font-size: 12px; }
+    .asset-loc { font-size: 11px; color: var(--text-3); }
+    .status-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+    .status-ok { background: var(--green-bg); color: var(--green-text); }
+    .status-warn { background: var(--amber-bg); color: var(--amber-text); }
+    .status-crit { background: var(--red-bg); color: var(--red-text); }
+
+    /* Donut */
+    .donut-wrap { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 8px 0 12px; }
+    .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+    .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .legend-row strong { color: var(--text); }
+
+    .stats-row {
+      display: flex; justify-content: space-between;
+      border-top: 0.5px solid var(--border);
+      padding-top: 10px; margin-top: 4px;
+    }
+    .stat-item { text-align: center; }
+    .stat-val { font-size: 17px; font-weight: 500; }
+    .stat-lbl { font-size: 10px; color: var(--text-3); }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">MA</div>
+      <div>
+        <div class="logo-name">MAMA</div>
+        <div class="logo-sub">Maintenance Manager</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">Navigatie</div>
+  <a href="index.html" class="nav-item active"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="pages/assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Machineparken</a>
+  <a href="pages/werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge">7</span></a>
+  <a href="pages/planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <a href="pages/storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
+  <a href="#" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="pages/qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="docs/api.md" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div>
+        <div class="user-name">Leon</div>
+        <div class="user-role">Board / Owner</div>
+      </div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="greeting">Goedemorgen 👋</div>
+      <div class="topbar-date" id="datestr"></div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn"><i class="ti ti-download"></i> Exporteer</button>
+      <button class="btn"><i class="ti ti-brand-windows"></i> Power BI</button>
+      <button class="btn primary"><i class="ti ti-plus"></i> Nieuwe werkorder</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- AI Panel -->
+    <div class="ai-panel">
+      <div class="ai-icon">AI</div>
+      <div style="flex:1;">
+        <div class="ai-title">MAMA AI — inzicht van vandaag</div>
+        <div class="ai-msg">Compressor #C-04 toont afwijkende trillingpatronen. Aanbevolen actie: inspectie inplannen vóór donderdag. Verder zijn 2 onderhoudsorders deze week verlopen zonder afsluiting.</div>
+        <div class="ai-chips">
+          <div class="chip">Werkorder aanmaken</div>
+          <div class="chip">Bekijk C-04 details</div>
+          <div class="chip">Verlopen orders tonen</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI's -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-building-factory-2"></i> Assets</div>
+        <div class="kpi-value">148</div>
+        <div class="kpi-sub">12 locaties</div>
+        <div class="kpi-trend up">↑ 4 toegevoegd deze maand</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-clipboard-list"></i> Werkorders</div>
+        <div class="kpi-value">34</div>
+        <div class="kpi-sub">7 openstaand · 3 verlopen</div>
+        <div class="kpi-trend down">↓ 2 verlopen deadline</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-clock"></i> Gem. MTTR</div>
+        <div class="kpi-value">4.2u</div>
+        <div class="kpi-sub">Mean Time To Repair</div>
+        <div class="kpi-trend up">↑ 12% beter dan vorige maand</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-activity"></i> Uptime</div>
+        <div class="kpi-value">96.4%</div>
+        <div class="kpi-sub">Afgelopen 30 dagen</div>
+        <div class="kpi-trend up">↑ Doel: 95% ✓</div>
+      </div>
+    </div>
+
+    <!-- Werkorders + Uptime -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-clipboard-list"></i> Actieve werkorders</div>
+          <a href="pages/werkorders.html" class="card-action">Alles bekijken →</a>
+        </div>
+        <div class="wo-row"><span class="wo-id">WO-041</span><span class="wo-desc">Smering lagerblok lijn 3</span><span class="wo-person">J. de Vries</span><span class="badge badge-progress">Bezig</span></div>
+        <div class="wo-row"><span class="wo-id">WO-042</span><span class="wo-desc">Inspectie hydrauliekpomp</span><span class="wo-person">M. Bakker</span><span class="badge badge-open">Open</span></div>
+        <div class="wo-row"><span class="wo-id">WO-043</span><span class="wo-desc">Vervanging riemset C-04</span><span class="wo-person">P. Jansen</span><span class="badge badge-open">Open</span></div>
+        <div class="wo-row"><span class="wo-id">WO-039</span><span class="wo-desc">Elektrische keuring schakelkast</span><span class="wo-person">R. Smit</span><span class="badge badge-done">Klaar</span></div>
+        <div class="wo-row"><span class="wo-id">WO-038</span><span class="wo-desc">Filter wisselen compressor hal B</span><span class="wo-person">J. de Vries</span><span class="badge badge-done">Klaar</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-activity"></i> Uptime per locatie</div>
+        </div>
+        <div class="bar-row"><span class="bar-label">Hal A</span><div class="bar-track"><div class="bar-fill" style="width:98%;background:var(--green);"></div></div><span class="bar-val up">98%</span></div>
+        <div class="bar-row"><span class="bar-label">Hal B</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:var(--green);"></div></div><span class="bar-val up">95%</span></div>
+        <div class="bar-row"><span class="bar-label">Hal C</span><div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--amber);"></div></div><span class="bar-val" style="color:var(--amber-text);">88%</span></div>
+        <div class="bar-row"><span class="bar-label">Buitenterr.</span><div class="bar-track"><div class="bar-fill" style="width:91%;background:var(--green);"></div></div><span class="bar-val up">91%</span></div>
+        <div class="bar-row"><span class="bar-label">Kantoor</span><div class="bar-track"><div class="bar-fill" style="width:99%;background:var(--green);"></div></div><span class="bar-val up">99%</span></div>
+      </div>
+    </div>
+
+    <!-- Assets + Donut -->
+    <div class="grid-2b">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-building-factory-2"></i> Machinestatus</div>
+          <a href="pages/assets.html" class="card-action">Alles bekijken →</a>
+        </div>
+        <div class="asset-row"><div class="dot dot-green"></div><div class="asset-info"><div class="asset-name">Compressor C-01</div><div class="asset-loc">Hal A · Lijn 1</div></div><span class="status-badge status-ok">Operationeel</span></div>
+        <div class="asset-row"><div class="dot dot-amber"></div><div class="asset-info"><div class="asset-name">Compressor C-04</div><div class="asset-loc">Hal B · Lijn 2</div></div><span class="status-badge status-warn">Let op</span></div>
+        <div class="asset-row"><div class="dot dot-red"></div><div class="asset-info"><div class="asset-name">Hydrauliekpomp HP-07</div><div class="asset-loc">Hal C · Lijn 3</div></div><span class="status-badge status-crit">Storing</span></div>
+        <div class="asset-row"><div class="dot dot-green"></div><div class="asset-info"><div class="asset-name">Ventilatiesysteem V-02</div><div class="asset-loc">Hal A</div></div><span class="status-badge status-ok">Operationeel</span></div>
+        <div class="asset-row"><div class="dot dot-green"></div><div class="asset-info"><div class="asset-name">Transportband TB-03</div><div class="asset-loc">Hal B · Lijn 1</div></div><span class="status-badge status-ok">Operationeel</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-chart-donut"></i> Werkorders deze maand</div>
+        </div>
+        <div class="donut-wrap">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="34" fill="none" stroke="#f0f0f0" stroke-width="10"/>
+            <circle cx="45" cy="45" r="34" fill="none" stroke="#1D9E75" stroke-width="10"
+              stroke-dasharray="133 81" stroke-dashoffset="0" stroke-linecap="round"
+              transform="rotate(-90 45 45)"/>
+            <circle cx="45" cy="45" r="34" fill="none" stroke="#EF9F27" stroke-width="10"
+              stroke-dasharray="48 166" stroke-dashoffset="-133" stroke-linecap="round"
+              transform="rotate(-90 45 45)"/>
+            <circle cx="45" cy="45" r="34" fill="none" stroke="#E24B4A" stroke-width="10"
+              stroke-dasharray="33 181" stroke-dashoffset="-181" stroke-linecap="round"
+              transform="rotate(-90 45 45)"/>
+            <text x="45" y="50" text-anchor="middle" font-size="14" font-weight="600" fill="#1d1d1f">34</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-row"><div class="legend-dot" style="background:var(--green);"></div>Voltooid <strong>20</strong></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--amber);"></div>Bezig <strong>7</strong></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--red);"></div>Verlopen <strong>7</strong></div>
+          </div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-item"><div class="stat-val">4.2u</div><div class="stat-lbl">Gem. doorlooptijd</div></div>
+          <div class="stat-item"><div class="stat-val">€ 3.840</div><div class="stat-lbl">Onderhoudskosten</div></div>
+          <div class="stat-item"><div class="stat-val">8</div><div class="stat-lbl">Monteurs actief</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const now = new Date();
+  const h = now.getHours();
+  const gr = h < 12 ? 'Goedemorgen' : h < 18 ? 'Goedemiddag' : 'Goedenavond';
+  document.getElementById('greeting').textContent = gr + ', Leon 👋';
+  document.getElementById('datestr').textContent = now.toLocaleDateString('nl-NL', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  }) + ' · 3 actieve storingen';
+</script>
+</body>
+</html>

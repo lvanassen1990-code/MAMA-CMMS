@@ -1,0 +1,261 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: var(--color-background-tertiary); }
+
+.app { display: flex; height: 100vh; min-height: 600px; background: var(--color-background-tertiary); }
+
+.sidebar { width: 220px; min-width: 220px; background: var(--color-background-primary); border-right: 0.5px solid var(--color-border-tertiary); display: flex; flex-direction: column; padding: 0; }
+
+.sidebar-logo { padding: 20px 20px 16px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.logo-mark { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 32px; height: 32px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-icon span { color: #fff; font-size: 13px; font-weight: 500; letter-spacing: -0.5px; }
+.logo-name { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.logo-sub { font-size: 10px; color: var(--color-text-secondary); letter-spacing: 0.5px; text-transform: uppercase; }
+
+.sidebar-section { padding: 12px 12px 4px; font-size: 10px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.8px; }
+
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; margin: 1px 8px; border-radius: var(--border-radius-md); cursor: pointer; font-size: 13px; color: var(--color-text-secondary); transition: background 0.15s; }
+.nav-item:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+.nav-item.active { background: var(--color-background-secondary); color: var(--color-text-primary); font-weight: 500; }
+.nav-item i { font-size: 16px; }
+.nav-badge { margin-left: auto; background: #e24b4a; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+
+.sidebar-bottom { margin-top: auto; padding: 12px; border-top: 0.5px solid var(--color-border-tertiary); }
+.user-row { display: flex; align-items: center; gap: 10px; }
+.user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--color-background-info); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; color: var(--color-text-info); }
+.user-name { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+.user-role { font-size: 10px; color: var(--color-text-tertiary); }
+
+.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+.topbar { background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; }
+.topbar-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+.topbar-date { font-size: 12px; color: var(--color-text-secondary); }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); font-size: 12px; color: var(--color-text-secondary); cursor: pointer; }
+.topbar-btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+.content { padding: 20px 24px; flex: 1; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; }
+.kpi-label { font-size: 11px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.kpi-value { font-size: 24px; font-weight: 500; color: var(--color-text-primary); line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px; }
+.kpi-trend { font-size: 11px; margin-top: 4px; }
+.trend-up { color: #0F6E56; } .trend-down { color: #993C1D; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.grid-3 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+.card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 16px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.card-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+.card-action { font-size: 11px; color: var(--color-text-secondary); cursor: pointer; }
+
+.asset-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); gap: 10px; }
+.asset-row:last-child { border-bottom: none; }
+.asset-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: #1D9E75; } .dot-amber { background: #EF9F27; } .dot-red { background: #E24B4A; }
+.asset-name { font-size: 12px; color: var(--color-text-primary); flex: 1; }
+.asset-loc { font-size: 11px; color: var(--color-text-secondary); }
+.asset-status { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+.status-ok { background: #E1F5EE; color: #0F6E56; }
+.status-warn { background: #FAEEDA; color: #854F0B; }
+.status-crit { background: #FCEBEB; color: #A32D2D; }
+
+.wo-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); gap: 10px; }
+.wo-row:last-child { border-bottom: none; }
+.wo-id { font-size: 10px; color: var(--color-text-tertiary); font-family: var(--font-mono); min-width: 48px; }
+.wo-desc { font-size: 12px; color: var(--color-text-primary); flex: 1; }
+.wo-person { font-size: 11px; color: var(--color-text-secondary); }
+.wo-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+.badge-open { background: #E6F1FB; color: #185FA5; }
+.badge-progress { background: #FAEEDA; color: #854F0B; }
+.badge-done { background: #EAF3DE; color: #3B6D11; }
+
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-label { font-size: 11px; color: var(--color-text-secondary); min-width: 80px; }
+.bar-track { flex: 1; height: 6px; background: var(--color-background-secondary); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; }
+.bar-val { font-size: 11px; color: var(--color-text-primary); font-weight: 500; min-width: 30px; text-align: right; }
+
+.ai-panel { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px 16px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 12px; }
+.ai-icon { width: 28px; height: 28px; background: #1a1a1a; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ai-icon span { color: #fff; font-size: 11px; font-weight: 500; }
+.ai-text { flex: 1; }
+.ai-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+.ai-msg { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+.ai-chips { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.ai-chip { font-size: 11px; padding: 3px 10px; border-radius: 10px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-secondary); cursor: pointer; }
+
+.uptime-ring { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; }
+.ring-val { font-size: 28px; font-weight: 500; color: var(--color-text-primary); }
+.ring-label { font-size: 11px; color: var(--color-text-secondary); }
+svg.ring { display: block; }
+</style>
+
+<h2 class="sr-only">MAMA Maintenance Manager dashboard — overzicht van machineparken, werkorders en KPI's</h2>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon"><span>MA</span></div>
+        <div>
+          <div class="logo-name">MAMA</div>
+          <div class="logo-sub">Maintenance Manager</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">Navigatie</div>
+    <div class="nav-item active"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</div>
+    <div class="nav-item"><i class="ti ti-building-factory-2" aria-hidden="true"></i> Machineparken</div>
+    <div class="nav-item"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Werkorders <span class="nav-badge">7</span></div>
+    <div class="nav-item"><i class="ti ti-calendar-event" aria-hidden="true"></i> Planning</div>
+    <div class="nav-item"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Storingen <span class="nav-badge">3</span></div>
+    <div class="nav-item"><i class="ti ti-box" aria-hidden="true"></i> Onderdelen</div>
+    <div class="nav-item"><i class="ti ti-shield-check" aria-hidden="true"></i> Quality Control</div>
+    <div class="nav-item"><i class="ti ti-chart-bar" aria-hidden="true"></i> Rapportages</div>
+
+    <div class="sidebar-section" style="margin-top:8px;">Integraties</div>
+    <div class="nav-item"><i class="ti ti-brand-windows" aria-hidden="true"></i> Power BI</div>
+    <div class="nav-item"><i class="ti ti-plug" aria-hidden="true"></i> API & Webhooks</div>
+
+    <div class="sidebar-bottom">
+      <div class="user-row">
+        <div class="user-avatar">LB</div>
+        <div>
+          <div class="user-name">Leon</div>
+          <div class="user-role">Board / Owner</div>
+        </div>
+        <i class="ti ti-settings" style="font-size:15px;color:var(--color-text-tertiary);margin-left:auto;" aria-hidden="true"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Goedemorgen, Leon 👋</div>
+        <div class="topbar-date">Zondag 10 mei 2026 · 3 actieve storingen</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-btn"><i class="ti ti-download" style="font-size:13px;" aria-hidden="true"></i> Exporteer</div>
+        <div class="topbar-btn"><i class="ti ti-brand-windows" style="font-size:13px;" aria-hidden="true"></i> Power BI</div>
+        <div class="topbar-btn primary"><i class="ti ti-plus" style="font-size:13px;" aria-hidden="true"></i> Nieuwe werkorder</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="ai-panel">
+        <div class="ai-icon"><span>AI</span></div>
+        <div class="ai-text">
+          <div class="ai-title">MAMA AI — inzicht van vandaag</div>
+          <div class="ai-msg">Compressor #C-04 toont afwijkende trillingpatronen. Aanbevolen actie: inspectie inplannen voor donderdag. Verder zijn 2 onderhoudsorders deze week verlopen zonder afsluiting.</div>
+          <div class="ai-chips">
+            <div class="ai-chip">Werkorder aanmaken</div>
+            <div class="ai-chip">Bekijk C-04 details</div>
+            <div class="ai-chip">Verlopen orders</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label"><i class="ti ti-building-factory-2" style="font-size:14px;" aria-hidden="true"></i> Assets</div>
+          <div class="kpi-value">148</div>
+          <div class="kpi-sub">12 locaties</div>
+          <div class="kpi-trend trend-up">↑ 4 toegevoegd deze maand</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label"><i class="ti ti-clipboard-list" style="font-size:14px;" aria-hidden="true"></i> Werkorders</div>
+          <div class="kpi-value">34</div>
+          <div class="kpi-sub">7 openstaand · 3 verlopen</div>
+          <div class="kpi-trend trend-down">↓ 2 verlopen deadline</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label"><i class="ti ti-clock" style="font-size:14px;" aria-hidden="true"></i> Gem. MTTR</div>
+          <div class="kpi-value">4.2u</div>
+          <div class="kpi-sub">Mean Time To Repair</div>
+          <div class="kpi-trend trend-up">↑ 12% beter dan vorige maand</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label"><i class="ti ti-activity" style="font-size:14px;" aria-hidden="true"></i> Uptime</div>
+          <div class="kpi-value">96.4%</div>
+          <div class="kpi-sub">Afgelopen 30 dagen</div>
+          <div class="kpi-trend trend-up">↑ Doel: 95%</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-clipboard-list" style="font-size:14px;margin-right:6px;" aria-hidden="true"></i>Actieve werkorders</div>
+            <div class="card-action">Alles bekijken →</div>
+          </div>
+          <div class="wo-row"><span class="wo-id">WO-041</span><span class="wo-desc">Smering lagerblok lijn 3</span><span class="wo-person">J. de Vries</span><span class="wo-badge badge-progress">Bezig</span></div>
+          <div class="wo-row"><span class="wo-id">WO-042</span><span class="wo-desc">Inspectie hydrauliekpomp</span><span class="wo-person">M. Bakker</span><span class="wo-badge badge-open">Open</span></div>
+          <div class="wo-row"><span class="wo-id">WO-043</span><span class="wo-desc">Vervanging riemset C-04</span><span class="wo-person">P. Jansen</span><span class="wo-badge badge-open">Open</span></div>
+          <div class="wo-row"><span class="wo-id">WO-039</span><span class="wo-desc">Elektrische keuring schakelkast</span><span class="wo-person">R. Smit</span><span class="wo-badge badge-done">Klaar</span></div>
+          <div class="wo-row"><span class="wo-id">WO-038</span><span class="wo-desc">Filter wisselen compressor hal B</span><span class="wo-person">J. de Vries</span><span class="wo-badge badge-done">Klaar</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-activity" style="font-size:14px;margin-right:6px;" aria-hidden="true"></i>Uptime per locatie</div>
+          </div>
+          <div class="bar-row"><span class="bar-label">Hal A</span><div class="bar-track"><div class="bar-fill" style="width:98%;background:#1D9E75;"></div></div><span class="bar-val">98%</span></div>
+          <div class="bar-row"><span class="bar-label">Hal B</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:#1D9E75;"></div></div><span class="bar-val">95%</span></div>
+          <div class="bar-row"><span class="bar-label">Hal C</span><div class="bar-track"><div class="bar-fill" style="width:88%;background:#EF9F27;"></div></div><span class="bar-val">88%</span></div>
+          <div class="bar-row"><span class="bar-label">Buitenterr.</span><div class="bar-track"><div class="bar-fill" style="width:91%;background:#1D9E75;"></div></div><span class="bar-val">91%</span></div>
+          <div class="bar-row"><span class="bar-label">Kantoor</span><div class="bar-track"><div class="bar-fill" style="width:99%;background:#1D9E75;"></div></div><span class="bar-val">99%</span></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-building-factory-2" style="font-size:14px;margin-right:6px;" aria-hidden="true"></i>Machinestatus overzicht</div>
+            <div class="card-action">Alles bekijken →</div>
+          </div>
+          <div class="asset-row"><div class="asset-dot dot-green"></div><div style="flex:1"><div class="asset-name">Compressor C-01</div><div class="asset-loc">Hal A · Lijn 1</div></div><span class="asset-status status-ok">Operationeel</span></div>
+          <div class="asset-row"><div class="asset-dot dot-amber"></div><div style="flex:1"><div class="asset-name">Compressor C-04</div><div class="asset-loc">Hal B · Lijn 2</div></div><span class="asset-status status-warn">Let op</span></div>
+          <div class="asset-row"><div class="asset-dot dot-red"></div><div style="flex:1"><div class="asset-name">Hydrauliekpomp HP-07</div><div class="asset-loc">Hal C · Lijn 3</div></div><span class="asset-status status-crit">Storing</span></div>
+          <div class="asset-row"><div class="asset-dot dot-green"></div><div style="flex:1"><div class="asset-name">Ventilatiesysteem V-02</div><div class="asset-loc">Hal A</div></div><span class="asset-status status-ok">Operationeel</span></div>
+          <div class="asset-row"><div class="asset-dot dot-green"></div><div style="flex:1"><div class="asset-name">Transportband TB-03</div><div class="asset-loc">Hal B · Lijn 1</div></div><span class="asset-status status-ok">Operationeel</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="ti ti-chart-donut" style="font-size:14px;margin-right:6px;" aria-hidden="true"></i>Werkorders deze maand</div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:8px 0 12px;">
+            <svg class="ring" width="90" height="90" viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="36" fill="none" stroke="var(--color-background-secondary)" stroke-width="10"/>
+              <circle cx="45" cy="45" r="36" fill="none" stroke="#1D9E75" stroke-width="10" stroke-dasharray="141 85" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 45 45)"/>
+              <circle cx="45" cy="45" r="36" fill="none" stroke="#EF9F27" stroke-width="10" stroke-dasharray="51 175" stroke-dashoffset="-141" stroke-linecap="round" transform="rotate(-90 45 45)"/>
+              <circle cx="45" cy="45" r="36" fill="none" stroke="#E24B4A" stroke-width="10" stroke-dasharray="34 192" stroke-dashoffset="-192" stroke-linecap="round" transform="rotate(-90 45 45)"/>
+              <text x="45" y="49" text-anchor="middle" font-size="13" font-weight="500" fill="var(--color-text-primary)">34</text>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;"></div><span style="font-size:12px;color:var(--color-text-secondary);">Voltooid <strong style="color:var(--color-text-primary);">20</strong></span></div>
+              <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:#EF9F27;"></div><span style="font-size:12px;color:var(--color-text-secondary);">In uitvoering <strong style="color:var(--color-text-primary);">7</strong></span></div>
+              <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:#E24B4A;"></div><span style="font-size:12px;color:var(--color-text-secondary);">Verlopen <strong style="color:var(--color-text-primary);">7</strong></span></div>
+            </div>
+          </div>
+          <div style="border-top:0.5px solid var(--color-border-tertiary);padding-top:10px;display:flex;justify-content:space-between;">
+            <div style="text-align:center;"><div style="font-size:18px;font-weight:500;color:var(--color-text-primary);">4.2u</div><div style="font-size:10px;color:var(--color-text-secondary);">Gem. doorlooptijd</div></div>
+            <div style="text-align:center;"><div style="font-size:18px;font-weight:500;color:var(--color-text-primary);">€ 3.840</div><div style="font-size:10px;color:var(--color-text-secondary);">Onderhoud kosten</div></div>
+            <div style="text-align:center;"><div style="font-size:18px;font-weight:500;color:var(--color-text-primary);">8</div><div style="font-size:10px;color:var(--color-text-secondary);">Monteurs actief</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
