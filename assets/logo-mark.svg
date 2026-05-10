@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" width="260" height="260">
+  <title>MAMA mark</title>
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A84FF"></stop>
+      <stop offset="100%" stop-color="#003E9E"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="260" height="260" rx="56" fill="url(#g)"></rect>
+  <path d="M58 190 V78 L130 150 L202 78 V190" fill="none" stroke="#FFFFFF" stroke-width="34" stroke-linecap="square" stroke-linejoin="miter"></path>
+</svg>
