@@ -95,7 +95,7 @@
   <a href="pages/assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
   <a href="pages/werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge">7</span></a>
   <a href="pages/planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
-  <a href="pages/storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
+  <a href="pages/storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
   <a href="pages/onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
   <a href="pages/onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="pages/qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
@@ -256,7 +256,18 @@
   document.getElementById('greeting').textContent = gr + ', Leon 👋';
   document.getElementById('datestr').textContent = now.toLocaleDateString('nl-NL', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  }) + ' · 3 actieve storingen';
+  });
+  (async () => {
+    try {
+      const { count } = await sb.from('storingen').select('id', { count: 'exact', head: true }).in('status', ['Open', 'In behandeling']);
+      const badge = document.getElementById('storingenBadge');
+      if (badge) { badge.textContent = count || ''; badge.style.display = count ? '' : 'none'; }
+      if (count) {
+        const dateEl = document.getElementById('datestr');
+        if (dateEl) dateEl.textContent += ` · ${count} actieve storing${count !== 1 ? 'en' : ''}`;
+      }
+    } catch(e) {}
+  })();
 </script>
 </body>
 </html>

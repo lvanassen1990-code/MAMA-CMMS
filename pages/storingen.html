@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Storingen — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../assets/mama.css" />
+  <style>
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-top { display: flex; flex-direction: column; gap: 16px; flex-shrink: 0; padding-bottom: 4px; }
+    .content-scroll { flex: 1; min-height: 0; padding-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .kpi-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .kpi-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .kpi-label i { font-size: 13px; }
+    .kpi-value { font-size: 26px; font-weight: 500; line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    .filter-bar { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .search-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 180px; }
+    .search-wrap i { color: var(--text-3); font-size: 15px; }
+    .search-wrap input { border: none; outline: none; background: transparent; font-size: 13px; color: var(--text); width: 100%; font-family: inherit; }
+    .search-wrap input::placeholder { color: var(--text-3); }
+    .divider-v { width: 0.5px; height: 20px; background: var(--border-strong); }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-label { font-size: 11px; color: var(--text-3); }
+    select.filter-select { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg); padding: 4px 8px; font-size: 12px; color: var(--text-2); cursor: pointer; font-family: inherit; outline: none; }
+
+    .status-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid transparent; background: var(--bg); color: var(--text-3); transition: all 0.15s; font-family: inherit; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.4; transition: opacity 0.15s; }
+    .status-chip.active .chip-dot { opacity: 1; }
+    .status-chip.active { color: var(--text); }
+    .status-chip.chip-open.active       { background: var(--red-bg);    border-color: var(--red);    color: var(--red-text); }
+    .status-chip.chip-behandeling.active{ background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber-text); }
+    .status-chip.chip-opgelost.active   { background: var(--green-bg);  border-color: var(--green);  color: var(--green-text); }
+    .status-chip.chip-off.active        { background: var(--bg);        border-color: var(--border-strong); color: var(--text-2); }
+    .status-chip:not(.active) { opacity: 0.45; }
+    .status-chip:hover { opacity: 1; }
+
+    .table-wrap { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: clip; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 0.5px solid var(--border); background: var(--bg); white-space: nowrap; }
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.1s; cursor: pointer; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    tbody td { padding: 10px 14px; font-size: 12px; vertical-align: middle; }
+
+    .st-number { font-family: monospace; font-size: 11px; color: var(--text-3); }
+    .st-desc { font-size: 12px; font-weight: 500; }
+    .st-asset { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+    .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+    .dot-red    { background: var(--red); }
+    .dot-amber  { background: var(--amber); }
+    .dot-green  { background: var(--green); }
+    .dot-grey   { background: var(--text-3); }
+
+    .prio-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; }
+    .prio-kritiek { background: var(--red-bg);   color: var(--red-text); }
+    .prio-hoog    { background: var(--amber-bg); color: var(--amber-text); }
+    .prio-normaal { background: var(--bg);       color: var(--text-2); border: 0.5px solid var(--border-strong); }
+    .prio-laag    { background: var(--bg);       color: var(--text-3); border: 0.5px solid var(--border-strong); }
+
+    .oorzaak-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; padding: 2px 7px; border-radius: 6px; background: var(--bg); color: var(--text-2); border: 0.5px solid var(--border-strong); }
+
+    .herhaal-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 6px; background: var(--red-bg); color: var(--red-text); }
+
+    thead th.sortable { cursor: pointer; user-select: none; }
+    thead th.sortable:hover { color: var(--text-2); background: #ececec; }
+    thead th.sort-active { color: var(--text) !important; }
+    .sort-icon { font-size: 10px; margin-left: 3px; color: var(--text-3); display: inline-block; width: 10px; }
+
+    .table-footer { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-top: 0.5px solid var(--border); background: var(--bg); }
+    .footer-count { font-size: 11px; color: var(--text-3); }
+
+    .drawer { position:fixed; top:0; left:220px; right:0; bottom:0; transform:translateX(100%); transition:transform .26s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; overflow:hidden; background:var(--surface); border-left:.5px solid var(--border); box-shadow:-8px 0 32px rgba(0,0,0,.1); z-index:50; }
+    .drawer-overlay.open .drawer { transform:translateX(0); }
+    .drawer-hero { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
+    .drawer-hero-left { width: 300px; flex-shrink: 0; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; }
+    .drawer-asset-photo { flex: 1; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; min-height: 160px; }
+    .drawer-asset-photo i { font-size: 48px; color: var(--text-3); }
+    .drawer-asset-info { padding: 12px 16px; border-top: 0.5px solid var(--border); }
+    .drawer-asset-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .drawer-asset-id { font-size: 10px; font-family: monospace; color: var(--text-3); }
+    .drawer-hero-right { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .drawer-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 20px; }
+    .drawer-field { display: flex; flex-direction: column; gap: 3px; }
+    .drawer-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .drawer-value { font-size: 13px; font-weight: 500; }
+    .drawer-value.muted { color: var(--text-2); font-weight: 400; }
+    .drawer-notes-box { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-2); line-height: 1.6; border: 0.5px solid var(--border); }
+
+    .activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); margin-top: 4px; flex-shrink: 0; }
+    .activity-body { flex: 1; }
+    .activity-text { font-size: 12px; font-weight: 500; }
+    .activity-time { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+    .wo-link-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+    .wo-link-num { font-family: monospace; font-size: 11px; color: var(--text-3); }
+    .wo-link-desc { font-size: 12px; font-weight: 500; flex: 1; }
+    .wo-link-status { font-size: 11px; color: var(--text-2); }
+
+    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <img src="../assets/logo-mark.svg" alt="MAMA" style="width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0;" />
+      <div>
+        <div class="logo-name">MAMA</div>
+        <div class="logo-sub">Maintenance Manager</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <a href="storingen.html" class="nav-item active"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
+  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div>
+        <div class="user-name">Leon</div>
+        <div class="user-role">Board / Owner</div>
+      </div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Storingen</div>
+      <div class="topbar-sub" id="topbarSub">Laden…</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn"><i class="ti ti-download"></i> Exporteer</button>
+      <button class="btn primary" onclick="openModal()"><i class="ti ti-plus"></i> Nieuwe storing</button>
+    </div>
+  </div>
+
+  <div class="content">
+  <div class="content-top">
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-alert-triangle"></i> Totaal open</div>
+        <div class="kpi-value" style="color:var(--red);" id="kpiOpen">—</div>
+        <div class="kpi-sub">Open storingen</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="color:var(--amber-text);"><i class="ti ti-tool"></i> In behandeling</div>
+        <div class="kpi-value" style="color:var(--amber);" id="kpiBehandeling">—</div>
+        <div class="kpi-sub">Worden opgepakt</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="color:var(--red-text);"><i class="ti ti-repeat"></i> Herhalend</div>
+        <div class="kpi-value" style="color:var(--red);" id="kpiHerhaal">—</div>
+        <div class="kpi-sub">Zelfde oorzaak &lt; 90 dagen</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-clock"></i> Gem. hersteltijd</div>
+        <div class="kpi-value" id="kpiMttr">—</div>
+        <div class="kpi-sub">Minuten (opgeloste storingen)</div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="searchInput" placeholder="Zoek op nummer, omschrijving of asset…" oninput="filterTable()" />
+      </div>
+      <div class="divider-v"></div>
+      <div class="filter-group" style="flex-wrap:wrap;gap:5px;">
+        <span class="filter-label">Status</span>
+        <div class="status-chips">
+          <button type="button" class="status-chip chip-open active"        data-status="Open"           onclick="toggleChip(this)"><span class="chip-dot dot-red"></span>Open</button>
+          <button type="button" class="status-chip chip-behandeling active" data-status="In behandeling" onclick="toggleChip(this)"><span class="chip-dot dot-amber"></span>In behandeling</button>
+          <button type="button" class="status-chip chip-opgelost"           data-status="Opgelost"        onclick="toggleChip(this)"><span class="chip-dot dot-green"></span>Opgelost</button>
+          <button type="button" class="status-chip chip-off"                data-status="Geannuleerd"     onclick="toggleChip(this)"><span class="chip-dot dot-grey"></span>Geannuleerd</button>
+        </div>
+      </div>
+      <div class="divider-v"></div>
+      <div class="filter-group">
+        <span class="filter-label">Prioriteit</span>
+        <select class="filter-select" id="filterPrio" onchange="filterTable()">
+          <option value="">Alle</option>
+          <option value="Kritiek">Kritiek</option>
+          <option value="Hoog">Hoog</option>
+          <option value="Normaal">Normaal</option>
+          <option value="Laag">Laag</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Oorzaak</span>
+        <select class="filter-select" id="filterOorzaak" onchange="filterTable()">
+          <option value="">Alle</option>
+          <option value="Mechanisch">Mechanisch</option>
+          <option value="Elektrisch">Elektrisch</option>
+          <option value="Operatorfout">Operatorfout</option>
+          <option value="Slijtage">Slijtage</option>
+          <option value="Onbekend">Onbekend</option>
+        </select>
+      </div>
+    </div>
+
+  </div><!-- /content-top -->
+  <div class="content-scroll">
+
+    <div class="table-wrap">
+      <table id="storingenTable">
+        <thead>
+          <tr>
+            <th class="sortable" onclick="sortBy('storing_number')">Storing# <span class="sort-icon" id="si_storing_number"></span></th>
+            <th class="sortable" onclick="sortBy('description')">Omschrijving <span class="sort-icon" id="si_description"></span></th>
+            <th class="sortable" onclick="sortBy('asset_id')">Asset <span class="sort-icon" id="si_asset_id"></span></th>
+            <th class="sortable" onclick="sortBy('priority')">Prioriteit <span class="sort-icon" id="si_priority"></span></th>
+            <th class="sortable" onclick="sortBy('oorzaak_categorie')">Oorzaak <span class="sort-icon" id="si_oorzaak_categorie"></span></th>
+            <th class="sortable" onclick="sortBy('status')">Status <span class="sort-icon" id="si_status"></span></th>
+            <th class="sortable" onclick="sortBy('created_at')">Gemeld op <span class="sort-icon" id="si_created_at"></span></th>
+            <th class="sortable" onclick="sortBy('herstel_tijd')">Hersteltijd <span class="sort-icon" id="si_herstel_tijd"></span></th>
+          </tr>
+        </thead>
+        <tbody id="storingenBody"></tbody>
+      </table>
+      <div class="table-footer">
+        <span class="footer-count" id="footerCount">—</span>
+      </div>
+    </div>
+
+  </div><!-- /content-scroll -->
+  </div><!-- /content -->
+</div>
+
+<!-- Detail drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      <div class="drawer-title" id="drawerTitle">Storing</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn" id="drawerWoBtn" onclick="maakWerkorderVanStoring()"><i class="ti ti-clipboard-plus"></i> Maak werkorder</button>
+        <button type="button" class="btn" onclick="openStatusModal()"><i class="ti ti-refresh"></i> Status wijzigen</button>
+      </div>
+    </div>
+
+    <div class="drawer-hero">
+      <div class="drawer-hero-left">
+        <div class="drawer-asset-photo" id="drawerAssetPhoto">
+          <i class="ti ti-alert-triangle" style="color:var(--red);opacity:0.4;"></i>
+        </div>
+        <div class="drawer-asset-info">
+          <div class="drawer-asset-name" id="drawerAssetName">—</div>
+          <div class="drawer-asset-id" id="drawerAssetId">—</div>
+        </div>
+      </div>
+      <div class="drawer-hero-right" id="drawerInfo"></div>
+    </div>
+
+    <div class="drawer-tabs">
+      <button type="button" class="drawer-tab active" onclick="switchDrawerTab('details',this)"><i class="ti ti-info-circle"></i> Details</button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('werkorder',this)"><i class="ti ti-clipboard-list"></i> Werkorder</button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('notities',this)"><i class="ti ti-note"></i> Notities</button>
+    </div>
+
+    <div class="drawer-tab-content">
+      <div class="drawer-tab-pane active" id="tabDetails"></div>
+      <div class="drawer-tab-pane" id="tabWerkorder"></div>
+      <div class="drawer-tab-pane" id="tabNotities"></div>
+    </div>
+
+    <div class="drawer-footer">
+      <button type="button" class="btn" onclick="closeDrawer()"><i class="ti ti-x"></i> Sluiten</button>
+      <button type="button" class="btn primary" id="btnOpgelost" onclick="markOpgelost()"><i class="ti ti-check"></i> Markeer opgelost</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nieuwe storing -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Nieuwe storing melden</div>
+        <div style="margin-top:4px;display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Nummer</span>
+          <span id="fStNumDisplay" style="font-family:monospace;font-size:12px;font-weight:600;color:var(--text-2);background:var(--bg);padding:2px 8px;border-radius:6px;border:0.5px solid var(--border-strong);">…</span>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="fStNum" />
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Prioriteit</label>
+          <select class="form-input" id="fPrio">
+            <option value="Laag">Laag</option>
+            <option value="Normaal" selected>Normaal</option>
+            <option value="Hoog">Hoog</option>
+            <option value="Kritiek">Kritiek</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Oorzaak categorie</label>
+          <select class="form-input" id="fOorzaak">
+            <option value="">— Onbekend —</option>
+            <option value="Mechanisch">Mechanisch</option>
+            <option value="Elektrisch">Elektrisch</option>
+            <option value="Operatorfout">Operatorfout</option>
+            <option value="Slijtage">Slijtage</option>
+            <option value="Onbekend">Onbekend</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Omschrijving <span style="color:var(--red)">*</span></label>
+        <textarea class="form-input" id="fDesc" rows="3" placeholder="Beschrijf de storing zo concreet mogelijk…" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field full">
+          <label class="form-label">Gekoppeld asset</label>
+          <select class="form-input" id="fAsset">
+            <option value="">— Geen asset —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Gemeld door</label>
+          <select class="form-input" id="fGemeld">
+            <option>J. de Vries</option>
+            <option>M. Bakker</option>
+            <option>P. Jansen</option>
+            <option>R. Smit</option>
+            <option>K. van Dam</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Hersteltijd (min)</label>
+          <input class="form-input" id="fHerstel" type="number" min="0" placeholder="bijv. 45" />
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Notities</label>
+        <textarea class="form-input" id="fNotes" rows="2" placeholder="Aanvullende informatie…" style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveStoring()"><i class="ti ti-check"></i> Melden</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Status wijzigen -->
+<div class="modal-overlay" id="statusModalOverlay" onclick="if(event.target===this)closeStatusModal()">
+  <div class="modal" style="width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">Status wijzigen</div>
+      <button class="modal-close" onclick="closeStatusModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:12px;">Storing: <strong id="statusStNum"></strong></p>
+      <div class="form-field full">
+        <label class="form-label">Nieuwe status</label>
+        <select class="form-input" id="statusSelect">
+          <option value="Open">Open</option>
+          <option value="In behandeling">In behandeling</option>
+          <option value="Opgelost">Opgelost</option>
+          <option value="Geannuleerd">Geannuleerd</option>
+        </select>
+      </div>
+      <div class="form-field full" style="margin-top:4px;">
+        <label class="form-label">Hersteltijd (min)</label>
+        <input class="form-input" id="statusHerstel" type="number" min="0" placeholder="Werkelijke hersteltijd in minuten" />
+      </div>
+      <div class="form-field full" style="margin-top:4px;">
+        <label class="form-label">Opmerking</label>
+        <textarea class="form-input" id="statusNote" rows="2" placeholder="Optioneel" style="resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeStatusModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveStatus()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let allStoringen = [];
+  let assets = [];
+  let currentStoring = null;
+  let activeChips = new Set(['Open', 'In behandeling']);
+  let sortCol = 'created_at';
+  let sortDir = 'desc';
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  async function init() {
+    await loadAssets();
+    await loadStoringen();
+    updateSidebarBadges();
+  }
+
+  async function loadAssets() {
+    const { data } = await sb.from('assets').select('asset_id, name').order('name');
+    assets = data || [];
+    const sel = document.getElementById('fAsset');
+    assets.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.asset_id;
+      opt.textContent = `${a.name} (${a.asset_id})`;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function loadStoringen() {
+    const { data, error } = await sb.from('storingen')
+      .select('*, assets(name)')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      document.getElementById('topbarSub').textContent = 'Fout bij laden';
+      return;
+    }
+
+    allStoringen = data || [];
+    updateKPIs();
+    filterTable();
+  }
+
+  // ── KPIs ──────────────────────────────────────────────────────────────────
+
+  function updateKPIs() {
+    const open        = allStoringen.filter(s => s.status === 'Open').length;
+    const behandeling = allStoringen.filter(s => s.status === 'In behandeling').length;
+    const herhaal     = allStoringen.filter(s => s.herhaalstoring).length;
+    const opgelost    = allStoringen.filter(s => s.status === 'Opgelost' && s.herstel_tijd);
+    const mttr = opgelost.length
+      ? Math.round(opgelost.reduce((sum, s) => sum + s.herstel_tijd, 0) / opgelost.length)
+      : null;
+
+    document.getElementById('kpiOpen').textContent        = open;
+    document.getElementById('kpiBehandeling').textContent = behandeling;
+    document.getElementById('kpiHerhaal').textContent     = herhaal;
+    document.getElementById('kpiMttr').textContent        = mttr !== null ? `${mttr} min` : '—';
+    document.getElementById('topbarSub').textContent      = `${allStoringen.length} storingen geladen`;
+  }
+
+  async function updateSidebarBadges() {
+    // Storingen badge
+    const { count: stCount } = await sb.from('storingen')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['Open', 'In behandeling']);
+    const stBadge = document.getElementById('storingenBadge');
+    stBadge.textContent = stCount || '';
+    stBadge.style.display = stCount ? '' : 'none';
+
+    // WO badge (overdue)
+    const today = new Date().toISOString().split('T')[0];
+    const { count: woCount } = await sb.from('werkorders')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['Open', 'In uitvoering'])
+      .lt('due_date', today);
+    const woBadge = document.getElementById('woBadge');
+    woBadge.textContent = woCount || '';
+    woBadge.style.display = woCount ? '' : 'none';
+  }
+
+  // ── Filter + Sort ─────────────────────────────────────────────────────────
+
+  function toggleChip(btn) {
+    const status = btn.dataset.status;
+    if (activeChips.has(status)) { activeChips.delete(status); btn.classList.remove('active'); }
+    else                         { activeChips.add(status);    btn.classList.add('active'); }
+    filterTable();
+  }
+
+  function filterTable() {
+    const q       = document.getElementById('searchInput').value.toLowerCase();
+    const prio    = document.getElementById('filterPrio').value;
+    const oorzaak = document.getElementById('filterOorzaak').value;
+
+    let rows = allStoringen.filter(s => {
+      if (!activeChips.has(s.status)) return false;
+      if (prio    && s.priority          !== prio)    return false;
+      if (oorzaak && s.oorzaak_categorie !== oorzaak) return false;
+      if (q) {
+        const assetName = s.assets?.name?.toLowerCase() || '';
+        const haystack  = `${s.storing_number} ${s.description} ${assetName}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      return true;
+    });
+
+    rows = sortRows(rows);
+    renderTable(rows);
+  }
+
+  function sortRows(rows) {
+    return [...rows].sort((a, b) => {
+      let va = a[sortCol] ?? '', vb = b[sortCol] ?? '';
+      if (typeof va === 'string') va = va.toLowerCase();
+      if (typeof vb === 'string') vb = vb.toLowerCase();
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ?  1 : -1;
+      return 0;
+    });
+  }
+
+  function sortBy(col) {
+    if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    else { sortCol = col; sortDir = 'asc'; }
+    document.querySelectorAll('.sort-icon').forEach(el => el.textContent = '');
+    const icon = document.getElementById(`si_${col}`);
+    if (icon) icon.textContent = sortDir === 'asc' ? '↑' : '↓';
+    document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-active'));
+    const th = document.querySelector(`[onclick="sortBy('${col}')"]`);
+    if (th) th.classList.add('sort-active');
+    filterTable();
+  }
+
+  // ── Render table ──────────────────────────────────────────────────────────
+
+  function renderTable(rows) {
+    const tbody = document.getElementById('storingenBody');
+    tbody.innerHTML = '';
+
+    rows.forEach(s => {
+      const tr = document.createElement('tr');
+      tr.ondblclick = () => openDrawer(s);
+      tr.onclick    = () => openDrawer(s);
+      tr.innerHTML = `
+        <td><span class="st-number">${s.storing_number}</span></td>
+        <td>
+          <div class="st-desc">${escHtml(s.description)}${s.herhaalstoring ? ' <span class="herhaal-badge"><i class="ti ti-repeat" style="font-size:9px;"></i> Herhaling</span>' : ''}</div>
+          ${s.assets?.name ? `<div class="st-asset">${escHtml(s.assets.name)}</div>` : ''}
+        </td>
+        <td style="font-size:11px;color:var(--text-2);">${s.assets?.name ? escHtml(s.assets.name) : '—'}</td>
+        <td>${prioBadge(s.priority)}</td>
+        <td>${s.oorzaak_categorie ? `<span class="oorzaak-badge">${escHtml(s.oorzaak_categorie)}</span>` : '<span style="color:var(--text-3);font-size:11px;">—</span>'}</td>
+        <td>${statusDot(s.status)}</td>
+        <td style="font-size:11px;color:var(--text-2);">${formatDate(s.created_at)}</td>
+        <td style="font-size:11px;color:var(--text-2);">${s.herstel_tijd ? `${s.herstel_tijd} min` : '—'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('footerCount').textContent =
+      `${rows.length} storing${rows.length !== 1 ? 'en' : ''} · ${allStoringen.filter(s => s.herhaalstoring).length} herhalend`;
+  }
+
+  // ── Drawer ────────────────────────────────────────────────────────────────
+
+  function openDrawer(s) {
+    currentStoring = s;
+    document.getElementById('drawerOverlay').classList.add('open');
+    document.getElementById('drawerTitle').textContent = s.storing_number;
+
+    const asset = assets.find(a => a.asset_id === s.asset_id);
+    document.getElementById('drawerAssetName').textContent = asset?.name || '—';
+    document.getElementById('drawerAssetId').textContent   = s.asset_id || '—';
+
+    const woBtn = document.getElementById('drawerWoBtn');
+    if (s.wo_id) {
+      woBtn.innerHTML = '<i class="ti ti-clipboard-check"></i> Werkorder aangemaakt';
+      woBtn.disabled = true;
+    } else {
+      woBtn.innerHTML = '<i class="ti ti-clipboard-plus"></i> Maak werkorder';
+      woBtn.disabled = false;
+    }
+
+    const btnOpgelost = document.getElementById('btnOpgelost');
+    btnOpgelost.style.display = ['Open', 'In behandeling'].includes(s.status) ? '' : 'none';
+
+    renderDrawerInfo(s);
+    renderTabDetails(s);
+    renderTabWerkorder(s);
+    renderTabNotities(s);
+    switchDrawerTab('details', document.querySelector('.drawer-tab'));
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawerOverlay').classList.remove('open');
+    currentStoring = null;
+  }
+
+  function renderDrawerInfo(s) {
+    const el = document.getElementById('drawerInfo');
+    el.innerHTML = `
+      <div class="drawer-meta-grid">
+        <div class="drawer-field">
+          <div class="drawer-label">Nummer</div>
+          <div class="drawer-value" style="font-family:monospace;">${s.storing_number}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Status</div>
+          <div class="drawer-value">${statusDot(s.status)}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Prioriteit</div>
+          <div class="drawer-value">${prioBadge(s.priority)}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Oorzaak</div>
+          <div class="drawer-value">${s.oorzaak_categorie ? `<span class="oorzaak-badge">${escHtml(s.oorzaak_categorie)}</span>` : '<span class="muted">—</span>'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Gemeld door</div>
+          <div class="drawer-value">${escHtml(s.gemeld_door || '—')}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Hersteltijd</div>
+          <div class="drawer-value">${s.herstel_tijd ? `${s.herstel_tijd} min` : '—'}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Gemeld op</div>
+          <div class="drawer-value muted">${formatDate(s.created_at)}</div>
+        </div>
+        <div class="drawer-field">
+          <div class="drawer-label">Herhaalstoring</div>
+          <div class="drawer-value">${s.herhaalstoring ? '<span class="herhaal-badge"><i class="ti ti-repeat" style="font-size:9px;"></i> Ja</span>' : '<span style="color:var(--text-3);font-size:12px;">Nee</span>'}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTabDetails(s) {
+    document.getElementById('tabDetails').innerHTML = `
+      <div style="padding:16px 20px;">
+        <div class="drawer-label" style="margin-bottom:8px;">Omschrijving</div>
+        <div class="drawer-notes-box">${escHtml(s.description)}</div>
+      </div>
+    `;
+  }
+
+  function renderTabWerkorder(s) {
+    const el = document.getElementById('tabWerkorder');
+    if (!s.wo_id) {
+      el.innerHTML = `
+        <div style="padding:32px;text-align:center;color:var(--text-3);">
+          <i class="ti ti-clipboard-list" style="font-size:32px;opacity:0.3;display:block;margin-bottom:8px;"></i>
+          Geen werkorder gekoppeld.<br>
+          <span style="font-size:11px;">Gebruik de knop "Maak werkorder" om een WO aan te maken.</span>
+        </div>`;
+      return;
+    }
+    loadLinkedWerkorder(s.wo_id, el);
+  }
+
+  async function loadLinkedWerkorder(woId, el) {
+    const { data: wo } = await sb.from('werkorders').select('*').eq('id', woId).single();
+    if (!wo) { el.innerHTML = '<div style="padding:20px;color:var(--text-3);">Werkorder niet gevonden.</div>'; return; }
+    el.innerHTML = `
+      <div style="padding:16px 20px;">
+        <div class="wo-link-card">
+          <i class="ti ti-clipboard-list" style="font-size:20px;color:var(--text-3);"></i>
+          <div>
+            <div class="wo-link-num">${wo.wo_number}</div>
+            <div class="wo-link-desc">${escHtml(wo.description)}</div>
+          </div>
+          <div class="wo-link-status">${statusDot(wo.status)}</div>
+        </div>
+        <div style="margin-top:14px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+          <div class="drawer-field"><div class="drawer-label">Prioriteit</div><div class="drawer-value">${prioBadge(wo.priority)}</div></div>
+          <div class="drawer-field"><div class="drawer-label">Toegewezen aan</div><div class="drawer-value muted">${escHtml(wo.assigned_to || '—')}</div></div>
+          <div class="drawer-field"><div class="drawer-label">Deadline</div><div class="drawer-value muted">${wo.due_date || '—'}</div></div>
+          <div class="drawer-field"><div class="drawer-label">Type</div><div class="drawer-value muted">${escHtml(wo.wo_type || '—')}</div></div>
+        </div>
+      </div>`;
+  }
+
+  function renderTabNotities(s) {
+    document.getElementById('tabNotities').innerHTML = `
+      <div style="padding:16px 20px;">
+        ${s.notes ? `<div class="drawer-notes-box">${escHtml(s.notes)}</div>` : '<div style="color:var(--text-3);font-size:12px;">Geen notities.</div>'}
+      </div>`;
+  }
+
+  function switchDrawerTab(tab, btn) {
+    document.querySelectorAll('.drawer-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.drawer-tab-pane').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const pane = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+    if (pane) pane.classList.add('active');
+  }
+
+  // ── Drawer actions ────────────────────────────────────────────────────────
+
+  async function markOpgelost() {
+    if (!currentStoring) return;
+    const herstel = prompt('Hersteltijd in minuten (leeg = onbekend):');
+    const payload = { status: 'Opgelost' };
+    if (herstel && !isNaN(parseInt(herstel))) payload.herstel_tijd = parseInt(herstel);
+    await sb.from('storingen').update(payload).eq('id', currentStoring.id);
+    await loadStoringen();
+    const updated = allStoringen.find(s => s.id === currentStoring.id);
+    if (updated) openDrawer(updated);
+  }
+
+  async function maakWerkorderVanStoring() {
+    if (!currentStoring || currentStoring.wo_id) return;
+
+    const { data: last } = await sb.from('werkorders')
+      .select('wo_number').order('created_at', { ascending: false }).limit(1);
+    let nextSeq = 1;
+    if (last?.length) {
+      const m = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
+      if (m) nextSeq = parseInt(m[1], 10) + 1;
+    }
+    const woNum = `WO-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
+
+    const { data: wo, error } = await sb.from('werkorders').insert({
+      wo_number:   woNum,
+      description: `Storing: ${currentStoring.description}`,
+      asset_id:    currentStoring.asset_id || null,
+      wo_type:     'Correctief',
+      priority:    currentStoring.priority || 'Normaal',
+      notes:       `Aangemaakt vanuit storing ${currentStoring.storing_number}`,
+      status:      'Open',
+    }).select().single();
+
+    if (error) { alert('Fout bij aanmaken werkorder: ' + error.message); return; }
+
+    await sb.from('storingen').update({ wo_id: wo.id }).eq('id', currentStoring.id);
+    await loadStoringen();
+    const updated = allStoringen.find(s => s.id === currentStoring.id);
+    if (updated) openDrawer(updated);
+    alert(`Werkorder ${woNum} aangemaakt.`);
+  }
+
+  // ── Status modal ──────────────────────────────────────────────────────────
+
+  function openStatusModal() {
+    if (!currentStoring) return;
+    document.getElementById('statusStNum').textContent = currentStoring.storing_number;
+    document.getElementById('statusSelect').value = currentStoring.status;
+    document.getElementById('statusHerstel').value = currentStoring.herstel_tijd || '';
+    document.getElementById('statusNote').value = '';
+    document.getElementById('statusModalOverlay').classList.add('open');
+  }
+
+  function closeStatusModal() {
+    document.getElementById('statusModalOverlay').classList.remove('open');
+  }
+
+  async function saveStatus() {
+    if (!currentStoring) return;
+    const newStatus = document.getElementById('statusSelect').value;
+    const herstel   = parseInt(document.getElementById('statusHerstel').value) || null;
+    const payload   = { status: newStatus };
+    if (herstel) payload.herstel_tijd = herstel;
+    await sb.from('storingen').update(payload).eq('id', currentStoring.id);
+    closeStatusModal();
+    await loadStoringen();
+    const updated = allStoringen.find(s => s.id === currentStoring.id);
+    if (updated) openDrawer(updated);
+  }
+
+  // ── Nieuwe storing modal ──────────────────────────────────────────────────
+
+  async function openModal() {
+    const { data: last } = await sb.from('storingen')
+      .select('storing_number').order('created_at', { ascending: false }).limit(1);
+    let nextSeq = 1;
+    if (last?.length) {
+      const m = last[0].storing_number.match(/ST-\d{4}-(\d+)/);
+      if (m) nextSeq = parseInt(m[1], 10) + 1;
+    }
+    const stNum = `ST-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
+    document.getElementById('fStNum').value       = stNum;
+    document.getElementById('fStNumDisplay').textContent = stNum;
+    document.getElementById('fDesc').value        = '';
+    document.getElementById('fPrio').value        = 'Normaal';
+    document.getElementById('fOorzaak').value     = '';
+    document.getElementById('fAsset').value       = '';
+    document.getElementById('fHerstel').value     = '';
+    document.getElementById('fNotes').value       = '';
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  async function saveStoring() {
+    const desc = document.getElementById('fDesc').value.trim();
+    if (!desc) { alert('Omschrijving is verplicht.'); return; }
+
+    const stNum   = document.getElementById('fStNum').value;
+    const assetId = document.getElementById('fAsset').value || null;
+    const herstel = parseInt(document.getElementById('fHerstel').value) || null;
+
+    // Herhaalstoring detectie: zelfde asset + zelfde oorzaak < 90 dagen
+    let herhaal = false;
+    const oorzaak = document.getElementById('fOorzaak').value || null;
+    if (assetId && oorzaak && oorzaak !== 'Onbekend') {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 90);
+      const { data: prev } = await sb.from('storingen')
+        .select('id')
+        .eq('asset_id', assetId)
+        .eq('oorzaak_categorie', oorzaak)
+        .gte('created_at', cutoff.toISOString())
+        .limit(1);
+      herhaal = (prev?.length > 0);
+    }
+
+    const { error } = await sb.from('storingen').insert({
+      storing_number:    stNum,
+      description:       desc,
+      asset_id:          assetId,
+      priority:          document.getElementById('fPrio').value,
+      oorzaak_categorie: oorzaak,
+      herstel_tijd:      herstel,
+      herhaalstoring:    herhaal,
+      gemeld_door:       document.getElementById('fGemeld').value,
+      notes:             document.getElementById('fNotes').value.trim() || null,
+      status:            'Open',
+    });
+
+    if (error) { alert('Fout bij opslaan: ' + error.message); return; }
+    closeModal();
+    await loadStoringen();
+    updateSidebarBadges();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  function escHtml(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('nl-NL', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  function prioBadge(prio) {
+    const map = { Kritiek: 'prio-kritiek', Hoog: 'prio-hoog', Normaal: 'prio-normaal', Laag: 'prio-laag' };
+    const cls = map[prio] || 'prio-normaal';
+    return `<span class="prio-badge ${cls}">${escHtml(prio || 'Normaal')}</span>`;
+  }
+
+  function statusDot(status) {
+    const map = {
+      'Open':           ['dot-red',   'Open'],
+      'In behandeling': ['dot-amber', 'In behandeling'],
+      'Opgelost':       ['dot-green', 'Opgelost'],
+      'Geannuleerd':    ['dot-grey',  'Geannuleerd'],
+    };
+    const [dotCls, label] = map[status] || ['dot-grey', status];
+    return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;"><span class="dot ${dotCls}"></span>${escHtml(label)}</span>`;
+  }
+
+  init();
+</script>
+</body>
+</html>
