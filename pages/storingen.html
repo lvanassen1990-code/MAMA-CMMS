@@ -37,6 +37,7 @@
     .status-chip.active { color: var(--text); }
     .status-chip.chip-open.active       { background: var(--red-bg);    border-color: var(--red);    color: var(--red-text); }
     .status-chip.chip-behandeling.active{ background: var(--amber-bg);  border-color: var(--amber);  color: var(--amber-text); }
+    .status-chip.chip-wo.active         { background: var(--blue-bg);   border-color: var(--blue);   color: var(--blue-text); }
     .status-chip.chip-opgelost.active   { background: var(--green-bg);  border-color: var(--green);  color: var(--green-text); }
     .status-chip.chip-off.active        { background: var(--bg);        border-color: var(--border-strong); color: var(--text-2); }
     .status-chip:not(.active) { opacity: 0.45; }
@@ -57,6 +58,7 @@
     .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
     .dot-red    { background: var(--red); }
     .dot-amber  { background: var(--amber); }
+    .dot-blue   { background: var(--blue); }
     .dot-green  { background: var(--green); }
     .dot-grey   { background: var(--text-3); }
 
@@ -199,8 +201,9 @@
         <span class="filter-label">Status</span>
         <div class="status-chips">
           <button type="button" class="status-chip chip-open active"        data-status="Open"           onclick="toggleChip(this)"><span class="chip-dot dot-red"></span>Open</button>
-          <button type="button" class="status-chip chip-behandeling active" data-status="In behandeling" onclick="toggleChip(this)"><span class="chip-dot dot-amber"></span>In behandeling</button>
-          <button type="button" class="status-chip chip-opgelost"           data-status="Opgelost"        onclick="toggleChip(this)"><span class="chip-dot dot-green"></span>Opgelost</button>
+          <button type="button" class="status-chip chip-behandeling active" data-status="In behandeling"       onclick="toggleChip(this)"><span class="chip-dot dot-amber"></span>In behandeling</button>
+          <button type="button" class="status-chip chip-wo active"          data-status="Werkorder aangemaakt" onclick="toggleChip(this)"><span class="chip-dot dot-blue"></span>Werkorder aangemaakt</button>
+          <button type="button" class="status-chip chip-opgelost"           data-status="Opgelost"             onclick="toggleChip(this)"><span class="chip-dot dot-green"></span>Opgelost</button>
           <button type="button" class="status-chip chip-off"                data-status="Geannuleerd"     onclick="toggleChip(this)"><span class="chip-dot dot-grey"></span>Geannuleerd</button>
         </div>
       </div>
@@ -391,6 +394,7 @@
         <select class="form-input" id="statusSelect">
           <option value="Open">Open</option>
           <option value="In behandeling">In behandeling</option>
+          <option value="Werkorder aangemaakt">Werkorder aangemaakt</option>
           <option value="Opgelost">Opgelost</option>
           <option value="Geannuleerd">Geannuleerd</option>
         </select>
@@ -420,7 +424,7 @@
   let allStoringen = [];
   let assets = [];
   let currentStoring = null;
-  let activeChips = new Set(['Open', 'In behandeling']);
+  let activeChips = new Set(['Open', 'In behandeling', 'Werkorder aangemaakt']);
   let sortCol = 'created_at';
   let sortDir = 'desc';
 
@@ -601,7 +605,7 @@
     }
 
     const btnOpgelost = document.getElementById('btnOpgelost');
-    btnOpgelost.style.display = ['Open', 'In behandeling'].includes(s.status) ? '' : 'none';
+    btnOpgelost.style.display = ['Open', 'In behandeling', 'Werkorder aangemaakt'].includes(s.status) ? '' : 'none';
 
     renderDrawerInfo(s);
     renderTabDetails(s);
@@ -751,7 +755,7 @@
 
     if (error) { alert('Fout bij aanmaken werkorder: ' + error.message); return; }
 
-    await sb.from('storingen').update({ wo_id: wo.id }).eq('id', currentStoring.id);
+    await sb.from('storingen').update({ wo_id: wo.id, status: 'Werkorder aangemaakt' }).eq('id', currentStoring.id);
     await loadStoringen();
     const updated = allStoringen.find(s => s.id === currentStoring.id);
     if (updated) openDrawer(updated);
@@ -873,10 +877,11 @@
 
   function statusDot(status) {
     const map = {
-      'Open':           ['dot-red',   'Open'],
-      'In behandeling': ['dot-amber', 'In behandeling'],
-      'Opgelost':       ['dot-green', 'Opgelost'],
-      'Geannuleerd':    ['dot-grey',  'Geannuleerd'],
+      'Open':                  ['dot-red',    'Open'],
+      'In behandeling':        ['dot-amber',  'In behandeling'],
+      'Werkorder aangemaakt':  ['dot-blue',   'Werkorder aangemaakt'],
+      'Opgelost':              ['dot-green',  'Opgelost'],
+      'Geannuleerd':           ['dot-grey',   'Geannuleerd'],
     };
     const [dotCls, label] = map[status] || ['dot-grey', status];
     return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;"><span class="dot ${dotCls}"></span>${escHtml(label)}</span>`;
