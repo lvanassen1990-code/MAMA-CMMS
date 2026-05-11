@@ -650,6 +650,12 @@
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('parts',this)">
         <i class="ti ti-box"></i> Onderdelen
       </button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('spec',this)">
+        <i class="ti ti-file-description"></i> Specificaties
+      </button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('storingen',this)">
+        <i class="ti ti-alert-triangle"></i> Storingen
+      </button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)">
         <i class="ti ti-note"></i> Notities
       </button>
@@ -660,6 +666,8 @@
       <div class="drawer-tab-pane active" id="tabHistory"></div>
       <div class="drawer-tab-pane" id="tabPlans"></div>
       <div class="drawer-tab-pane" id="tabParts"></div>
+      <div class="drawer-tab-pane" id="tabSpec"></div>
+      <div class="drawer-tab-pane" id="tabStoringen"></div>
       <div class="drawer-tab-pane" id="tabNotes"></div>
     </div>
 
@@ -1175,6 +1183,10 @@
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabParts').innerHTML =
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+    document.getElementById('tabSpec').innerHTML =
+      `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+    document.getElementById('tabStoringen').innerHTML =
+      `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabNotes').innerHTML =
       asset.notes
         ? `<p style="font-size:13px;color:var(--text-2);line-height:1.7;">${asset.notes}</p>`
@@ -1182,10 +1194,12 @@
 
     document.getElementById('drawerOverlay').classList.add('open');
 
-    // Async: laad history, plannen en onderdelen
+    // Async: laad alle tabs
     loadDrawerHistory(assetId);
     loadDrawerPlans(assetId);
     loadDrawerParts(assetId);
+    renderDrawerSpec(asset);
+    loadDrawerStoringen(assetId);
   }
 
   async function loadDrawerHistory(assetId) {
@@ -1316,6 +1330,133 @@
       </div>`;
     } catch(e) {
       pane.innerHTML = `<div style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden onderdelen.</div>`;
+    }
+  }
+
+  /* ── Tab: Specificaties ── */
+  function renderDrawerSpec(asset) {
+    const pane = document.getElementById('tabSpec');
+
+    const field = (label, value, isLink = false) => {
+      const val = isLink && value
+        ? `<a href="${value}" target="_blank" style="color:var(--accent);font-size:12px;">${value}</a>`
+        : `<span style="font-size:13px;font-weight:500;">${value || '—'}</span>`;
+      return `<div style="display:flex;flex-direction:column;gap:3px;">
+        <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">${label}</div>
+        ${val}
+      </div>`;
+    };
+
+    pane.innerHTML = `<div style="padding:20px 24px;display:flex;flex-direction:column;gap:20px;">
+      <div>
+        <div style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;border-bottom:0.5px solid var(--border);padding-bottom:6px;">Technische gegevens</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 20px;">
+          ${field('Fabrikant', asset.manufacturer)}
+          ${field('Model', asset.model)}
+          ${field('Serienummer', asset.serial_number)}
+          ${field('Bouwjaar', asset.build_year)}
+          ${field('Vermogen / Capaciteit', asset.capacity)}
+          ${field('Locatiezone / Hal', asset.location_zone)}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;border-bottom:0.5px solid var(--border);padding-bottom:6px;">Documentatie</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${field('Handleiding / Technisch manual', asset.manual_url, true)}
+          ${field('P&ID / Schakelschema', asset.pid_url, true)}
+          ${field('CE-certificaat', asset.certificate_url, true)}
+        </div>
+      </div>
+      <div style="padding:10px 0;">
+        <button type="button" class="btn" onclick="openSpecEdit()"><i class="ti ti-pencil"></i> Specificaties bewerken</button>
+      </div>
+    </div>`;
+  }
+
+  function openSpecEdit() {
+    if (!drawerAsset) return;
+    const a = drawerAsset;
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay open';
+    overlay.innerHTML = `<div class="modal" style="width:520px;">
+      <div class="modal-header">
+        <div class="modal-title">Specificaties bewerken — ${a.name}</div>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-field"><label class="form-label">Bouwjaar</label><input class="form-input" id="specYear" type="number" value="${a.build_year||''}" /></div>
+          <div class="form-field"><label class="form-label">Vermogen / Capaciteit</label><input class="form-input" id="specCapacity" value="${a.capacity||''}" /></div>
+        </div>
+        <div class="form-field full"><label class="form-label">Locatiezone / Hal</label><input class="form-input" id="specZone" value="${a.location_zone||''}" /></div>
+        <div class="form-field full"><label class="form-label">Handleiding URL</label><input class="form-input" id="specManual" type="url" value="${a.manual_url||''}" placeholder="https://…" /></div>
+        <div class="form-field full"><label class="form-label">P&ID / Schakelschema URL</label><input class="form-input" id="specPid" type="url" value="${a.pid_url||''}" placeholder="https://…" /></div>
+        <div class="form-field full"><label class="form-label">CE-certificaat URL</label><input class="form-input" id="specCert" type="url" value="${a.certificate_url||''}" placeholder="https://…" /></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="this.closest('.modal-overlay').remove()">Annuleren</button>
+        <button class="btn primary" onclick="saveSpecEdit(this)"><i class="ti ti-check"></i> Opslaan</button>
+      </div>
+    </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  async function saveSpecEdit(btn) {
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+    const payload = {
+      build_year:      parseInt(document.getElementById('specYear').value) || null,
+      capacity:        document.getElementById('specCapacity').value.trim() || null,
+      location_zone:   document.getElementById('specZone').value.trim() || null,
+      manual_url:      document.getElementById('specManual').value.trim() || null,
+      pid_url:         document.getElementById('specPid').value.trim() || null,
+      certificate_url: document.getElementById('specCert').value.trim() || null,
+    };
+    const { error } = await sb.from('assets').update(payload).eq('asset_id', drawerAsset.asset_id);
+    if (error) { alert('Fout: ' + error.message); btn.disabled = false; return; }
+    Object.assign(drawerAsset, payload);
+    const idx = allAssets.findIndex(a => a.asset_id === drawerAsset.asset_id);
+    if (idx !== -1) Object.assign(allAssets[idx], payload);
+    btn.closest('.modal-overlay').remove();
+    renderDrawerSpec(drawerAsset);
+  }
+
+  /* ── Tab: Storingen ── */
+  async function loadDrawerStoringen(assetId) {
+    const pane = document.getElementById('tabStoringen');
+    try {
+      const { data, error } = await sb.from('werkorders')
+        .select('wo_number,description,assigned_to,created_at,completed_at,status,priority')
+        .eq('asset_id', assetId)
+        .eq('wo_type', 'Correctief')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (!data || !data.length) {
+        pane.innerHTML = `<div class="history-empty"><i class="ti ti-mood-happy"></i>Geen storingen geregistreerd voor dit asset.</div>`;
+        return;
+      }
+
+      const rows = data.map(w => {
+        const date = new Date(w.created_at).toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'});
+        const duur = w.completed_at
+          ? Math.round((new Date(w.completed_at) - new Date(w.created_at)) / 60000) + ' min'
+          : '—';
+        const prioColor = { Kritiek: 'var(--red-text)', Hoog: 'var(--amber-text)', Normaal: 'var(--text-2)', Laag: 'var(--text-3)' }[w.priority] || 'var(--text-2)';
+        return `<div style="display:flex;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);align-items:flex-start;">
+          <div style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:${prioColor};margin-top:5px;"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:500;">${w.description}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${date} · ${w.wo_number} · ${w.assigned_to||'—'} · Hersteltijd: ${duur}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+      pane.innerHTML = `<div style="padding:16px 20px;">
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">${data.length} storing${data.length !== 1 ? 'en' : ''} geregistreerd</div>
+        ${rows}
+      </div>`;
+    } catch(e) {
+      pane.innerHTML = `<div style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden storingen.</div>`;
     }
   }
 
