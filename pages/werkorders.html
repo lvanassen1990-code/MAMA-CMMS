@@ -507,8 +507,8 @@
     document.getElementById('kpiLate').textContent  = late;
     document.getElementById('topbarSub').textContent = `${data.length} werkorders geladen`;
     const badge = document.getElementById('sidebarBadge');
-    badge.textContent = open + bezig || '';
-    badge.style.display = (open + bezig) ? '' : 'none';
+    badge.textContent = late || '';
+    badge.style.display = late ? '' : 'none';
   }
 
   function renderTable(data) {

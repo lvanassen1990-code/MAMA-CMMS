@@ -91,6 +91,36 @@
     .asset-option:hover { background: var(--bg); }
     .asset-option input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; }
 
+    /* Plans filter bar */
+    .plans-filter { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+    .plans-search { display: flex; align-items: center; gap: 8px; }
+    .plans-search i { color: var(--text-3); font-size: 14px; }
+    .plans-search input { border: none; outline: none; background: transparent; font-size: 12px; color: var(--text); width: 100%; font-family: inherit; }
+    .plans-search input::placeholder { color: var(--text-3); }
+    .plans-chips { display: flex; gap: 5px; }
+    .status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid transparent; background: var(--bg); color: var(--text-3); transition: all 0.15s; font-family: inherit; }
+    .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; opacity: 0.4; transition: opacity 0.15s; }
+    .status-chip.active .chip-dot { opacity: 1; }
+    .status-chip.active { color: var(--text); }
+    .status-chip.chip-actief.active  { background: var(--green-bg);  border-color: var(--green);  color: var(--green-text); }
+    .status-chip.chip-inactief.active { background: var(--bg); border-color: var(--border-strong); color: var(--text-2); }
+    .status-chip:not(.active) { opacity: 0.45; }
+    .status-chip:hover { opacity: 1; }
+
+    /* Inactive plan card */
+    .plan-card.inactive { opacity: 0.55; }
+    .inactive-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--bg); border: 0.5px solid var(--border-strong); color: var(--text-3); font-weight: 500; }
+
+    /* Toggle switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+    .toggle-label { font-size: 11px; color: var(--text-2); user-select: none; min-width: 38px; }
+    .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--border-strong); border-radius: 20px; transition: background .2s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .toggle input:checked + .toggle-slider { background: var(--green); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
   </style>
 </head>
 <body>
@@ -138,6 +168,16 @@
   <div class="content">
     <!-- Plans list -->
     <div class="plans-col">
+      <div class="plans-filter">
+        <div class="plans-search">
+          <i class="ti ti-search"></i>
+          <input type="text" id="planSearch" placeholder="Zoek op naam of omschrijving…" oninput="renderPlansList()" />
+        </div>
+        <div class="plans-chips">
+          <button type="button" class="status-chip chip-actief active" onclick="togglePlanChip(this,'actief')"><span class="chip-dot" style="background:var(--green);"></span>Actief</button>
+          <button type="button" class="status-chip chip-inactief" onclick="togglePlanChip(this,'inactief')"><span class="chip-dot" style="background:var(--text-3);"></span>Inactief</button>
+        </div>
+      </div>
       <div id="plansList" style="display:flex;flex-direction:column;gap:10px;">
         <div style="text-align:center;padding:40px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>
       </div>
@@ -232,6 +272,14 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let plans = [], allAssets = [], selectedPlan = null;
+  let showActief = true, showInactief = false;
+
+  function togglePlanChip(btn, key) {
+    btn.classList.toggle('active');
+    if (key === 'actief')   showActief   = btn.classList.contains('active');
+    if (key === 'inactief') showInactief = btn.classList.contains('active');
+    renderPlansList();
+  }
 
   const intervalDays = { Dagelijks:1, Wekelijks:7, Maandelijks:30, Kwartaal:90, Halfjaarlijks:182, Jaarlijks:365 };
 
@@ -261,26 +309,39 @@
     ]);
     plans = p || [];
     allAssets = a || [];
-    document.getElementById('topbarSub').textContent = `${plans.length} plannen`;
+    const actief = plans.filter(x => x.is_active !== false).length;
+    document.getElementById('topbarSub').textContent = `${actief} actieve plannen · ${plans.length - actief} inactief`;
     renderPlansList();
   }
 
   function renderPlansList() {
     const el = document.getElementById('plansList');
-    if (!plans.length) {
+    const q = (document.getElementById('planSearch')?.value || '').toLowerCase();
+
+    const visible = plans.filter(p => {
+      const active = p.is_active !== false;
+      if (active  && !showActief)   return false;
+      if (!active && !showInactief) return false;
+      if (q && !p.name.toLowerCase().includes(q) && !(p.description||'').toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    if (!visible.length) {
       el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-3);">Geen plannen gevonden</div>`;
       return;
     }
-    el.innerHTML = plans.map(p => {
+    el.innerHTML = visible.map(p => {
       const taskCount = (p.maintenance_tasks || []).length;
+      const isActive = p.is_active !== false;
       const sel = selectedPlan && selectedPlan.id === p.id ? 'selected' : '';
-      return `<div class="plan-card ${sel}" onclick="selectPlan('${p.id}')">
+      return `<div class="plan-card ${sel}${isActive ? '' : ' inactive'}" onclick="selectPlan('${p.id}')">
         <div class="plan-card-header">
           <div class="plan-name">${p.name}</div>
           <button class="btn" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();editPlan('${p.id}')"><i class="ti ti-pencil"></i></button>
         </div>
         <div class="plan-desc">${p.description || '—'}</div>
         <div class="plan-meta">
+          ${!isActive ? '<span class="inactive-badge">Inactief</span>' : ''}
           <span class="interval-badge"><i class="ti ti-refresh" style="font-size:10px;"></i> ${p.interval_type}</span>
           ${p.estimated_duration ? `<span class="duration-badge"><i class="ti ti-clock" style="font-size:10px;"></i> ${p.estimated_duration} min</span>` : ''}
           <span class="task-count"><i class="ti ti-checklist" style="font-size:12px;"></i> ${taskCount} taken</span>
@@ -306,12 +367,21 @@
       .eq('plan_id', p.id);
 
     const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
+    const isActive = p.is_active !== false;
 
     dc.innerHTML = `
       <div class="card">
         <div class="card-header">
           <div class="card-title"><i class="ti ti-clipboard-text"></i> ${p.name}</div>
-          <div style="display:flex;gap:6px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label class="toggle-wrap" title="${isActive ? 'Plan deactiveren' : 'Plan activeren'}">
+              <label class="toggle">
+                <input type="checkbox" ${isActive ? 'checked' : ''} onchange="togglePlanActive('${p.id}', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">${isActive ? 'Actief' : 'Inactief'}</span>
+            </label>
+            ${isActive ? `<button class="btn" onclick="genereerWerkorders('${p.id}')"><i class="ti ti-bolt"></i> Genereer werkorder</button>` : ''}
             <button class="btn" onclick="openLinkModal('${p.id}')"><i class="ti ti-link"></i> Assets koppelen</button>
             <button class="btn" onclick="editPlan('${p.id}')"><i class="ti ti-pencil"></i> Bewerken</button>
           </div>
@@ -466,6 +536,68 @@
     }
   }
 
+  /* ── Activeer / Deactiveer ── */
+  async function togglePlanActive(id, activate) {
+    const { error } = await sb.from('maintenance_plans').update({ is_active: activate }).eq('id', id);
+    if (error) { alert('Fout: ' + error.message); return; }
+    const plan = plans.find(p => p.id === id);
+    if (plan) plan.is_active = activate;
+    renderPlansList();
+    if (selectedPlan && selectedPlan.id === id) renderDetail();
+  }
+
+  /* ── Werkorder genereren ── */
+  async function maakWerkorderAan(plan, link) {
+    const { data: last } = await sb.from('werkorders')
+      .select('wo_number').order('created_at', { ascending: false }).limit(1);
+    let nextSeq = 1;
+    if (last?.length) {
+      const m = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
+      if (m) nextSeq = parseInt(m[1], 10) + 1;
+    }
+    const woNum = `WO-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
+    const payload = {
+      wo_number:   woNum,
+      description: `${plan.name} — ${link.assets?.name || link.asset_id}`,
+      asset_id:    link.asset_id,
+      wo_type:     'Preventief',
+      priority:    'Normaal',
+      due_date:    link.next_due || null,
+      notes:       `Automatisch gegenereerd vanuit onderhoudsplan: ${plan.name}`,
+      status:      'Open',
+    };
+    await sb.from('werkorders').insert(payload);
+
+    // next_due vooruitschuiven
+    const basis = link.next_due ? new Date(link.next_due) : new Date();
+    basis.setDate(basis.getDate() + plan.interval_days);
+    await sb.from('asset_maintenance_plans')
+      .update({ next_due: basis.toISOString().split('T')[0] })
+      .eq('id', link.id);
+  }
+
+  async function genereerWerkorders(planId) {
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) return;
+    const { data: links } = await sb.from('asset_maintenance_plans')
+      .select('*, assets(name)').eq('plan_id', planId);
+    if (!links?.length) { alert('Geen assets gekoppeld aan dit plan.'); return; }
+    for (const link of links) await maakWerkorderAan(plan, link);
+    alert(`${links.length} werkorder(s) aangemaakt.`);
+    if (selectedPlan?.id === planId) renderDetail();
+  }
+
+  async function checkAutoGenerate() {
+    const today = new Date().toISOString().split('T')[0];
+    const actievePlannen = plans.filter(p => p.is_active !== false);
+    for (const plan of actievePlannen) {
+      const { data: links } = await sb.from('asset_maintenance_plans')
+        .select('*, assets(name)').eq('plan_id', plan.id).lte('next_due', today);
+      if (!links?.length) continue;
+      for (const link of links) await maakWerkorderAan(plan, link);
+    }
+  }
+
   /* ── Link modal ── */
   let linkPlanId = null;
 
@@ -523,7 +655,10 @@
 
   async function init() {
     const ok = await testConnection();
-    if (ok) loadAll();
+    if (!ok) return;
+    await loadAll();
+    await checkAutoGenerate();
+    renderPlansList();
   }
 
   init();
