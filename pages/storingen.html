@@ -731,12 +731,11 @@
   async function maakWerkorderVanStoring() {
     if (!currentStoring || currentStoring.wo_id) return;
 
-    const { data: last } = await sb.from('werkorders')
-      .select('wo_number').order('created_at', { ascending: false }).limit(1);
+    const { data: allWos } = await sb.from('werkorders').select('wo_number');
     let nextSeq = 1;
-    if (last?.length) {
-      const m = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
-      if (m) nextSeq = parseInt(m[1], 10) + 1;
+    if (allWos?.length) {
+      const nums = allWos.map(w => { const m = w.wo_number.match(/WO-\d{4}-(\d+)/); return m ? parseInt(m[1], 10) : 0; });
+      nextSeq = Math.max(...nums) + 1;
     }
     const woNum = `WO-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
 
