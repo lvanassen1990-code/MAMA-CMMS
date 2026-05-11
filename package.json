@@ -1,0 +1,19 @@
+{
+  "name": "mama-cmms",
+  "version": "1.0.0",
+  "description": "MAMA Maintenance Manager — CMMS webapplicatie",
+  "type": "module",
+  "scripts": {
+    "serve": "npx serve . -p 3000",
+    "agent": "node tests/agent/cmms-tester.js",
+    "test":  "playwright test"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.0",
+    "playwright": "^1.45.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0",
+    "serve": "^14.2.0"
+  }
+}

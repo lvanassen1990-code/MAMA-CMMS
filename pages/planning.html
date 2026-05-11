@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planning — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../assets/mama.css" />
+  <style>
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-top { flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
+    .content-scroll { flex: 1; min-height: 0; overflow-y: scroll; overflow-x: clip; scrollbar-gutter: stable; padding-bottom: 20px; }
+    .content-scroll::-webkit-scrollbar { width: 6px; }
+    .content-scroll::-webkit-scrollbar-track { background: transparent; }
+    .content-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 3px; }
+
+    /* Kalender navigatiebalk */
+    .cal-nav { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+    .cal-nav-title { font-size: 15px; font-weight: 600; flex: 1; text-align: center; }
+    .cal-nav-btn { width: 30px; height: 30px; border-radius: 8px; border: 0.5px solid var(--border-strong); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-2); font-size: 16px; transition: background 0.1s; }
+    .cal-nav-btn:hover { background: var(--border); }
+    .cal-today-btn { padding: 5px 12px; border-radius: 8px; border: 0.5px solid var(--border-strong); background: var(--bg); cursor: pointer; font-size: 12px; color: var(--text-2); font-family: inherit; transition: background 0.1s; }
+    .cal-today-btn:hover { background: var(--border); }
+
+    /* View toggle */
+    .view-toggle { display: flex; border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); overflow: hidden; }
+    .view-btn { padding: 5px 12px; background: var(--bg); border: none; cursor: pointer; color: var(--text-3); font-size: 12px; font-family: inherit; transition: background 0.12s, color 0.12s; }
+    .view-btn.active { background: var(--accent); color: #fff; }
+
+    /* Legenda */
+    .legend { display: flex; align-items: center; gap: 14px; font-size: 11px; color: var(--text-3); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* Maandkalender */
+    .cal-grid { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: clip; }
+    .cal-header-row { display: grid; grid-template-columns: repeat(7,1fr); border-bottom: 0.5px solid var(--border); background: var(--bg); }
+    .cal-header-cell { padding: 8px 10px; font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+    .cal-body { display: grid; grid-template-columns: repeat(7,1fr); }
+    .cal-cell { min-height: 100px; border-right: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); padding: 6px 8px; display: flex; flex-direction: column; gap: 3px; background: var(--surface); transition: background 0.1s; }
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell.other-month { background: var(--bg); }
+    .cal-cell.today { background: rgba(26,26,26,0.03); }
+    .cal-cell.today .cal-day-nr { background: var(--accent); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    .cal-day-nr { font-size: 12px; font-weight: 500; color: var(--text-2); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
+    .cal-cell.other-month .cal-day-nr { color: var(--text-3); opacity: 0.4; }
+
+    /* Agenda blokken */
+    .cal-event { border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 500; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity 0.1s; }
+    .cal-event:hover { opacity: 0.8; }
+    .cal-event.ev-open    { background: var(--blue-bg);   color: var(--blue-text);   border-left: 2px solid var(--blue); }
+    .cal-event.ev-bezig   { background: var(--amber-bg);  color: var(--amber-text);  border-left: 2px solid var(--amber); }
+    .cal-event.ev-kritiek { background: var(--red-bg);    color: var(--red-text);    border-left: 2px solid var(--red); }
+    .cal-event.ev-plan    { background: var(--green-bg);  color: var(--green-text);  border-left: 2px solid var(--green); }
+    .cal-event.ev-done    { background: var(--bg);        color: var(--text-3);      border-left: 2px solid var(--border-strong); text-decoration: line-through; }
+    .cal-more { font-size: 10px; color: var(--text-3); padding-left: 4px; cursor: pointer; }
+    .cal-more:hover { color: var(--text-2); }
+
+    /* Weekweergave */
+    .week-grid { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: clip; }
+    .week-header { display: grid; grid-template-columns: 80px repeat(7,1fr); border-bottom: 0.5px solid var(--border); background: var(--bg); }
+    .week-header-cell { padding: 8px 10px; font-size: 11px; font-weight: 500; color: var(--text-2); text-align: center; border-left: 0.5px solid var(--border); }
+    .week-header-cell:first-child { border-left: none; }
+    .week-header-cell.today-col { color: var(--accent); font-weight: 600; }
+    .week-row { display: grid; grid-template-columns: 80px repeat(7,1fr); border-bottom: 0.5px solid var(--border); min-height: 60px; }
+    .week-row:last-child { border-bottom: none; }
+    .week-time { padding: 8px 10px; font-size: 10px; color: var(--text-3); text-align: right; border-right: 0.5px solid var(--border); display: flex; align-items: flex-start; padding-top: 6px; }
+    .week-cell { border-left: 0.5px solid var(--border); padding: 4px 6px; display: flex; flex-direction: column; gap: 3px; }
+
+    /* Tooltip / popover bij klikken op event */
+    .event-popover { position: fixed; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 14px 16px; width: 260px; z-index: 200; }
+    .event-popover-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+    .event-popover-row { display: flex; gap: 8px; font-size: 11px; color: var(--text-2); margin-bottom: 4px; }
+    .event-popover-row i { font-size: 13px; color: var(--text-3); flex-shrink: 0; margin-top: 1px; }
+    .event-popover-close { position: absolute; top: 8px; right: 8px; background: none; border: none; cursor: pointer; color: var(--text-3); font-size: 16px; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <img src="../assets/logo-mark.svg" alt="MAMA" style="width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0;" />
+      <div><div class="logo-name">MAMA</div><div class="logo-sub">Maintenance Manager</div></div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="sidebarBadge" style="display:none;"></span></a>
+  <a href="planning.html" class="nav-item active"><i class="ti ti-calendar-event"></i> Planning</a>
+  <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge">3</span></a>
+  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div><div class="user-name">Leon</div><div class="user-role">Board / Owner</div></div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Planning</div>
+      <div class="topbar-sub" id="topbarSub">Laden…</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" onclick="window.location='werkorders.html'"><i class="ti ti-plus"></i> Nieuwe werkorder</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="content-top">
+
+      <!-- Navigatiebalk -->
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+        <button class="cal-today-btn" onclick="goToday()">Vandaag</button>
+        <div class="cal-nav-title" id="calTitle">—</div>
+        <button class="cal-nav-btn" onclick="changeMonth(1)"><i class="ti ti-chevron-right"></i></button>
+        <div class="view-toggle">
+          <button class="view-btn active" id="btnMonth" onclick="setView('month')">Maand</button>
+          <button class="view-btn" id="btnWeek" onclick="setView('week')">Week</button>
+        </div>
+        <div class="legend">
+          <span><span class="legend-dot" style="background:var(--blue);"></span> Werkorder</span>
+          <span><span class="legend-dot" style="background:var(--green);"></span> Onderhoudsplan</span>
+          <span><span class="legend-dot" style="background:var(--red);"></span> Kritiek</span>
+          <span><span class="legend-dot" style="background:var(--border-strong);"></span> Voltooid</span>
+        </div>
+      </div>
+
+    </div>
+    <div class="content-scroll">
+      <div id="calContainer"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Event popover -->
+<div id="eventPopover" class="event-popover" style="display:none;">
+  <button class="event-popover-close" onclick="closePopover()"><i class="ti ti-x"></i></button>
+  <div class="event-popover-title" id="popTitle"></div>
+  <div id="popBody"></div>
+  <div style="margin-top:10px;">
+    <a id="popLink" href="#" class="btn" style="font-size:11px;padding:4px 10px;"><i class="ti ti-external-link"></i> Open werkorder</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const DAYS_NL  = ['Ma','Di','Wo','Do','Vr','Za','Zo'];
+  const MONTHS_NL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+
+  let currentDate = new Date();
+  let currentView = 'month';
+  let allEvents   = []; // gecombineerde werkorders + planningsblokken
+
+  // ── Data laden ──────────────────────────────────────────────────────────────
+
+  async function loadData() {
+    document.getElementById('topbarSub').textContent = 'Laden…';
+
+    const year  = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    // Ruim venster: vorige maand t/m volgende maand
+    const from = new Date(year, month - 1, 1).toISOString().split('T')[0];
+    const to   = new Date(year, month + 2, 0).toISOString().split('T')[0];
+
+    const [{ data: wos }, { data: plans }] = await Promise.all([
+      sb.from('werkorders')
+        .select('id,wo_number,description,status,priority,due_date,assigned_to,asset_id,wo_type')
+        .not('due_date', 'is', null)
+        .gte('due_date', from)
+        .lte('due_date', to),
+      sb.from('asset_maintenance_plans')
+        .select('id,next_due,plan_id,asset_id,maintenance_plans(name,interval_type),assets(name)')
+        .not('next_due', 'is', null)
+        .gte('next_due', from)
+        .lte('next_due', to),
+    ]);
+
+    allEvents = [];
+
+    // Werkorders
+    (wos || []).forEach(w => {
+      allEvents.push({
+        type:    'wo',
+        date:    w.due_date,
+        title:   w.description,
+        sub:     w.wo_number,
+        status:  w.status,
+        priority:w.priority,
+        assigned:w.assigned_to,
+        id:      w.id,
+        woType:  w.wo_type,
+      });
+    });
+
+    // Onderhoudsplannen
+    (plans || []).forEach(p => {
+      allEvents.push({
+        type:    'plan',
+        date:    p.next_due,
+        title:   p.maintenance_plans?.name || 'Onderhoudsplan',
+        sub:     p.assets?.name || p.asset_id,
+        status:  'Plan',
+        priority:'Normaal',
+        assigned:'—',
+        id:      p.id,
+        planId:  p.plan_id,
+      });
+    });
+
+    const woCount   = (wos||[]).length;
+    const planCount = (plans||[]).length;
+    document.getElementById('topbarSub').textContent =
+      `${woCount} werkorder${woCount !== 1 ? 's' : ''} · ${planCount} onderhoudsplan${planCount !== 1 ? 'nen' : ''}`;
+
+    // Badge sidebar verlopen WO's
+    const today = new Date().toISOString().split('T')[0];
+    const { data: late } = await sb.from('werkorders')
+      .select('id').lt('due_date', today)
+      .not('status', 'in', '("Voltooid","Geannuleerd")');
+    const badge = document.getElementById('sidebarBadge');
+    badge.textContent = (late||[]).length || '';
+    badge.style.display = (late||[]).length ? '' : 'none';
+
+    render();
+  }
+
+  // ── Renderen ─────────────────────────────────────────────────────────────────
+
+  function render() {
+    updateTitle();
+    if (currentView === 'month') renderMonth();
+    else renderWeek();
+  }
+
+  function updateTitle() {
+    const m = MONTHS_NL[currentDate.getMonth()];
+    const y = currentDate.getFullYear();
+    if (currentView === 'month') {
+      document.getElementById('calTitle').textContent = `${m.charAt(0).toUpperCase() + m.slice(1)} ${y}`;
+    } else {
+      const weekStart = getWeekStart(currentDate);
+      const weekEnd   = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+      document.getElementById('calTitle').textContent =
+        `${weekStart.getDate()} ${MONTHS_NL[weekStart.getMonth()]} — ${weekEnd.getDate()} ${MONTHS_NL[weekEnd.getMonth()]} ${y}`;
+    }
+  }
+
+  function eventsForDate(dateStr) {
+    return allEvents.filter(e => e.date === dateStr);
+  }
+
+  function eventClass(ev) {
+    if (ev.type === 'plan') return 'ev-plan';
+    if (ev.status === 'Voltooid' || ev.status === 'Geannuleerd') return 'ev-done';
+    if (ev.priority === 'Kritiek') return 'ev-kritiek';
+    if (ev.status === 'In uitvoering') return 'ev-bezig';
+    return 'ev-open';
+  }
+
+  function eventIcon(ev) {
+    if (ev.type === 'plan') return '<i class="ti ti-clipboard-text" style="font-size:9px;"></i>';
+    if (ev.priority === 'Kritiek') return '<i class="ti ti-alert-circle" style="font-size:9px;"></i>';
+    return '';
+  }
+
+  function renderEventBlock(ev) {
+    const cls  = eventClass(ev);
+    const icon = eventIcon(ev);
+    return `<div class="cal-event ${cls}" onclick="showPopover(event,'${ev.id}','${ev.type}')" title="${ev.title}">
+      ${icon} ${ev.title}
+    </div>`;
+  }
+
+  // ── Maandweergave ────────────────────────────────────────────────────────────
+
+  function renderMonth() {
+    const year  = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const today = toDateStr(new Date());
+
+    const firstDay = new Date(year, month, 1);
+    // Maandag = 0 (NL week start)
+    let startOffset = firstDay.getDay() - 1;
+    if (startOffset < 0) startOffset = 6;
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrev  = new Date(year, month, 0).getDate();
+
+    let html = `<div class="cal-grid">
+      <div class="cal-header-row">
+        ${DAYS_NL.map(d => `<div class="cal-header-cell">${d}</div>`).join('')}
+      </div>
+      <div class="cal-body">`;
+
+    // Vorige maand opvullen
+    for (let i = startOffset - 1; i >= 0; i--) {
+      const d = daysInPrev - i;
+      const dateStr = toDateStr(new Date(year, month - 1, d));
+      const evs = eventsForDate(dateStr);
+      html += renderCell(d, dateStr, evs, true, false);
+    }
+
+    // Huidige maand
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = toDateStr(new Date(year, month, d));
+      const evs = eventsForDate(dateStr);
+      html += renderCell(d, dateStr, evs, false, dateStr === today);
+    }
+
+    // Volgende maand opvullen tot 42 cellen
+    const total = startOffset + daysInMonth;
+    const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+    for (let d = 1; d <= remaining; d++) {
+      const dateStr = toDateStr(new Date(year, month + 1, d));
+      const evs = eventsForDate(dateStr);
+      html += renderCell(d, dateStr, evs, true, false);
+    }
+
+    html += `</div></div>`;
+    document.getElementById('calContainer').innerHTML = html;
+  }
+
+  function renderCell(dayNr, dateStr, evs, otherMonth, isToday) {
+    const cls = `cal-cell${otherMonth ? ' other-month' : ''}${isToday ? ' today' : ''}`;
+    const MAX = 3;
+    const visible = evs.slice(0, MAX);
+    const extra   = evs.length - MAX;
+    return `<div class="${cls}">
+      <div class="cal-day-nr">${dayNr}</div>
+      ${visible.map(renderEventBlock).join('')}
+      ${extra > 0 ? `<div class="cal-more">+${extra} meer</div>` : ''}
+    </div>`;
+  }
+
+  // ── Weekweergave ─────────────────────────────────────────────────────────────
+
+  function getWeekStart(d) {
+    const date = new Date(d);
+    const day  = date.getDay();
+    const diff = (day === 0 ? -6 : 1 - day);
+    date.setDate(date.getDate() + diff);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  }
+
+  function renderWeek() {
+    const today     = toDateStr(new Date());
+    const weekStart = getWeekStart(currentDate);
+    const days      = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(weekStart);
+      d.setDate(weekStart.getDate() + i);
+      days.push(d);
+    }
+
+    const headerCells = days.map(d => {
+      const ds  = toDateStr(d);
+      const cls = ds === today ? 'week-header-cell today-col' : 'week-header-cell';
+      return `<div class="${cls}">${DAYS_NL[d.getDay() === 0 ? 6 : d.getDay() - 1]} ${d.getDate()}</div>`;
+    }).join('');
+
+    // Groepeer events per dag
+    const eventsByDay = days.map(d => eventsForDate(toDateStr(d)));
+    const maxRows = Math.max(1, ...eventsByDay.map(e => e.length));
+
+    let rows = '';
+    for (let r = 0; r < maxRows; r++) {
+      rows += `<div class="week-row">
+        <div class="week-time">${r === 0 ? '' : ''}</div>
+        ${days.map((d, i) => {
+          const ev = eventsByDay[i][r];
+          return `<div class="week-cell">${ev ? renderEventBlock(ev) : ''}</div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    document.getElementById('calContainer').innerHTML = `
+      <div class="week-grid">
+        <div class="week-header">
+          <div class="week-header-cell" style="border-left:none;"></div>
+          ${headerCells}
+        </div>
+        ${rows}
+      </div>`;
+  }
+
+  // ── Popover ──────────────────────────────────────────────────────────────────
+
+  function showPopover(mouseEvent, id, type) {
+    mouseEvent.stopPropagation();
+    const ev = allEvents.find(e => e.id === id && e.type === type);
+    if (!ev) return;
+
+    const pop = document.getElementById('eventPopover');
+    document.getElementById('popTitle').textContent = ev.title;
+
+    const typeLabel = ev.type === 'plan' ? 'Onderhoudsplan' : `Werkorder · ${ev.woType||''}`;
+    const rows = [
+      ['ti-tag',       typeLabel],
+      ['ti-calendar',  `Datum: ${formatDate(ev.date)}`],
+      ['ti-user',      `Toegewezen: ${ev.assigned || '—'}`],
+      ev.type === 'wo' ? ['ti-flag', `Prioriteit: ${ev.priority}`] : null,
+      ev.type === 'wo' ? ['ti-circle-dot', `Status: ${ev.status}`] : ['ti-building-factory-2', `Asset: ${ev.sub}`],
+    ].filter(Boolean);
+
+    document.getElementById('popBody').innerHTML = rows.map(([icon, text]) =>
+      `<div class="event-popover-row"><i class="ti ${icon}"></i>${text}</div>`
+    ).join('');
+
+    const link = document.getElementById('popLink');
+    if (ev.type === 'wo') {
+      link.href = `werkorders.html`;
+      link.style.display = '';
+    } else {
+      link.href = `onderhoudsplannen.html`;
+      link.textContent = 'Open onderhoudsplan';
+      link.style.display = '';
+    }
+
+    // Positioneer
+    const x = Math.min(mouseEvent.clientX + 12, window.innerWidth - 280);
+    const y = Math.min(mouseEvent.clientY + 12, window.innerHeight - 220);
+    pop.style.left = x + 'px';
+    pop.style.top  = y + 'px';
+    pop.style.display = 'block';
+  }
+
+  function closePopover() { document.getElementById('eventPopover').style.display = 'none'; }
+  document.addEventListener('click', closePopover);
+
+  // ── Navigatie ─────────────────────────────────────────────────────────────────
+
+  function changeMonth(delta) {
+    if (currentView === 'month') {
+      currentDate.setMonth(currentDate.getMonth() + delta);
+    } else {
+      currentDate.setDate(currentDate.getDate() + delta * 7);
+    }
+    loadData();
+  }
+
+  function goToday() {
+    currentDate = new Date();
+    loadData();
+  }
+
+  function setView(view) {
+    currentView = view;
+    document.getElementById('btnMonth').classList.toggle('active', view === 'month');
+    document.getElementById('btnWeek').classList.toggle('active', view === 'week');
+    render();
+  }
+
+  // ── Hulpfuncties ──────────────────────────────────────────────────────────────
+
+  function toDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatDate(str) {
+    if (!str) return '—';
+    return new Date(str).toLocaleDateString('nl-NL', {day:'numeric',month:'long',year:'numeric'});
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────────
+
+  loadData();
+</script>
+</body>
+</html>
