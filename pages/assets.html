@@ -1299,7 +1299,7 @@
         : `<i class="ti ${icon}"></i>`;
       const [dc, dt] = dueCls(a.next_maintenance);
       const nameSafe = (a.name||'').replace(/'/g,"\\'");
-      return `<div class="asset-card" ${dragAttrs(a.asset_id)}>
+      return `<div class="asset-card" onclick="openDrawer('${a.asset_id}')" style="cursor:pointer;" ${dragAttrs(a.asset_id)}>
         <div class="asset-card-photo">
           ${thumb}
           <div class="asset-card-status">${statusBadge(a.status)}</div>
@@ -1316,7 +1316,7 @@
         </div>
         <div class="asset-card-footer">
           <span class="${dc}" style="font-size:11px;"><i class="ti ti-calendar-event" style="font-size:12px;margin-right:3px;"></i>${dt}</span>
-          <button type="button" class="action-btn" onclick="openStatusModal('${a.asset_id}','${a.status}','${nameSafe}')">
+          <button type="button" class="action-btn" onclick="event.stopPropagation();openStatusModal('${a.asset_id}','${a.status}','${nameSafe}')">
             <i class="ti ti-refresh" style="font-size:12px;"></i> Status
           </button>
         </div>
