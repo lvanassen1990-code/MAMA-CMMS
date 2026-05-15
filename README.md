@@ -11,7 +11,7 @@ MAMA is een moderne, Nederlandstalig CMMS-platform (Computerized Maintenance Man
 | Module | Status | Beschrijving |
 |---|---|---|
 | **Dashboard** | ✅ Live | KPI's, machinestatus, AI-assistent, uptime-grafiek |
-| **Assets** | ✅ Live | Assetbeheer met technische stamkaart, specificaties, storingen- en onderhoudshistorie |
+| **Assets** | ✅ Live | Assetbeheer, stamkaart, asset hiërarchie (parent/child boom), drag & drop koppelmodus |
 | **Werkorders** | ✅ Live | WO-beheer met prioriteit, type, onderdelen, statusflow |
 | **Planning** | ✅ Live | Maand/week kalender met WO's en onderhoudsplannen |
 | **Storingen** | ✅ Live | Storingsregistratie, oorzaakanalyse, MTTR, herhaaldetectie, WO-koppeling |
@@ -99,7 +99,7 @@ MAMA-CMMS/
 
 | Tabel | Beschrijving |
 |---|---|
-| `assets` | Machines en installaties |
+| `assets` | Machines en installaties (incl. `parent_id` voor hiërarchie) |
 | `werkorders` | Onderhoudsopdrachten |
 | `maintenance_plans` | Preventieve onderhoudsplannen |
 | `asset_maintenance_plans` | Koppeling asset ↔ plan |
@@ -125,7 +125,10 @@ MAMA-CMMS/
 - [x] Licentiesleutelsysteem voor Field app
 - [x] Foto upload via Field app (Supabase Storage)
 - [x] AI Playwright tester agent (consultancy rapport)
-- [x] Dynamische sidebar badges
+- [x] Dynamische sidebar badges (verlopen WO's + open storingen, alle pagina's)
+- [x] Asset hiërarchie — parent/child boom, uitklap/inklap, sub-assets tab in drawer
+- [x] Drag & drop koppelmodus — assets visueel koppelen/loskoppelen via slepen
+- [x] Edge-detectie op kaarten — rand = loskoppelen, midden = koppelen
 
 ### Gepland 🔜
 - [ ] Veiligheidsmeldingen zichtbaar in MAMA desktop
