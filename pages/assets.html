@@ -291,8 +291,8 @@
     .drawer-plan-due { font-size: 11px; }
     .drawer-plan-interval { font-size: 11px; color: var(--text-3); }
 
-    tbody tr.clickable-row { cursor: default; }
-    tbody tr.clickable-row:hover { cursor: default; }
+    tbody tr.clickable-row { cursor: pointer; }
+    tbody tr.clickable-row:hover { cursor: pointer; }
 
     /* ── Drag & drop koppelmodus ── */
     .drag-mode-toggle {
@@ -1244,7 +1244,7 @@
          </span>`
       : '';
 
-    return `<tr class="clickable-row${depth > 0 ? ' child-row' : ''}" data-assetid="${a.asset_id}" style="${depth > 0 ? 'background:var(--bg);' : ''}" ${dragAttrs(a.asset_id)}>
+    return `<tr class="clickable-row${depth > 0 ? ' child-row' : ''}" data-assetid="${a.asset_id}" style="${depth > 0 ? 'background:var(--bg);' : ''}" onclick="openDrawer('${a.asset_id}')" ${dragAttrs(a.asset_id)}>
       <td class="asset-id" style="padding-left:${8 + indent}px;">
         <div style="display:flex;align-items:center;gap:2px;">
           ${expandBtn}
@@ -2135,11 +2135,6 @@
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
-  // Dubbelklik op tabelrij → open drawer
-  document.getElementById('assetsBody').addEventListener('dblclick', function(e) {
-    const row = e.target.closest('tr[data-assetid]');
-    if (row) openDrawer(row.dataset.assetid);
-  });
 
   loadAssets();
   (async () => {
