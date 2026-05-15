@@ -293,6 +293,13 @@
 
     tbody tr.clickable-row { cursor: default; }
     tbody tr.clickable-row:hover { cursor: default; }
+    .expand-btn {
+      width: 22px; height: 22px; border: none; background: none; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 4px; color: var(--text-2); padding: 0; flex-shrink: 0;
+    }
+    .expand-btn:hover { background: var(--border); }
+    .child-row { background: var(--bg); }
 
     /* Edit mode in drawer */
     .drawer-edit-input {
@@ -548,6 +555,13 @@
           </select>
         </div>
       </div>
+      <div class="form-field full">
+        <label class="form-label">Hoofd-asset (optioneel)</label>
+        <select class="form-input" id="fParent" onchange="onParentChange()">
+          <option value="">— Geen (zelfstandig asset) —</option>
+        </select>
+        <div style="font-size:10px;color:var(--text-3);margin-top:3px;">Kies een parent als dit asset onderdeel is van een groter systeem. Locatie wordt overgenomen.</div>
+      </div>
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Fabrikant</label>
@@ -644,6 +658,9 @@
       <button type="button" class="drawer-tab active" onclick="switchDrawerTab('history',this)">
         <i class="ti ti-tools"></i> Onderhoudshistorie
       </button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('subassets',this)">
+        <i class="ti ti-sitemap"></i> Sub-assets
+      </button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('plans',this)">
         <i class="ti ti-clipboard-text"></i> Onderhoudsplannen
       </button>
@@ -664,6 +681,7 @@
     <!-- Tab content -->
     <div class="drawer-tab-content">
       <div class="drawer-tab-pane active" id="tabHistory"></div>
+      <div class="drawer-tab-pane" id="tabSubassets"></div>
       <div class="drawer-tab-pane" id="tabPlans"></div>
       <div class="drawer-tab-pane" id="tabParts"></div>
       <div class="drawer-tab-pane" id="tabSpec"></div>
@@ -781,6 +799,7 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let allAssets = [];
+  let expandedNodes = new Set();
 
   const catIcons = {
     'Compressor': 'ti-wind', 'Hydrauliek': 'ti-droplet',
@@ -847,36 +866,105 @@
     renderPagination(total, pages);
   }
 
+  function buildTree(assets) {
+    const byId = {};
+    assets.forEach(a => byId[a.asset_id] = { ...a, children: [] });
+    const roots = [];
+    assets.forEach(a => {
+      if (a.parent_id && byId[a.parent_id]) {
+        byId[a.parent_id].children.push(byId[a.asset_id]);
+      } else {
+        roots.push(byId[a.asset_id]);
+      }
+    });
+    return roots;
+  }
+
+  function renderAssetRow(a, depth, hasChildren, isExpanded) {
+    const icon = catIcons[a.category] || 'ti-tool';
+    const [dc, dt] = dueCls(a.next_maintenance);
+    const lastDate = a.last_maintenance
+      ? new Date(a.last_maintenance).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' })
+      : '—';
+    const thumb = a.photo_url
+      ? `<img src="${a.photo_url}" alt="${a.name}" onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\'></i>'" />`
+      : `<i class="ti ${icon}"></i>`;
+
+    const indent = depth * 20;
+    const expandBtn = hasChildren
+      ? `<button class="expand-btn" onclick="event.stopPropagation();toggleExpand('${a.asset_id}')" title="${isExpanded ? 'Inklappen' : 'Uitklappen'}">
+           <i class="ti ti-chevron-${isExpanded ? 'down' : 'right'}" style="font-size:11px;"></i>
+         </button>`
+      : `<span style="display:inline-block;width:22px;"></span>`;
+
+    const childBadge = hasChildren
+      ? `<span style="font-size:9px;background:var(--blue-bg);color:var(--blue-text);border-radius:6px;padding:1px 5px;margin-left:4px;font-weight:500;">${a.children.length}</span>`
+      : '';
+
+    const depthLine = depth > 0
+      ? `<span style="display:inline-block;width:${indent}px;position:relative;">
+           <span style="position:absolute;left:${indent-12}px;top:-8px;bottom:0;border-left:1.5px solid var(--border-strong);border-bottom:1.5px solid var(--border-strong);width:10px;height:calc(50% + 8px);border-radius:0 0 0 4px;"></span>
+         </span>`
+      : '';
+
+    return `<tr class="clickable-row${depth > 0 ? ' child-row' : ''}" data-assetid="${a.asset_id}" style="${depth > 0 ? 'background:var(--bg);' : ''}">
+      <td class="asset-id" style="padding-left:${8 + indent}px;">
+        <div style="display:flex;align-items:center;gap:2px;">
+          ${expandBtn}
+          <span style="font-size:10px;color:var(--text-3);">${a.asset_id}</span>
+        </div>
+      </td>
+      <td><div class="asset-cell" style="padding-left:${indent}px;">
+        ${depth > 0 ? depthLine : ''}
+        <div class="asset-icon" style="width:28px;height:28px;font-size:14px;">${thumb}</div>
+        <div>
+          <div class="asset-name-main">${a.name}${childBadge}</div>
+          <div class="asset-name-sub">${a.model || ''}</div>
+        </div>
+      </div></td>
+      <td><span class="cat-badge">${a.category || '—'}</span></td>
+      <td style="font-size:12px;color:var(--text-2);">${a.location || '—'}</td>
+      <td>${statusBadge(a.status)}</td>
+      <td style="font-size:11px;color:var(--text-3);">${lastDate}</td>
+      <td><span class="${dc}">${dt}</span></td>
+      <td style="font-size:11px;color:var(--text-2);">${a.responsible_person || '—'}</td>
+      <td><button type="button" class="action-btn" onclick="event.stopPropagation();openStatusModal('${a.asset_id}','${a.status}','${a.name.replace(/'/g,"\\'")}')"><i class="ti ti-refresh" style="font-size:12px;"></i> Status</button></td>
+    </tr>`;
+  }
+
+  function renderTreeRows(nodes, depth = 0) {
+    let html = '';
+    nodes.forEach(a => {
+      const hasChildren = a.children && a.children.length > 0;
+      const isExpanded = expandedNodes.has(a.asset_id);
+      html += renderAssetRow(a, depth, hasChildren, isExpanded);
+      if (hasChildren && isExpanded) {
+        html += renderTreeRows(a.children, depth + 1);
+      }
+    });
+    return html;
+  }
+
+  function toggleExpand(assetId) {
+    if (expandedNodes.has(assetId)) expandedNodes.delete(assetId);
+    else expandedNodes.add(assetId);
+    applyPage();
+  }
+
   function renderTablePage(data) {
     const tbody = document.getElementById('assetsBody');
     if (!filteredCache.length) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Geen assets gevonden</td></tr>`;
       return;
     }
-    tbody.innerHTML = data.map(a => {
-      const icon = catIcons[a.category] || 'ti-tool';
-      const [dc, dt] = dueCls(a.next_maintenance);
-      const lastDate = a.last_maintenance
-        ? new Date(a.last_maintenance).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' })
-        : '—';
-      const thumb = a.photo_url
-        ? `<img src="${a.photo_url}" alt="${a.name}" onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\'></i>'" />`
-        : `<i class="ti ${icon}"></i>`;
-      return `<tr class="clickable-row" data-assetid="${a.asset_id}">
-        <td class="asset-id">${a.asset_id}</td>
-        <td><div class="asset-cell">
-          <div class="asset-icon">${thumb}</div>
-          <div><div class="asset-name-main">${a.name}</div><div class="asset-name-sub">${a.model || ''}</div></div>
-        </div></td>
-        <td><span class="cat-badge">${a.category || '—'}</span></td>
-        <td style="font-size:12px;color:var(--text-2);">${a.location || '—'}</td>
-        <td>${statusBadge(a.status)}</td>
-        <td style="font-size:11px;color:var(--text-3);">${lastDate}</td>
-        <td><span class="${dc}">${dt}</span></td>
-        <td style="font-size:11px;color:var(--text-2);">${a.responsible_person || '—'}</td>
-        <td><button type="button" class="action-btn" onclick="event.stopPropagation();openStatusModal('${a.asset_id}','${a.status}','${a.name.replace(/'/g,"\\'")}')"><i class="ti ti-refresh" style="font-size:12px;"></i> Status</button></td>
-      </tr>`;
-    }).join('');
+    // Bij actieve zoekterm: platte lijst + paginering; anders volledige boomstructuur
+    const q = document.getElementById('searchInput').value.trim();
+    if (q) {
+      tbody.innerHTML = data.map(a => renderAssetRow(a, 0, false, false)).join('');
+    } else {
+      const tree = buildTree(filteredCache);
+      tbody.innerHTML = renderTreeRows(tree);
+    }
   }
 
   function renderPagination(total, pages) {
@@ -1037,6 +1125,7 @@
       name,
       category:             document.getElementById('fCategory').value,
       location:             document.getElementById('fLocation').value,
+      parent_id:            document.getElementById('fParent').value || null,
       manufacturer:         document.getElementById('fManufacturer').value.trim(),
       serial_number:        document.getElementById('fSerial').value.trim(),
       installation_date:    document.getElementById('fInstallDate').value || null,
@@ -1103,7 +1192,22 @@
     if (!asset) return;
     drawerAsset = asset;
 
-    document.getElementById('drawerTitle').textContent = asset.name;
+    if (asset.parent_id) {
+      const parent = allAssets.find(a => a.asset_id === asset.parent_id);
+      if (parent) {
+        document.getElementById('drawerTitle').innerHTML =
+          `<span style="font-size:11px;color:var(--text-3);font-weight:400;display:block;margin-bottom:1px;">
+             <a href="#" onclick="event.preventDefault();closeDrawer();setTimeout(()=>openDrawer('${parent.asset_id}'),50)"
+                style="color:var(--accent);text-decoration:none;">
+               <i class="ti ti-chevron-left" style="font-size:10px;"></i> ${parent.name}
+             </a>
+           </span>${asset.name}`;
+      } else {
+        document.getElementById('drawerTitle').textContent = asset.name;
+      }
+    } else {
+      document.getElementById('drawerTitle').textContent = asset.name;
+    }
 
     // Reset tabs to first
     document.querySelectorAll('.drawer-tab').forEach((b,i) => b.classList.toggle('active', i===0));
@@ -1179,6 +1283,8 @@
 
     document.getElementById('tabHistory').innerHTML =
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+    document.getElementById('tabSubassets').innerHTML =
+      `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabPlans').innerHTML =
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabParts').innerHTML =
@@ -1196,6 +1302,7 @@
 
     // Async: laad alle tabs
     loadDrawerHistory(assetId);
+    loadDrawerSubassets(assetId);
     loadDrawerPlans(assetId);
     loadDrawerParts(assetId);
     renderDrawerSpec(asset);
@@ -1460,6 +1567,47 @@
     }
   }
 
+  function loadDrawerSubassets(assetId) {
+    const pane = document.getElementById('tabSubassets');
+    const children = allAssets.filter(a => a.parent_id === assetId);
+
+    if (!children.length) {
+      pane.innerHTML = `<div class="history-empty">
+        <i class="ti ti-sitemap" style="font-size:32px;display:block;margin-bottom:10px;"></i>
+        Geen sub-assets gekoppeld.
+        <div style="margin-top:14px;">
+          <button class="btn primary" onclick="openModal('${assetId}')"><i class="ti ti-plus"></i> Sub-asset toevoegen</button>
+        </div>
+      </div>`;
+      return;
+    }
+
+    const rows = children.map(c => {
+      const icon = catIcons[c.category] || 'ti-tool';
+      const thumb = c.photo_url
+        ? `<img src="${c.photo_url}" alt="${c.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<i class=\'ti ${icon}\' style=\'font-size:16px;\'></i>'" />`
+        : `<i class="ti ${icon}" style="font-size:16px;"></i>`;
+      const grandChildren = allAssets.filter(a => a.parent_id === c.asset_id).length;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);cursor:pointer;"
+                   ondblclick="closeDrawer();setTimeout(()=>openDrawer('${c.asset_id}'),50)">
+        <div class="asset-icon" style="width:32px;height:32px;font-size:16px;flex-shrink:0;">${thumb}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;font-weight:500;">${c.name}${grandChildren ? ` <span style="font-size:9px;background:var(--blue-bg);color:var(--blue-text);border-radius:6px;padding:1px 5px;">${grandChildren}</span>` : ''}</div>
+          <div style="font-size:11px;color:var(--text-3);">${c.asset_id} · ${c.category||'—'} · ${c.location||'—'}</div>
+        </div>
+        ${statusBadge(c.status)}
+      </div>`;
+    }).join('');
+
+    pane.innerHTML = `<div style="padding:16px 20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:11px;font-weight:500;color:var(--text-3);text-transform:uppercase;letter-spacing:0.6px;">${children.length} sub-asset${children.length !== 1 ? 's' : ''}</span>
+        <button class="btn" onclick="openModal('${assetId}')"><i class="ti ti-plus"></i> Sub-asset toevoegen</button>
+      </div>
+      ${rows}
+    </div>`;
+  }
+
   function closeDrawer() {
     document.getElementById('drawerOverlay').classList.remove('open');
     drawerAsset = null;
@@ -1614,13 +1762,38 @@
     loadDrawerHistory(drawerAsset.asset_id);
   }
 
-  function openModal() {
+  function openModal(presetParentId = null) {
     document.getElementById('fPhoto').value = '';
     document.getElementById('photoPreview').innerHTML =
       `<i class="ti ti-camera" style="font-size:22px;color:var(--text-3);"></i>
        <span style="font-size:12px;color:var(--text-3);margin-top:6px;">Klik om foto te uploaden</span>
        <span style="font-size:10px;color:var(--text-3);">JPG, PNG of WEBP · max 5MB</span>`;
+
+    // Vul parent dropdown
+    const parentSel = document.getElementById('fParent');
+    parentSel.innerHTML = '<option value="">— Geen (zelfstandig asset) —</option>';
+    allAssets.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.asset_id;
+      opt.textContent = `${a.asset_id} — ${a.name}`;
+      if (a.asset_id === presetParentId) opt.selected = true;
+      parentSel.appendChild(opt);
+    });
+
+    if (presetParentId) onParentChange();
     document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function onParentChange() {
+    const parentId = document.getElementById('fParent').value;
+    if (!parentId) return;
+    const parent = allAssets.find(a => a.asset_id === parentId);
+    if (!parent) return;
+    // Locatie overnemen van parent
+    const locSel = document.getElementById('fLocation');
+    for (const opt of locSel.options) {
+      if (opt.value === parent.location) { opt.selected = true; break; }
+    }
   }
   function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
