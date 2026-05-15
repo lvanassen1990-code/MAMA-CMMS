@@ -334,7 +334,7 @@
     tr[draggable="true"]:active { cursor: grabbing; }
     tr.is-dragging td { opacity: 0.3; }
 
-    /* Drop-target highlight */
+    /* Drop-target highlight — koppelen (midden) */
     .asset-card.drag-over-target {
       border-color: var(--accent) !important;
       box-shadow: 0 0 0 2.5px var(--accent), 0 10px 32px rgba(0,122,255,0.18) !important;
@@ -344,6 +344,19 @@
     }
     tr.drag-over-target td { background: var(--blue-bg) !important; }
     tr.drag-over-target td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+    /* Gap-indicator — loskoppelen (rand links/rechts) */
+    .asset-card.drag-over-gap { transition: all 0.1s; }
+    .asset-card.drag-over-gap[data-drop-side="left"] {
+      border-left: 3px solid var(--accent) !important;
+      box-shadow: -7px 0 18px rgba(0,122,255,0.28) !important;
+      transform: translateX(3px);
+    }
+    .asset-card.drag-over-gap[data-drop-side="right"] {
+      border-right: 3px solid var(--accent) !important;
+      box-shadow: 7px 0 18px rgba(0,122,255,0.28) !important;
+      transform: translateX(-3px);
+    }
 
     /* Root drop-zone */
     .drop-root-zone {
@@ -949,29 +962,77 @@
 
   function handleDragOver(event, targetId) {
     if (!dragMode || !draggedAssetId || draggedAssetId === targetId) return;
-    if (isDescendant(targetId, draggedAssetId)) return; // voorkom lus
+    if (isDescendant(targetId, draggedAssetId)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
-    event.currentTarget.classList.add('drag-over-target');
+
+    const el = event.currentTarget;
+
+    // Edge-detectie alleen voor kaartweergave (DIV), niet voor tabelrijen (TR)
+    if (el.tagName === 'DIV') {
+      const dragged = allAssets.find(a => a.asset_id === draggedAssetId);
+      if (dragged?.parent_id) {
+        const rect = el.getBoundingClientRect();
+        const threshold = 44;
+        const nearLeft  = event.clientX < rect.left  + threshold;
+        const nearRight = event.clientX > rect.right - threshold;
+        if (nearLeft || nearRight) {
+          el.classList.remove('drag-over-target');
+          el.classList.add('drag-over-gap');
+          el.dataset.dropSide = nearLeft ? 'left' : 'right';
+          return;
+        }
+      }
+      el.classList.remove('drag-over-gap');
+      delete el.dataset.dropSide;
+    }
+
+    el.classList.add('drag-over-target');
   }
 
   function handleDragLeave(event) {
-    event.currentTarget.classList.remove('drag-over-target');
+    const el = event.currentTarget;
+    el.classList.remove('drag-over-target', 'drag-over-gap');
+    delete el.dataset.dropSide;
   }
 
   function handleDrop(event, targetId) {
     event.preventDefault();
-    event.currentTarget.classList.remove('drag-over-target');
-    if (!draggedAssetId || draggedAssetId === targetId) return;
-    if (isDescendant(targetId, draggedAssetId)) return;
+    const el = event.currentTarget;
+    const isGapDrop = el.classList.contains('drag-over-gap');
+    el.classList.remove('drag-over-target', 'drag-over-gap');
+    delete el.dataset.dropSide;
 
+    if (!draggedAssetId || draggedAssetId === targetId) return;
+
+    if (isGapDrop) {
+      // Rand: loskoppelen van parent
+      const dragged = allAssets.find(a => a.asset_id === draggedAssetId);
+      if (!dragged?.parent_id) return;
+      const currentParent = allAssets.find(a => a.asset_id === dragged.parent_id);
+      const descendants = getDescendants(draggedAssetId);
+
+      let body = `<strong>${dragged.name}</strong> loskoppelen van <strong>${currentParent?.name || dragged.parent_id}</strong>?
+        <br><span style="color:var(--text-3);font-size:11px;">Het asset wordt een zelfstandig top-level asset.</span>`;
+      if (descendants.length) {
+        body += `<br><span style="color:var(--text-3);font-size:11px;">${descendants.length} sub-asset${descendants.length !== 1 ? 's' : ''} verhuist mee.</span>`;
+      }
+      pendingLink = { assetId: draggedAssetId, newParentId: null };
+      document.getElementById('dragConfirmTitle').textContent = 'Koppeling verbreken';
+      document.getElementById('dragConfirmBody').innerHTML = body;
+      document.getElementById('dragConfirmBtn').innerHTML = '<i class="ti ti-unlink"></i> Loskoppelen';
+      document.getElementById('dragConfirmOverlay').classList.add('open');
+      return;
+    }
+
+    // Midden: koppelen aan andere asset
+    if (isDescendant(targetId, draggedAssetId)) return;
     const dragged = allAssets.find(a => a.asset_id === draggedAssetId);
     const target  = allAssets.find(a => a.asset_id === targetId);
     if (!dragged || !target) return;
 
     const currentParent = dragged.parent_id
-      ? allAssets.find(a => a.asset_id === dragged.parent_id)
-      : null;
+      ? allAssets.find(a => a.asset_id === dragged.parent_id) : null;
     const descendants = getDescendants(draggedAssetId);
 
     let body = `<strong>${dragged.name}</strong> koppelen als sub-asset van <strong>${target.name}</strong>?`;
@@ -981,7 +1042,6 @@
     if (descendants.length) {
       body += `<br><span style="color:var(--text-3);font-size:11px;">${descendants.length} sub-asset${descendants.length !== 1 ? 's' : ''} verhuist mee.</span>`;
     }
-
     pendingLink = { assetId: draggedAssetId, newParentId: targetId };
     document.getElementById('dragConfirmTitle').textContent = 'Asset koppelen';
     document.getElementById('dragConfirmBody').innerHTML = body;
