@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MAMA Field — QR Code</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f5f7;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; margin: 0;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 40px 48px;
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+      max-width: 360px; width: 90%;
+    }
+    .logo {
+      width: 52px; height: 52px;
+      background: #1a1a1a; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700; color: #fff;
+      margin: 0 auto 16px;
+      letter-spacing: -0.5px;
+    }
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .sub { font-size: 13px; color: #6e6e73; margin-bottom: 28px; }
+    #qrcode { display: flex; justify-content: center; margin-bottom: 24px; }
+    #qrcode canvas, #qrcode img { border-radius: 10px; }
+    .url {
+      font-size: 11px; color: #aeaeb2;
+      word-break: break-all; line-height: 1.5;
+      background: #f5f5f7; border-radius: 8px;
+      padding: 8px 12px; margin-bottom: 20px;
+    }
+    .key-box {
+      background: #E1F5EE; border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 8px;
+    }
+    .key-label { font-size: 10px; font-weight: 500; color: #0F6E56; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .key-value { font-size: 18px; font-weight: 600; font-family: monospace; color: #0F6E56; letter-spacing: 1px; }
+    .print-btn {
+      margin-top: 16px;
+      padding: 10px 24px;
+      background: #1a1a1a; color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      font-family: inherit; cursor: pointer;
+    }
+    @media print {
+      body { background: #fff; }
+      .print-btn { display: none; }
+      .card { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">M</div>
+    <h1>MAMA Field</h1>
+    <div class="sub">Scan met je telefoon om de app te openen</div>
+    <div id="qrcode"></div>
+    <div class="url" id="appUrl"></div>
+    <div class="key-box">
+      <div class="key-label">Licentiesleutel</div>
+      <div class="key-value" id="licenseDisplay">—</div>
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨 Afdrukken</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    const APP_URL = 'https://lvanassen1990-code.github.io/MAMA-CMMS/mama-field/';
+
+    // Licentiesleutel uit URL-parameter of localStorage
+    const params  = new URLSearchParams(location.search);
+    const key     = params.get('key') || localStorage.getItem('mama_license_key') || 'MAMA-DEMO-2026';
+
+    document.getElementById('appUrl').textContent     = APP_URL;
+    document.getElementById('licenseDisplay').textContent = key;
+
+    new QRCode(document.getElementById('qrcode'), {
+      text:          APP_URL,
+      width:         220,
+      height:        220,
+      colorDark:     '#1a1a1a',
+      colorLight:    '#ffffff',
+      correctLevel:  QRCode.CorrectLevel.M,
+    });
+  </script>
+</body>
+</html>
