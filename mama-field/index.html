@@ -611,15 +611,7 @@
     }
 
     const errEl = document.getElementById('keyError');
-    if (error) {
-      errEl.textContent = 'Fout: ' + (error.message || error.code || JSON.stringify(error));
-    } else if (!data) {
-      errEl.textContent = 'Sleutel niet gevonden in database.';
-    } else if (!data.is_active) {
-      errEl.textContent = 'Sleutel is inactief.';
-    } else {
-      errEl.textContent = 'Onbekende fout.';
-    }
+    errEl.textContent = 'Ongeldige sleutel. Controleer de code en probeer opnieuw.';
     errEl.classList.add('show');
   }
 
