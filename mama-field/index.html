@@ -611,9 +611,15 @@
     }
 
     const errEl = document.getElementById('keyError');
-    errEl.textContent = error
-      ? 'Verbindingsfout: ' + (error.message || error.code)
-      : 'Ongeldige sleutel. Controleer de code en probeer opnieuw.';
+    if (error) {
+      errEl.textContent = 'Fout: ' + (error.message || error.code || JSON.stringify(error));
+    } else if (!data) {
+      errEl.textContent = 'Sleutel niet gevonden in database.';
+    } else if (!data.is_active) {
+      errEl.textContent = 'Sleutel is inactief.';
+    } else {
+      errEl.textContent = 'Onbekende fout.';
+    }
     errEl.classList.add('show');
   }
 
