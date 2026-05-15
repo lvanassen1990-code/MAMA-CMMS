@@ -429,7 +429,7 @@
   <div class="sidebar-section">Navigatie</div>
   <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
   <a href="assets.html" class="nav-item active"><i class="ti ti-building-factory-2"></i> Assets</a>
-  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge">7</span></a>
+  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
   <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
   <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
@@ -2137,6 +2137,13 @@
 
 
   loadAssets();
+  (async () => {
+    try {
+      const { count: woCount } = await sb.from('werkorders').select('id', { count: 'exact', head: true }).not('status', 'in', '("Voltooid","Geannuleerd")');
+      const woBadge = document.getElementById('woBadge');
+      if (woBadge) { woBadge.textContent = woCount || ''; woBadge.style.display = woCount ? '' : 'none'; }
+    } catch(e) {}
+  })();
   (async () => {
     try {
       const { count } = await sb.from('storingen').select('id', { count: 'exact', head: true }).in('status', ['Open', 'In behandeling']);
