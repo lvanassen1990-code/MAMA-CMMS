@@ -233,12 +233,12 @@
 
     // Badge sidebar verlopen WO's
     const today = new Date().toISOString().split('T')[0];
-    const { data: late } = await sb.from('werkorders')
-      .select('id').lt('due_date', today)
-      .not('status', 'in', '("Voltooid","Geannuleerd")');
+    const { count: lateCount } = await sb.from('werkorders')
+      .select('id', { count: 'exact', head: true }).lt('due_date', today)
+      .neq('status', 'Voltooid').neq('status', 'Geannuleerd');
     const badge = document.getElementById('sidebarBadge');
-    badge.textContent = (late||[]).length || '';
-    badge.style.display = (late||[]).length ? '' : 'none';
+    badge.textContent = lateCount || '';
+    badge.style.display = lateCount ? '' : 'none';
 
     render();
   }

@@ -664,7 +664,7 @@
   init();
   (async () => {
     try {
-      const { count: woCount } = await sb.from('werkorders').select('id', { count: 'exact', head: true }).lt('due_date', new Date().toISOString()).not('status', 'in', '("Voltooid","Geannuleerd")');
+      const { count: woCount } = await sb.from('werkorders').select('id', { count: 'exact', head: true }).lt('due_date', new Date().toISOString()).neq('status', 'Voltooid').neq('status', 'Geannuleerd');
       const woBadge = document.getElementById('woBadge');
       if (woBadge) { woBadge.textContent = woCount || ''; woBadge.style.display = woCount ? '' : 'none'; }
     } catch(e) {}
