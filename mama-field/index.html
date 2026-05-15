@@ -594,31 +594,16 @@
     setLoading('key', true);
     hideError('keyError');
 
-    // Fallback: hardcoded demo sleutel werkt altijd
-    const DEMO_KEYS = { 'MAMA-DEMO-2026': 'Demo Bedrijf BV' };
-
     const { data, error } = await sb.from('license_keys')
       .select('company_name, is_active')
       .eq('license_key', key)
       .maybeSingle();
 
     setLoading('key', false);
-    console.log('License check:', { key, data, error });
 
-    // Geldig via Supabase tabel
-    if (data && data.is_active) {
+    if (!error && data && data.is_active) {
       licenseKey  = key;
       companyName = data.company_name;
-      localStorage.setItem('mama_license_key',  licenseKey);
-      localStorage.setItem('mama_company_name', companyName);
-      bootApp();
-      return;
-    }
-
-    // Geldig via hardcoded fallback
-    if (DEMO_KEYS[key]) {
-      licenseKey  = key;
-      companyName = DEMO_KEYS[key];
       localStorage.setItem('mama_license_key',  licenseKey);
       localStorage.setItem('mama_company_name', companyName);
       bootApp();
