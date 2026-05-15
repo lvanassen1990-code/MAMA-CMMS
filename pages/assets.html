@@ -293,6 +293,73 @@
 
     tbody tr.clickable-row { cursor: default; }
     tbody tr.clickable-row:hover { cursor: default; }
+
+    /* ── Drag & drop koppelmodus ── */
+    .drag-mode-toggle {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: var(--radius-sm);
+      border: 0.5px solid var(--border-strong); background: var(--surface);
+      cursor: pointer; font-size: 12px; color: var(--text-2);
+      font-family: inherit; transition: all 0.15s; user-select: none;
+    }
+    .drag-mode-toggle:hover { background: var(--bg); }
+    .drag-mode-toggle.active { border-color: var(--amber); background: var(--amber-bg); color: var(--amber-text); }
+    .drag-toggle-pill {
+      width: 30px; height: 17px; border-radius: 10px;
+      background: var(--border-strong); position: relative;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .drag-mode-toggle.active .drag-toggle-pill { background: var(--amber); }
+    .drag-toggle-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 13px; height: 13px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    .drag-mode-toggle.active .drag-toggle-thumb { transform: translateX(13px); }
+
+    .drag-mode-banner {
+      display: none; align-items: center; gap: 10px;
+      padding: 9px 16px; background: var(--amber-bg);
+      border: 0.5px solid var(--amber); border-radius: var(--radius-sm);
+      font-size: 12px; color: var(--amber-text); flex-shrink: 0;
+    }
+    .drag-mode-active .drag-mode-banner { display: flex; }
+
+    /* Drag-source */
+    .asset-card[draggable="true"] { cursor: grab; }
+    .asset-card[draggable="true"]:active { cursor: grabbing; }
+    .asset-card.is-dragging { opacity: 0.3; transform: scale(0.96); pointer-events: none; }
+    tr[draggable="true"] { cursor: grab; }
+    tr[draggable="true"]:active { cursor: grabbing; }
+    tr.is-dragging td { opacity: 0.3; }
+
+    /* Drop-target highlight */
+    .asset-card.drag-over-target {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 2.5px var(--accent), 0 10px 32px rgba(0,122,255,0.18) !important;
+      background: var(--blue-bg) !important;
+      transform: scale(1.025);
+      transition: all 0.12s;
+    }
+    tr.drag-over-target td { background: var(--blue-bg) !important; }
+    tr.drag-over-target td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+    /* Root drop-zone */
+    .drop-root-zone {
+      display: none; align-items: center; justify-content: center; gap: 14px;
+      padding: 18px 24px; border-radius: var(--radius);
+      border: 1.5px dashed var(--border-strong);
+      color: var(--text-3); font-size: 13px;
+      transition: all 0.15s; flex-shrink: 0; margin-top: 4px;
+    }
+    .drag-mode-active .drop-root-zone { display: flex; }
+    .drop-root-zone.drag-over {
+      border-color: var(--amber); border-style: solid;
+      background: var(--amber-bg); color: var(--amber-text);
+    }
+    .drop-root-zone i { font-size: 22px; }
+
     .expand-btn {
       width: 22px; height: 22px; border: none; background: none; cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center;
@@ -381,6 +448,11 @@
       <div class="topbar-sub">148 assets · 12 locaties</div>
     </div>
     <div class="topbar-right">
+      <button type="button" class="drag-mode-toggle" id="dragModeToggle" onclick="toggleDragMode()">
+        <i class="ti ti-lock" id="dragModeIcon"></i>
+        <span>Koppelmodus</span>
+        <div class="drag-toggle-pill"><div class="drag-toggle-thumb"></div></div>
+      </button>
       <button class="btn"><i class="ti ti-download"></i> Exporteer</button>
       <button class="btn"><i class="ti ti-upload"></i> Importeer</button>
       <button class="btn primary" onclick="openModal()"><i class="ti ti-plus"></i> Nieuw asset</button>
@@ -388,6 +460,13 @@
   </div>
 
   <div class="content">
+  <div class="drag-mode-banner">
+    <i class="ti ti-lock-open" style="font-size:15px;"></i>
+    <div>
+      <strong>Koppelmodus actief</strong> &mdash; Sleep een asset op een ander om te koppelen. Gebruik de loskoppelzone onderaan om een koppeling te verbreken.
+    </div>
+    <button type="button" class="btn" style="margin-left:auto;font-size:11px;padding:4px 10px;" onclick="toggleDragMode()">Vergrendelen</button>
+  </div>
   <div class="content-top">
 
     <!-- KPI's -->
@@ -507,6 +586,18 @@
       <div id="assetsGrid" class="assets-grid"></div>
       <div class="card-footer">
         <span class="footer-count" id="footerCountGrid">— assets</span>
+      </div>
+    </div>
+
+    <!-- Root drop-zone (zichtbaar in koppelmodus) -->
+    <div class="drop-root-zone" id="dropRootZone"
+         ondragover="handleDragOverRoot(event)"
+         ondragleave="handleDragLeaveRoot(event)"
+         ondrop="handleDropRoot(event)">
+      <i class="ti ti-unlink"></i>
+      <div>
+        <div style="font-weight:500;">Loskoppelen</div>
+        <div style="font-size:11px;color:inherit;opacity:0.75;margin-top:2px;">Sleep hier naartoe om de parent-koppeling te verbreken</div>
       </div>
     </div>
 
@@ -792,6 +883,23 @@
   </div>
 </div>
 
+<!-- Modal: Drag-koppeling bevestigen -->
+<div class="modal-overlay" id="dragConfirmOverlay" onclick="if(event.target===this)cancelDragLink()">
+  <div class="modal" style="width:420px;">
+    <div class="modal-header">
+      <div class="modal-title" id="dragConfirmTitle">Asset koppelen</div>
+      <button class="modal-close" onclick="cancelDragLink()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="dragConfirmBody" style="font-size:13px;color:var(--text-2);line-height:1.7;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cancelDragLink()">Annuleren</button>
+      <button class="btn primary" id="dragConfirmBtn" onclick="confirmDragLink()"><i class="ti ti-check"></i> Bevestigen</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
@@ -800,6 +908,172 @@
 
   let allAssets = [];
   let expandedNodes = new Set();
+
+  // ── Koppelmodus (drag & drop) ──
+  let dragMode = false;
+  let draggedAssetId = null;
+  let pendingLink = null; // { assetId, newParentId|null }
+
+  function toggleDragMode() {
+    dragMode = !dragMode;
+    const toggle = document.getElementById('dragModeToggle');
+    const icon   = document.getElementById('dragModeIcon');
+    toggle.classList.toggle('active', dragMode);
+    icon.className = dragMode ? 'ti ti-lock-open' : 'ti ti-lock';
+    document.body.classList.toggle('drag-mode-active', dragMode);
+    filterTable(); // herrender met/zonder draggable-attribs
+  }
+
+  function dragAttrs(assetId) {
+    if (!dragMode) return '';
+    const id = assetId.replace(/'/g, "\\'");
+    return `draggable="true"
+      ondragstart="handleDragStart(event,'${id}')"
+      ondragend="handleDragEnd(event)"
+      ondragover="handleDragOver(event,'${id}')"
+      ondragleave="handleDragLeave(event)"
+      ondrop="handleDrop(event,'${id}')"`;
+  }
+
+  function handleDragStart(event, assetId) {
+    draggedAssetId = assetId;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', assetId);
+    setTimeout(() => event.currentTarget.classList.add('is-dragging'), 0);
+  }
+
+  function handleDragEnd(event) {
+    event.currentTarget.classList.remove('is-dragging');
+    draggedAssetId = null;
+  }
+
+  function handleDragOver(event, targetId) {
+    if (!dragMode || !draggedAssetId || draggedAssetId === targetId) return;
+    if (isDescendant(targetId, draggedAssetId)) return; // voorkom lus
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    event.currentTarget.classList.add('drag-over-target');
+  }
+
+  function handleDragLeave(event) {
+    event.currentTarget.classList.remove('drag-over-target');
+  }
+
+  function handleDrop(event, targetId) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('drag-over-target');
+    if (!draggedAssetId || draggedAssetId === targetId) return;
+    if (isDescendant(targetId, draggedAssetId)) return;
+
+    const dragged = allAssets.find(a => a.asset_id === draggedAssetId);
+    const target  = allAssets.find(a => a.asset_id === targetId);
+    if (!dragged || !target) return;
+
+    const currentParent = dragged.parent_id
+      ? allAssets.find(a => a.asset_id === dragged.parent_id)
+      : null;
+    const descendants = getDescendants(draggedAssetId);
+
+    let body = `<strong>${dragged.name}</strong> koppelen als sub-asset van <strong>${target.name}</strong>?`;
+    if (currentParent) {
+      body += `<br><span style="color:var(--text-3);font-size:11px;">Huidige koppeling met <em>${currentParent.name}</em> wordt verbroken.</span>`;
+    }
+    if (descendants.length) {
+      body += `<br><span style="color:var(--text-3);font-size:11px;">${descendants.length} sub-asset${descendants.length !== 1 ? 's' : ''} verhuist mee.</span>`;
+    }
+
+    pendingLink = { assetId: draggedAssetId, newParentId: targetId };
+    document.getElementById('dragConfirmTitle').textContent = 'Asset koppelen';
+    document.getElementById('dragConfirmBody').innerHTML = body;
+    document.getElementById('dragConfirmBtn').innerHTML = '<i class="ti ti-link"></i> Koppelen';
+    document.getElementById('dragConfirmOverlay').classList.add('open');
+  }
+
+  function handleDragOverRoot(event) {
+    if (!dragMode || !draggedAssetId) return;
+    const dragged = allAssets.find(a => a.asset_id === draggedAssetId);
+    if (!dragged?.parent_id) return;
+    event.preventDefault();
+    event.currentTarget.classList.add('drag-over');
+  }
+
+  function handleDragLeaveRoot(event) {
+    event.currentTarget.classList.remove('drag-over');
+  }
+
+  function handleDropRoot(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('drag-over');
+    if (!draggedAssetId) return;
+    const dragged = allAssets.find(a => a.asset_id === draggedAssetId);
+    if (!dragged?.parent_id) return;
+
+    const currentParent = allAssets.find(a => a.asset_id === dragged.parent_id);
+    const descendants = getDescendants(draggedAssetId);
+
+    let body = `<strong>${dragged.name}</strong> loskoppelen van <strong>${currentParent?.name || dragged.parent_id}</strong>?
+      <br><span style="color:var(--text-3);font-size:11px;">Het asset wordt een zelfstandig top-level asset.</span>`;
+    if (descendants.length) {
+      body += `<br><span style="color:var(--text-3);font-size:11px;">${descendants.length} sub-asset${descendants.length !== 1 ? 's' : ''} verhuist mee.</span>`;
+    }
+
+    pendingLink = { assetId: draggedAssetId, newParentId: null };
+    document.getElementById('dragConfirmTitle').textContent = 'Koppeling verbreken';
+    document.getElementById('dragConfirmBody').innerHTML = body;
+    document.getElementById('dragConfirmBtn').innerHTML = '<i class="ti ti-unlink"></i> Loskoppelen';
+    document.getElementById('dragConfirmOverlay').classList.add('open');
+  }
+
+  function isDescendant(potentialDesc, ancestorId) {
+    let current = allAssets.find(a => a.asset_id === potentialDesc);
+    const visited = new Set();
+    while (current?.parent_id) {
+      if (visited.has(current.asset_id)) break;
+      visited.add(current.asset_id);
+      if (current.parent_id === ancestorId) return true;
+      current = allAssets.find(a => a.asset_id === current.parent_id);
+    }
+    return false;
+  }
+
+  function getDescendants(assetId) {
+    const result = [];
+    const queue = [assetId];
+    while (queue.length) {
+      const id = queue.shift();
+      allAssets.filter(a => a.parent_id === id).forEach(c => {
+        result.push(c);
+        queue.push(c.asset_id);
+      });
+    }
+    return result;
+  }
+
+  async function confirmDragLink() {
+    if (!pendingLink) return;
+    const btn = document.getElementById('dragConfirmBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+
+    const { error } = await sb.from('assets')
+      .update({ parent_id: pendingLink.newParentId })
+      .eq('asset_id', pendingLink.assetId);
+
+    btn.disabled = false;
+    if (error) { alert('Fout: ' + error.message); return; }
+
+    // Update lokale cache
+    const idx = allAssets.findIndex(a => a.asset_id === pendingLink.assetId);
+    if (idx !== -1) allAssets[idx].parent_id = pendingLink.newParentId;
+
+    cancelDragLink();
+    filterTable();
+  }
+
+  function cancelDragLink() {
+    pendingLink = null;
+    document.getElementById('dragConfirmOverlay').classList.remove('open');
+  }
 
   const catIcons = {
     'Compressor': 'ti-wind', 'Hydrauliek': 'ti-droplet',
@@ -907,7 +1181,7 @@
          </span>`
       : '';
 
-    return `<tr class="clickable-row${depth > 0 ? ' child-row' : ''}" data-assetid="${a.asset_id}" style="${depth > 0 ? 'background:var(--bg);' : ''}">
+    return `<tr class="clickable-row${depth > 0 ? ' child-row' : ''}" data-assetid="${a.asset_id}" style="${depth > 0 ? 'background:var(--bg);' : ''}" ${dragAttrs(a.asset_id)}>
       <td class="asset-id" style="padding-left:${8 + indent}px;">
         <div style="display:flex;align-items:center;gap:2px;">
           ${expandBtn}
@@ -1022,7 +1296,7 @@
         : `<i class="ti ${icon}"></i>`;
       const [dc, dt] = dueCls(a.next_maintenance);
       const nameSafe = (a.name||'').replace(/'/g,"\\'");
-      return `<div class="asset-card">
+      return `<div class="asset-card" ${dragAttrs(a.asset_id)}>
         <div class="asset-card-photo">
           ${thumb}
           <div class="asset-card-status">${statusBadge(a.status)}</div>
