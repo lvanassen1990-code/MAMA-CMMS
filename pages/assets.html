@@ -1066,6 +1066,9 @@
     const idx = allAssets.findIndex(a => a.asset_id === pendingLink.assetId);
     if (idx !== -1) allAssets[idx].parent_id = pendingLink.newParentId;
 
+    // Klap de nieuwe parent automatisch open
+    if (pendingLink.newParentId) expandedNodes.add(pendingLink.newParentId);
+
     cancelDragLink();
     filterTable();
   }
