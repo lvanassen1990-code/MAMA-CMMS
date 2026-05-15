@@ -494,7 +494,7 @@
     const today = new Date().toISOString().split('T')[0];
     const { count: woCount } = await sb.from('werkorders')
       .select('id', { count: 'exact', head: true })
-      .lt('due_date', today)
+      .lte('due_date', today)
       .neq('status', 'Voltooid').neq('status', 'Geannuleerd');
     const woBadge = document.getElementById('woBadge');
     woBadge.textContent = woCount || '';

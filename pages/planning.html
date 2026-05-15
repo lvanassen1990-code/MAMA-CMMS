@@ -234,7 +234,7 @@
     // Badge sidebar verlopen WO's
     const today = new Date().toISOString().split('T')[0];
     const { count: lateCount } = await sb.from('werkorders')
-      .select('id', { count: 'exact', head: true }).lt('due_date', today)
+      .select('id', { count: 'exact', head: true }).lte('due_date', today)
       .neq('status', 'Voltooid').neq('status', 'Geannuleerd');
     const badge = document.getElementById('sidebarBadge');
     badge.textContent = lateCount || '';
