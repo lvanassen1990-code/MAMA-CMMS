@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MAMA Field" />
+  <meta name="theme-color" content="#1a1a1a" />
+  <title>MAMA Field</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:          #f5f5f7;
+      --surface:     #ffffff;
+      --border:      rgba(0,0,0,0.09);
+      --text:        #1d1d1f;
+      --text-2:      #6e6e73;
+      --text-3:      #aeaeb2;
+      --accent:      #1a1a1a;
+      --green:       #1D9E75;
+      --green-bg:    #E1F5EE;
+      --green-text:  #0F6E56;
+      --amber:       #EF9F27;
+      --amber-bg:    #FAEEDA;
+      --red:         #E24B4A;
+      --red-bg:      #FCEBEB;
+      --red-text:    #A32D2D;
+      --blue:        #378ADD;
+      --blue-bg:     #E6F1FB;
+      --radius:      14px;
+      --radius-sm:   10px;
+      --safe-top:    env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%; width: 100%;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ── Screens ── */
+    .screen {
+      display: none;
+      position: fixed; inset: 0;
+      flex-direction: column;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    .screen.active { display: flex; }
+
+    /* ── Key screen ── */
+    .key-screen {
+      background: var(--accent);
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      gap: 0;
+    }
+    .key-logo {
+      width: 72px; height: 72px;
+      background: #fff;
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 24px;
+      letter-spacing: -1px;
+    }
+    .key-title { font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .key-sub   { font-size: 14px; color: rgba(255,255,255,0.55); margin-bottom: 40px; text-align: center; }
+    .key-card  {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 24px;
+      width: 100%; max-width: 360px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .key-label { font-size: 11px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; }
+    .key-input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid rgba(0,0,0,0.12);
+      font-size: 16px; font-family: monospace;
+      color: var(--text); background: var(--bg);
+      outline: none; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .key-input:focus { border-color: var(--blue); background: #fff; }
+    .key-error { font-size: 12px; color: var(--red); display: none; }
+    .key-error.show { display: block; }
+
+    /* ── Home screen ── */
+    .home-screen { background: var(--bg); }
+    .home-header {
+      background: var(--surface);
+      padding: 20px 20px 16px;
+      border-bottom: 0.5px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .home-logo-row { display: flex; align-items: center; gap: 10px; }
+    .home-logo-mark {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff;
+      letter-spacing: -0.5px; flex-shrink: 0;
+    }
+    .home-logo-name { font-size: 16px; font-weight: 600; }
+    .home-company   { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+    .home-logout-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 12px; color: var(--text-3); font-family: inherit;
+      padding: 6px;
+    }
+    .home-logout-btn:hover { color: var(--text-2); }
+
+    .home-body { flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 12px; }
+    .home-greeting { font-size: 13px; color: var(--text-2); margin-bottom: 4px; }
+
+    .action-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      padding: 20px;
+      display: flex; align-items: center; gap: 16px;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+      text-decoration: none; color: inherit;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .action-card:active { transform: scale(0.97); }
+    .action-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .icon-red    { background: var(--red-bg); }
+    .icon-amber  { background: var(--amber-bg); }
+    .icon-blue   { background: var(--blue-bg); }
+    .action-title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .action-sub   { font-size: 12px; color: var(--text-2); }
+    .action-arrow { margin-left: auto; font-size: 18px; color: var(--text-3); }
+
+    /* ── Form screens ── */
+    .form-screen { background: var(--bg); }
+    .form-header {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0;
+    }
+    .back-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--bg); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--text-2); flex-shrink: 0;
+    }
+    .back-btn:active { background: rgba(0,0,0,0.08); }
+    .form-header-title { font-size: 15px; font-weight: 600; }
+
+    .form-body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 11px; font-weight: 500;
+      color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .field textarea, .field select, .field input[type="text"], .field input[type="number"] {
+      padding: 13px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(0,0,0,0.12);
+      font-size: 15px; font-family: inherit; color: var(--text);
+      background: var(--surface); outline: none;
+      transition: border-color 0.12s;
+      -webkit-appearance: none; appearance: none;
+      width: 100%;
+    }
+    .field textarea:focus,
+    .field select:focus,
+    .field input:focus { border-color: var(--blue); }
+    .field textarea { resize: none; min-height: 100px; line-height: 1.5; }
+    .field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aeaeb2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+    /* Priority pills */
+    .pill-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      padding: 8px 16px; border-radius: 999px;
+      border: 1.5px solid rgba(0,0,0,0.12);
+      font-size: 13px; font-weight: 500;
+      background: var(--surface); color: var(--text-2);
+      cursor: pointer; transition: all 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .pill.active-normaal { background: var(--bg);       border-color: var(--text-2);  color: var(--text); }
+    .pill.active-hoog    { background: var(--amber-bg); border-color: var(--amber);   color: #7a4300; }
+    .pill.active-kritiek { background: var(--red-bg);   border-color: var(--red);     color: var(--red-text); }
+    .pill.active-laag    { background: var(--blue-bg);  border-color: var(--blue);    color: #185FA5; }
+    .pill.active-middel  { background: var(--amber-bg); border-color: var(--amber);   color: #7a4300; }
+
+    /* Photo upload */
+    .photo-zone {
+      border: 2px dashed rgba(0,0,0,0.15);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      min-height: 120px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer;
+      transition: border-color 0.12s;
+      position: relative; overflow: hidden;
+    }
+    .photo-zone:active { border-color: var(--blue); }
+    .photo-zone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .photo-zone-icon { font-size: 32px; }
+    .photo-zone-label { font-size: 13px; color: var(--text-2); }
+    .photo-preview {
+      width: 100%; border-radius: var(--radius-sm);
+      max-height: 220px; object-fit: cover;
+      display: none;
+    }
+    .photo-preview.show { display: block; }
+
+    /* Toggle type */
+    .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .type-btn {
+      padding: 12px; border-radius: var(--radius-sm);
+      border: 1.5px solid rgba(0,0,0,0.12);
+      background: var(--surface); color: var(--text-2);
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: all 0.12s; text-align: center;
+    }
+    .type-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Submit button */
+    .submit-btn {
+      width: 100%; padding: 16px;
+      border-radius: var(--radius-sm);
+      border: none; cursor: pointer;
+      font-size: 15px; font-weight: 600;
+      font-family: inherit;
+      background: var(--accent); color: #fff;
+      transition: background 0.12s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 4px;
+    }
+    .submit-btn:active { background: #333; }
+    .submit-btn:disabled { background: var(--text-3); cursor: not-allowed; }
+
+    /* ── Success screen ── */
+    .success-screen {
+      background: var(--green-bg);
+      align-items: center; justify-content: center;
+      text-align: center; padding: 32px 24px; gap: 16px;
+    }
+    .success-icon { font-size: 64px; }
+    .success-title { font-size: 22px; font-weight: 600; color: var(--green-text); }
+    .success-sub { font-size: 14px; color: var(--green-text); opacity: 0.7; }
+    .success-num {
+      font-family: monospace; font-size: 13px;
+      background: rgba(0,0,0,0.08); color: var(--green-text);
+      padding: 4px 12px; border-radius: 8px;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .spinner.show { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .form-error {
+      font-size: 12px; color: var(--red);
+      background: var(--red-bg); border-radius: 8px;
+      padding: 10px 12px; display: none;
+    }
+    .form-error.show { display: block; }
+
+    /* Spacer for scroll past bottom */
+    .scroll-pad { height: 20px; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Scherm 1: Licentiesleutel                              -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="screen key-screen active" id="screenKey">
+  <div class="key-logo">M</div>
+  <div class="key-title">MAMA Field</div>
+  <div class="key-sub">Voer de licentiesleutel in die<br>je van je beheerder hebt ontvangen</div>
+  <div class="key-card">
+    <div class="field">
+      <label class="key-label">Licentiesleutel</label>
+      <input class="key-input" id="keyInput" type="text" placeholder="bijv. MAMA-XXXX-0000"
+        autocomplete="off" autocorrect="off" spellcheck="false"
+        oninput="this.value=this.value.toUpperCase()" />
+    </div>
+    <div class="key-error" id="keyError">Ongeldige sleutel. Controleer de code en probeer opnieuw.</div>
+    <button class="submit-btn" id="keyBtn" onclick="activateKey()">
+      <span id="keyBtnLabel">Activeren</span>
+      <div class="spinner" id="keySpinner"></div>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Scherm 2: Startscherm                                  -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="screen home-screen" id="screenHome">
+  <div class="home-header">
+    <div class="home-logo-row">
+      <div class="home-logo-mark">M</div>
+      <div>
+        <div class="home-logo-name">MAMA Field</div>
+        <div class="home-company" id="companyName">—</div>
+      </div>
+    </div>
+    <button class="home-logout-btn" onclick="confirmLogout()">Afmelden</button>
+  </div>
+  <div class="home-body">
+    <div class="home-greeting">Wat wil je melden?</div>
+
+    <div class="action-card" onclick="showScreen('screenStoring')">
+      <div class="action-icon icon-red">🔴</div>
+      <div>
+        <div class="action-title">Storing melden</div>
+        <div class="action-sub">Machine defect of technisch probleem</div>
+      </div>
+      <div class="action-arrow">›</div>
+    </div>
+
+    <div class="action-card" onclick="showScreen('screenVeiligheid')">
+      <div class="action-icon icon-amber">⚠️</div>
+      <div>
+        <div class="action-title">Veiligheidsmelding</div>
+        <div class="action-sub">Onveilige situatie of risico</div>
+      </div>
+      <div class="action-arrow">›</div>
+    </div>
+
+    <div class="action-card" onclick="showScreen('screenFoto')">
+      <div class="action-icon icon-blue">📷</div>
+      <div>
+        <div class="action-title">Foto toevoegen</div>
+        <div class="action-sub">Foto koppelen aan werkorder of asset</div>
+      </div>
+      <div class="action-arrow">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Scherm 3: Storing melden                               -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="screen form-screen" id="screenStoring">
+  <div class="form-header">
+    <button class="back-btn" onclick="showScreen('screenHome')">‹</button>
+    <div class="form-header-title">Storing melden</div>
+  </div>
+  <div class="form-body">
+
+    <div class="field">
+      <label>Omschrijving *</label>
+      <textarea id="stDesc" placeholder="Beschrijf de storing zo concreet mogelijk…"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Asset</label>
+      <select id="stAsset">
+        <option value="">— Geen / onbekend —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Prioriteit</label>
+      <div class="pill-group" id="stPrioGroup">
+        <button class="pill" onclick="setPrio('st','Normaal',this)">Normaal</button>
+        <button class="pill" onclick="setPrio('st','Hoog',this)">Hoog</button>
+        <button class="pill active-kritiek" onclick="setPrio('st','Kritiek',this)">Kritiek</button>
+      </div>
+      <input type="hidden" id="stPrio" value="Kritiek" />
+    </div>
+
+    <div class="field">
+      <label>Je naam</label>
+      <input type="text" id="stNaam" placeholder="Voornaam of initialen" />
+    </div>
+
+    <div class="field">
+      <label>Foto (optioneel)</label>
+      <div class="photo-zone" id="stPhotoZone">
+        <input type="file" accept="image/*" capture="environment" id="stPhotoInput" onchange="previewPhoto('st',this)" />
+        <div class="photo-zone-icon">📷</div>
+        <div class="photo-zone-label">Tik om foto te maken</div>
+      </div>
+      <img class="photo-preview" id="stPhotoPreview" alt="Preview" />
+    </div>
+
+    <div class="form-error" id="stError"></div>
+
+    <button class="submit-btn" id="stBtn" onclick="submitStoring()">
+      <span id="stBtnLabel">Verstuur melding</span>
+      <div class="spinner" id="stSpinner"></div>
+    </button>
+    <div class="scroll-pad"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Scherm 4: Veiligheidsmelding                           -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="screen form-screen" id="screenVeiligheid">
+  <div class="form-header">
+    <button class="back-btn" onclick="showScreen('screenHome')">‹</button>
+    <div class="form-header-title">Veiligheidsmelding</div>
+  </div>
+  <div class="form-body">
+
+    <div class="field">
+      <label>Omschrijving *</label>
+      <textarea id="vDesc" placeholder="Wat is de onveilige situatie?"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Locatie</label>
+      <input type="text" id="vLocatie" placeholder="bijv. Hal B, lijn 3" />
+    </div>
+
+    <div class="field">
+      <label>Risiconiveau</label>
+      <div class="pill-group" id="vRisicoGroup">
+        <button class="pill" onclick="setPrio('v','Laag',this)">Laag</button>
+        <button class="pill" onclick="setPrio('v','Middel',this)">Middel</button>
+        <button class="pill" onclick="setPrio('v','Hoog',this)">Hoog</button>
+        <button class="pill active-kritiek" onclick="setPrio('v','Kritiek',this)">Kritiek</button>
+      </div>
+      <input type="hidden" id="vRisico" value="Kritiek" />
+    </div>
+
+    <div class="field">
+      <label>Je naam</label>
+      <input type="text" id="vNaam" placeholder="Voornaam of initialen" />
+    </div>
+
+    <div class="field">
+      <label>Foto (optioneel)</label>
+      <div class="photo-zone" id="vPhotoZone">
+        <input type="file" accept="image/*" capture="environment" id="vPhotoInput" onchange="previewPhoto('v',this)" />
+        <div class="photo-zone-icon">📷</div>
+        <div class="photo-zone-label">Tik om foto te maken</div>
+      </div>
+      <img class="photo-preview" id="vPhotoPreview" alt="Preview" />
+    </div>
+
+    <div class="form-error" id="vError"></div>
+
+    <button class="submit-btn" id="vBtn" onclick="submitVeiligheid()">
+      <span id="vBtnLabel">Verstuur melding</span>
+      <div class="spinner" id="vSpinner"></div>
+    </button>
+    <div class="scroll-pad"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Scherm 5: Foto toevoegen                               -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="screen form-screen" id="screenFoto">
+  <div class="form-header">
+    <button class="back-btn" onclick="showScreen('screenHome')">‹</button>
+    <div class="form-header-title">Foto toevoegen</div>
+  </div>
+  <div class="form-body">
+
+    <div class="field">
+      <label>Koppelen aan</label>
+      <div class="type-toggle">
+        <button class="type-btn active" id="fTypeWO" onclick="setFotoType('werkorder')">Werkorder</button>
+        <button class="type-btn" id="fTypeAsset" onclick="setFotoType('asset')">Asset</button>
+      </div>
+    </div>
+
+    <div class="field" id="fWoField">
+      <label>Werkorder</label>
+      <select id="fWoSelect">
+        <option value="">— Selecteer werkorder —</option>
+      </select>
+    </div>
+
+    <div class="field" id="fAssetField" style="display:none;">
+      <label>Asset</label>
+      <select id="fAssetSelect">
+        <option value="">— Selecteer asset —</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Foto *</label>
+      <div class="photo-zone" id="fPhotoZone">
+        <input type="file" accept="image/*" capture="environment" id="fPhotoInput" onchange="previewPhoto('f',this)" />
+        <div class="photo-zone-icon">📷</div>
+        <div class="photo-zone-label">Tik om foto te maken</div>
+      </div>
+      <img class="photo-preview" id="fPhotoPreview" alt="Preview" />
+    </div>
+
+    <div class="form-error" id="fError"></div>
+
+    <button class="submit-btn" id="fBtn" onclick="submitFoto()">
+      <span id="fBtnLabel">Uploaden</span>
+      <div class="spinner" id="fSpinner"></div>
+    </button>
+    <div class="scroll-pad"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- Scherm 6: Success                                      -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="screen success-screen" id="screenSuccess">
+  <div class="success-icon" id="successIcon">✅</div>
+  <div class="success-title" id="successTitle">Melding verstuurd!</div>
+  <div class="success-sub" id="successSub">Je melding is ontvangen en zichtbaar in MAMA.</div>
+  <div class="success-num" id="successNum"></div>
+  <button class="submit-btn" style="max-width:280px;background:var(--green);" onclick="showScreen('screenHome')">
+    Terug naar start
+  </button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ── Supabase ──────────────────────────────────────────
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ── State ─────────────────────────────────────────────
+  let licenseKey  = localStorage.getItem('mama_license_key') || '';
+  let companyName = localStorage.getItem('mama_company_name') || '';
+  let fotoType    = 'werkorder';
+
+  // ── Boot ──────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  if (licenseKey && companyName) {
+    bootApp();
+  }
+
+  function bootApp() {
+    document.getElementById('companyName').textContent = companyName;
+    showScreen('screenHome');
+    loadDropdowns();
+  }
+
+  // ── Navigation ────────────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ── License key ───────────────────────────────────────
+  async function activateKey() {
+    const key = document.getElementById('keyInput').value.trim();
+    if (!key) return;
+
+    setLoading('key', true);
+    hideError('keyError');
+
+    const { data, error } = await sb.from('license_keys')
+      .select('company_name, is_active')
+      .eq('license_key', key)
+      .single();
+
+    setLoading('key', false);
+
+    if (error || !data || !data.is_active) {
+      showError('keyError');
+      return;
+    }
+
+    licenseKey  = key;
+    companyName = data.company_name;
+    localStorage.setItem('mama_license_key',  licenseKey);
+    localStorage.setItem('mama_company_name', companyName);
+    bootApp();
+  }
+
+  document.getElementById('keyInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') activateKey();
+  });
+
+  function confirmLogout() {
+    if (!confirm('Wil je de sleutel verwijderen van dit apparaat?')) return;
+    localStorage.removeItem('mama_license_key');
+    localStorage.removeItem('mama_company_name');
+    licenseKey = ''; companyName = '';
+    document.getElementById('keyInput').value = '';
+    showScreen('screenKey');
+  }
+
+  // ── Dropdowns ─────────────────────────────────────────
+  async function loadDropdowns() {
+    const { data: assets } = await sb.from('assets').select('asset_id, name').order('name');
+    const { data: wos    } = await sb.from('werkorders')
+      .select('id, wo_number, description')
+      .in('status', ['Open', 'In uitvoering'])
+      .order('wo_number', { ascending: false })
+      .limit(50);
+
+    // Storing asset dropdown
+    fillSelect('stAsset', assets, a => ({ value: a.asset_id, label: `${a.name} (${a.asset_id})` }));
+    // Foto asset dropdown
+    fillSelect('fAssetSelect', assets, a => ({ value: a.asset_id, label: `${a.name} (${a.asset_id})` }));
+    // Foto WO dropdown
+    fillSelect('fWoSelect', wos, w => ({ value: w.id, label: `${w.wo_number} — ${w.description?.substring(0, 40)}` }));
+  }
+
+  function fillSelect(id, items, mapper) {
+    const sel = document.getElementById(id);
+    if (!sel || !items) return;
+    items.forEach(item => {
+      const { value, label } = mapper(item);
+      const opt = document.createElement('option');
+      opt.value = value; opt.textContent = label;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ── Priority pills ────────────────────────────────────
+  function setPrio(prefix, value, btn) {
+    const group = document.getElementById(`${prefix}PrioGroup`) ||
+                  document.getElementById(`${prefix}RisicoGroup`);
+    if (group) group.querySelectorAll('.pill').forEach(p => p.className = 'pill');
+    btn.classList.add(`active-${value.toLowerCase()}`);
+    const hidden = document.getElementById(`${prefix}Prio`) ||
+                   document.getElementById(`${prefix}Risico`);
+    if (hidden) hidden.value = value;
+  }
+
+  // ── Photo preview ─────────────────────────────────────
+  function previewPhoto(prefix, input) {
+    const file    = input.files[0];
+    const preview = document.getElementById(`${prefix}PhotoPreview`);
+    const zone    = document.getElementById(`${prefix}PhotoZone`);
+    if (!file || !preview) return;
+    const url = URL.createObjectURL(file);
+    preview.src = url;
+    preview.classList.add('show');
+    if (zone) zone.style.display = 'none';
+  }
+
+  // ── Upload photo to Supabase Storage ─────────────────
+  async function uploadPhoto(prefix) {
+    const input = document.getElementById(`${prefix}PhotoInput`);
+    if (!input?.files[0]) return null;
+    const file = input.files[0];
+    const ext  = file.name.split('.').pop() || 'jpg';
+    const path = `${prefix}/${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from('mama-photos').upload(path, file, { upsert: true });
+    if (error) return null;
+    const { data: urlData } = sb.storage.from('mama-photos').getPublicUrl(path);
+    return urlData?.publicUrl || null;
+  }
+
+  // ── Storing nummer genereren ──────────────────────────
+  async function nextStoringNum() {
+    const { data } = await sb.from('storingen').select('storing_number');
+    let max = 0;
+    (data || []).forEach(r => {
+      const m = r.storing_number?.match(/ST-\d{4}-(\d+)/);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return `ST-${new Date().getFullYear()}-${String(max + 1).padStart(4, '0')}`;
+  }
+
+  async function nextSafetyNum() {
+    const { data } = await sb.from('safety_reports').select('report_number');
+    let max = 0;
+    (data || []).forEach(r => {
+      const m = r.report_number?.match(/VV-\d{4}-(\d+)/);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return `VV-${new Date().getFullYear()}-${String(max + 1).padStart(4, '0')}`;
+  }
+
+  // ── Submit: Storing ───────────────────────────────────
+  async function submitStoring() {
+    const desc = document.getElementById('stDesc').value.trim();
+    if (!desc) { showFormError('stError', 'Omschrijving is verplicht.'); return; }
+    hideFormError('stError');
+    setLoading('st', true);
+
+    const photoUrl = await uploadPhoto('st');
+    const num      = await nextStoringNum();
+    const assetId  = document.getElementById('stAsset').value || null;
+
+    // Herhaalstoring detectie
+    let herhaal = false;
+    if (assetId) {
+      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 90);
+      const { data: prev } = await sb.from('storingen')
+        .select('id').eq('asset_id', assetId).gte('created_at', cutoff.toISOString()).limit(1);
+      herhaal = (prev?.length > 0);
+    }
+
+    const { error } = await sb.from('storingen').insert({
+      storing_number: num,
+      description:    desc,
+      asset_id:       assetId,
+      priority:       document.getElementById('stPrio').value,
+      gemeld_door:    document.getElementById('stNaam').value.trim() || 'Veldmedewerker',
+      herhaalstoring: herhaal,
+      photo_url:      photoUrl,
+      status:         'Open',
+      license_key:    licenseKey,
+    });
+
+    setLoading('st', false);
+    if (error) { showFormError('stError', 'Fout bij versturen. Probeer opnieuw.'); return; }
+
+    resetForm('st');
+    showSuccess('✅', 'Storing gemeld!', 'De storing is zichtbaar in MAMA.', num);
+  }
+
+  // ── Submit: Veiligheid ────────────────────────────────
+  async function submitVeiligheid() {
+    const desc = document.getElementById('vDesc').value.trim();
+    if (!desc) { showFormError('vError', 'Omschrijving is verplicht.'); return; }
+    hideFormError('vError');
+    setLoading('v', true);
+
+    const photoUrl = await uploadPhoto('v');
+    const num      = await nextSafetyNum();
+
+    const { error } = await sb.from('safety_reports').insert({
+      report_number: num,
+      description:   desc,
+      location:      document.getElementById('vLocatie').value.trim() || null,
+      risk_level:    document.getElementById('vRisico').value,
+      gemeld_door:   document.getElementById('vNaam').value.trim() || 'Veldmedewerker',
+      photo_url:     photoUrl,
+      status:        'Open',
+      license_key:   licenseKey,
+    });
+
+    setLoading('v', false);
+    if (error) { showFormError('vError', 'Fout bij versturen. Probeer opnieuw.'); return; }
+
+    resetForm('v');
+    showSuccess('⚠️', 'Veiligheidsmelding verstuurd!', 'De melding is zichtbaar in MAMA.', num);
+  }
+
+  // ── Foto type toggle ──────────────────────────────────
+  function setFotoType(type) {
+    fotoType = type;
+    document.getElementById('fTypeWO').classList.toggle('active', type === 'werkorder');
+    document.getElementById('fTypeAsset').classList.toggle('active', type === 'asset');
+    document.getElementById('fWoField').style.display    = type === 'werkorder' ? '' : 'none';
+    document.getElementById('fAssetField').style.display = type === 'asset'     ? '' : 'none';
+  }
+
+  // ── Submit: Foto ──────────────────────────────────────
+  async function submitFoto() {
+    const input = document.getElementById('fPhotoInput');
+    if (!input?.files[0]) { showFormError('fError', 'Kies eerst een foto.'); return; }
+
+    const targetId = fotoType === 'werkorder'
+      ? document.getElementById('fWoSelect').value
+      : document.getElementById('fAssetSelect').value;
+
+    if (!targetId) {
+      showFormError('fError', `Selecteer een ${fotoType === 'werkorder' ? 'werkorder' : 'asset'}.`);
+      return;
+    }
+
+    hideFormError('fError');
+    setLoading('f', true);
+
+    const photoUrl = await uploadPhoto('f');
+    if (!photoUrl) { showFormError('fError', 'Upload mislukt. Probeer opnieuw.'); setLoading('f', false); return; }
+
+    let error;
+    if (fotoType === 'werkorder') {
+      ({ error } = await sb.from('werkorders').update({ photo_url: photoUrl }).eq('id', targetId));
+    } else {
+      ({ error } = await sb.from('assets').update({ photo_url: photoUrl }).eq('asset_id', targetId));
+    }
+
+    setLoading('f', false);
+    if (error) { showFormError('fError', 'Fout bij koppelen. Probeer opnieuw.'); return; }
+
+    resetForm('f');
+    showSuccess('📷', 'Foto geüpload!', `Foto is gekoppeld aan de ${fotoType}.`, '');
+  }
+
+  // ── Helpers ───────────────────────────────────────────
+  function setLoading(prefix, on) {
+    const btn     = document.getElementById(`${prefix}Btn`);
+    const label   = document.getElementById(`${prefix}BtnLabel`);
+    const spinner = document.getElementById(`${prefix}Spinner`);
+    if (btn)     btn.disabled = on;
+    if (label)   label.style.opacity = on ? '0.5' : '1';
+    if (spinner) spinner.classList.toggle('show', on);
+  }
+
+  function showError(id)         { document.getElementById(id)?.classList.add('show'); }
+  function hideError(id)         { document.getElementById(id)?.classList.remove('show'); }
+  function showFormError(id, msg){ const el = document.getElementById(id); if (el) { el.textContent = msg; el.classList.add('show'); } }
+  function hideFormError(id)     { document.getElementById(id)?.classList.remove('show'); }
+
+  function showSuccess(icon, title, sub, num) {
+    document.getElementById('successIcon').textContent  = icon;
+    document.getElementById('successTitle').textContent = title;
+    document.getElementById('successSub').textContent   = sub;
+    const numEl = document.getElementById('successNum');
+    numEl.textContent = num;
+    numEl.style.display = num ? '' : 'none';
+    showScreen('screenSuccess');
+  }
+
+  function resetForm(prefix) {
+    // Reset textareas and text inputs
+    ['Desc','Locatie','Naam'].forEach(f => {
+      const el = document.getElementById(`${prefix}${f}`);
+      if (el) el.value = '';
+    });
+    // Reset photo
+    const input   = document.getElementById(`${prefix}PhotoInput`);
+    const preview = document.getElementById(`${prefix}PhotoPreview`);
+    const zone    = document.getElementById(`${prefix}PhotoZone`);
+    if (input)   input.value = '';
+    if (preview) { preview.src = ''; preview.classList.remove('show'); }
+    if (zone)    zone.style.display = '';
+    // Reset select
+    const asset = document.getElementById(`${prefix}Asset`);
+    if (asset) asset.selectedIndex = 0;
+  }
+</script>
+</body>
+</html>
