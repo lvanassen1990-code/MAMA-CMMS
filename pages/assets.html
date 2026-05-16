@@ -814,6 +814,9 @@
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('storingen',this)">
         <i class="ti ti-alert-triangle"></i> Storingen
       </button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('meters',this)">
+        <i class="ti ti-gauge"></i> Meters
+      </button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)">
         <i class="ti ti-note"></i> Notities
       </button>
@@ -827,6 +830,7 @@
       <div class="drawer-tab-pane" id="tabParts"></div>
       <div class="drawer-tab-pane" id="tabSpec"></div>
       <div class="drawer-tab-pane" id="tabStoringen"></div>
+      <div class="drawer-tab-pane" id="tabMeters"></div>
       <div class="drawer-tab-pane" id="tabNotes"></div>
     </div>
 
@@ -1759,6 +1763,8 @@
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabStoringen').innerHTML =
       `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
+    document.getElementById('tabMeters').innerHTML =
+      `<div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
     document.getElementById('tabNotes').innerHTML =
       asset.notes
         ? `<p style="font-size:13px;color:var(--text-2);line-height:1.7;">${asset.notes}</p>`
@@ -1773,6 +1779,7 @@
     loadDrawerParts(assetId);
     renderDrawerSpec(asset);
     loadDrawerStoringen(assetId);
+    loadDrawerMeters(assetId);
   }
 
   async function loadDrawerHistory(assetId) {
@@ -1991,6 +1998,65 @@
     if (idx !== -1) Object.assign(allAssets[idx], payload);
     btn.closest('.modal-overlay').remove();
     renderDrawerSpec(drawerAsset);
+  }
+
+  /* ── Tab: Meters ── */
+  async function loadDrawerMeters(assetId) {
+    await loadEenheden();
+    const pane = document.getElementById('tabMeters');
+    const { data, error } = await sb.from('meters').select('*').eq('asset_id', assetId).order('naam');
+    if (error) { pane.innerHTML = `<div style="padding:20px;color:var(--red-text);">Fout bij laden meters.</div>`; return; }
+
+    function meterRowHtml(m) {
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:500;">${m.naam}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${m.eenheid || '—'}</div>
+        </div>
+        <div style="font-size:18px;font-weight:600;color:var(--text);">${m.huidige_stand ?? 0} <span style="font-size:12px;font-weight:400;color:var(--text-3);">${m.eenheid || ''}</span></div>
+      </div>`;
+    }
+
+    let meterCounter = 0;
+    function renderMeters(meters) {
+      const list = meters.length
+        ? meters.map(meterRowHtml).join('')
+        : `<div style="padding:20px 0;text-align:center;color:var(--text-3);font-size:12px;"><i class="ti ti-gauge" style="font-size:22px;display:block;margin-bottom:6px;opacity:0.4;"></i>Nog geen meters voor dit asset</div>`;
+
+      pane.innerHTML = `
+        <div style="padding:16px 20px;">
+          ${list}
+          <div id="drawerMeterNewRows" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;"></div>
+          <button class="add-meter-btn" style="margin-top:8px;" onclick="drawerAddMeterRow()"><i class="ti ti-plus"></i> Meter toevoegen</button>
+        </div>`;
+    }
+
+    renderMeters(data || []);
+
+    window.drawerAddMeterRow = function() {
+      meterCounter++;
+      const id = `dm${meterCounter}`;
+      const div = document.createElement('div');
+      div.className = 'meter-row';
+      div.id = id;
+      div.innerHTML = `
+        <input type="text" placeholder="Meternaam (bijv. Bedrijfsuren)" id="${id}naam" />
+        <span class="meter-row-divider"></span>
+        <select id="${id}eenh">${meterEenheidOptions()}</select>
+        <button class="meter-row-del" onclick="document.getElementById('${id}').remove()"><i class="ti ti-x"></i></button>
+        <button class="btn primary" style="padding:4px 10px;font-size:11px;" onclick="drawerSaveMeter('${id}','${assetId}')">Opslaan</button>
+      `;
+      document.getElementById('drawerMeterNewRows').appendChild(div);
+    };
+
+    window.drawerSaveMeter = async function(rowId, aid) {
+      const naam = document.getElementById(`${rowId}naam`).value.trim();
+      const eenheid = document.getElementById(`${rowId}eenh`).value || null;
+      if (!naam) return;
+      const { error: err } = await sb.from('meters').insert({ naam, eenheid, asset_id: aid, huidige_stand: 0 });
+      if (err) { alert('Fout: ' + err.message); return; }
+      loadDrawerMeters(aid);
+    };
   }
 
   /* ── Tab: Storingen ── */
