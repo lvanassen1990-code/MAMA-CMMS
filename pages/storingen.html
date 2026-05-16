@@ -435,6 +435,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/search-select.js"></script>
 <script>
   function toggleNavOnderhoud() {
     const g = document.getElementById('navOnderhoud');
@@ -480,6 +481,7 @@
       opt.textContent = `${a.name} (${a.asset_id})`;
       sel.appendChild(opt);
     });
+    enhanceSearchSelect('fAsset', 'Zoek asset...');
   }
 
   async function loadStoringen() {
@@ -862,6 +864,7 @@
     document.getElementById('fPrio').value        = 'Normaal';
     document.getElementById('fOorzaak').value     = '';
     document.getElementById('fAsset').value       = '';
+    syncSearchSelect('fAsset');
     document.getElementById('fHerstel').value     = '';
     document.getElementById('fNotes').value       = '';
     document.getElementById('modalOverlay').classList.add('open');

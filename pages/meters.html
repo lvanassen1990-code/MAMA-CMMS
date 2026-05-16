@@ -307,6 +307,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/search-select.js"></script>
 <script>
   function toggleNavOnderhoud() {
     const g = document.getElementById('navOnderhoud');
@@ -350,6 +351,7 @@
       if (!sel) return;
       while (sel.options.length > 1) sel.remove(1);
       allAssets.forEach(a => sel.add(new Option(a.name, a.asset_id)));
+      enhanceSearchSelect(id, 'Zoek asset...');
     });
   }
 
@@ -509,6 +511,8 @@
     const sel = document.getElementById('fAfgelezenAsset');
     sel.innerHTML = '<option value="">— Geen specifieke machine —</option>' +
       allAssets.map(a => `<option value="${a.asset_id}" ${a.asset_id === selectedId ? 'selected' : ''}>${a.name}</option>`).join('');
+    enhanceSearchSelect('fAfgelezenAsset', 'Zoek asset...');
+    syncSearchSelect('fAfgelezenAsset');
   }
 
   function openAfgelezenModal() {
@@ -570,6 +574,7 @@
     document.getElementById('fNaam').value = '';
     vulEenheidDropdown('fEenheid');
     document.getElementById('fAsset').value = '';
+    syncSearchSelect('fAsset');
     document.getElementById('fBeginstand').value = '0';
     document.getElementById('nieuweMeterOverlay').classList.add('open');
   }
@@ -604,6 +609,7 @@
     while (sel.options.length > 1) sel.remove(1);
     allAssets.forEach(a => sel.add(new Option(a.name, a.asset_id)));
     sel.value = drawerMeter.asset_id || '';
+    syncSearchSelect('fBewerkenAsset');
     document.getElementById('bewerkenOverlay').classList.add('open');
   }
   function closeBewerkenModal() { document.getElementById('bewerkenOverlay').classList.remove('open'); }

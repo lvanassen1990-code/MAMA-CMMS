@@ -602,6 +602,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/search-select.js"></script>
 <script>
   function toggleNavOnderhoud() {
     const g = document.getElementById('navOnderhoud');
@@ -899,6 +900,7 @@
     const sel = document.getElementById('fAsset');
     sel.innerHTML = '<option value="">— Geen asset —</option>' +
       allAssets.map(a => `<option value="${a.asset_id}">${a.name} (${a.asset_id})</option>`).join('');
+    enhanceSearchSelect('fAsset', 'Zoek asset...');
   }
 
   /* ── Drawer ── */
@@ -1508,6 +1510,7 @@
     document.getElementById('fNotes').value = '';
     document.getElementById('fDue').value = '';
     document.getElementById('fAsset').value = preAssetId || '';
+    syncSearchSelect('fAsset');
     document.getElementById('fType').value = 'Correctief';
     pendingParts = [];
     renderModalParts();
