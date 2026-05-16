@@ -219,7 +219,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Eenheid *</label>
-        <input type="text" class="form-input" id="fEenheid" placeholder="bijv. uur, cyclus, km, stuks">
+        <select class="form-input" id="fEenheid"><option value="">— Kies eenheid —</option></select>
       </div>
       <div class="form-group">
         <label class="form-label">Asset (optioneel)</label>
@@ -290,7 +290,7 @@
       </div>
       <div class="form-group">
         <label class="form-label">Eenheid *</label>
-        <input type="text" class="form-input" id="fBewerkenEenheid">
+        <select class="form-input" id="fBewerkenEenheid"><option value="">— Kies eenheid —</option></select>
       </div>
       <div class="form-group">
         <label class="form-label">Asset (optioneel)</label>
@@ -324,12 +324,23 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let allMeters = [], allAssets = [], drawerMeter = null, editingReadingId = null, toonInactief = false;
+  let allMeters = [], allAssets = [], allEenheden = [], drawerMeter = null, editingReadingId = null, toonInactief = false;
 
   document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
-    await Promise.all([loadAssets(), loadMeters()]);
+    await Promise.all([loadAssets(), loadMeters(), loadEenheden()]);
   });
+
+  async function loadEenheden() {
+    const { data } = await sb.from('eenheden').select('naam').order('naam');
+    allEenheden = (data || []).map(e => e.naam);
+  }
+
+  function vulEenheidDropdown(selectId, geselecteerd = '') {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = '<option value="">— Kies eenheid —</option>' +
+      allEenheden.map(e => `<option value="${e}" ${e === geselecteerd ? 'selected' : ''}>${e}</option>`).join('');
+  }
 
   async function loadAssets() {
     const { data } = await sb.from('assets').select('asset_id, name').neq('status', 'Afgeschreven').order('name');
@@ -557,7 +568,7 @@
   // ── Nieuwe meter ─────────────────────────────────────────
   function openNieuweMeterModal() {
     document.getElementById('fNaam').value = '';
-    document.getElementById('fEenheid').value = '';
+    vulEenheidDropdown('fEenheid');
     document.getElementById('fAsset').value = '';
     document.getElementById('fBeginstand').value = '0';
     document.getElementById('nieuweMeterOverlay').classList.add('open');
@@ -588,7 +599,7 @@
   function openBewerkenModal() {
     if (!drawerMeter) return;
     document.getElementById('fBewerkenNaam').value = drawerMeter.naam;
-    document.getElementById('fBewerkenEenheid').value = drawerMeter.eenheid;
+    vulEenheidDropdown('fBewerkenEenheid', drawerMeter.eenheid);
     const sel = document.getElementById('fBewerkenAsset');
     while (sel.options.length > 1) sel.remove(1);
     allAssets.forEach(a => sel.add(new Option(a.name, a.asset_id)));
