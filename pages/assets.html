@@ -561,12 +561,6 @@
         <span class="filter-label">Categorie</span>
         <select class="filter-select" id="filterCat" onchange="filterTable()">
           <option value="">Alle</option>
-          <option value="Compressor">Compressor</option>
-          <option value="Hydrauliek">Hydrauliek</option>
-          <option value="Ventilatie">Ventilatie</option>
-          <option value="Transport">Transport</option>
-          <option value="Elektrisch">Elektrisch</option>
-          <option value="Koeling">Koeling</option>
         </select>
       </div>
       <div class="filter-group">
@@ -671,14 +665,15 @@
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Categorie</label>
-          <select class="form-input" id="fCategory">
-            <option>Compressor</option>
-            <option>Hydrauliek</option>
-            <option>Ventilatie</option>
-            <option>Transport</option>
-            <option>Elektrisch</option>
-            <option>Koeling</option>
-          </select>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select class="form-input" id="fCategory" style="flex:1;"></select>
+            <button type="button" class="btn" onclick="toggleNieuweCatRow()" title="Nieuwe categorie toevoegen" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-plus"></i></button>
+          </div>
+          <div id="nieuweCatRow" style="display:none;margin-top:6px;gap:6px;align-items:center;">
+            <input class="form-input" id="nieuweCatInput" type="text" placeholder="Nieuwe categorie…" style="flex:1;" onkeydown="if(event.key==='Enter')saveNieuweCat();if(event.key==='Escape')toggleNieuweCatRow()" />
+            <button type="button" class="btn primary" onclick="saveNieuweCat()" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-check"></i></button>
+            <button type="button" class="btn" onclick="toggleNieuweCatRow()" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-x"></i></button>
+          </div>
         </div>
         <div class="form-field">
           <label class="form-label">Locatie</label>
@@ -975,6 +970,47 @@
   let allAssets = [];
   let expandedNodes = new Set();
   let allEenheden = [];
+  let allCategories = [];
+
+  async function loadCategories() {
+    const { data } = await sb.from('asset_categories').select('naam').order('naam');
+    allCategories = (data || []).map(r => r.naam);
+    vulCategoryDropdowns();
+  }
+
+  function vulCategoryDropdowns(geselecteerd) {
+    const fCat = document.getElementById('fCategory');
+    const huidig = geselecteerd ?? fCat.value;
+    fCat.innerHTML = allCategories.map(n => `<option${n === huidig ? ' selected' : ''}>${n}</option>`).join('');
+
+    const filterCat = document.getElementById('filterCat');
+    const huidigFilter = filterCat.value;
+    filterCat.innerHTML = '<option value="">Alle</option>' +
+      allCategories.map(n => `<option${n === huidigFilter ? ' selected' : ''}>${n}</option>`).join('');
+  }
+
+  function toggleNieuweCatRow() {
+    const row = document.getElementById('nieuweCatRow');
+    const zichtbaar = row.style.display === 'flex';
+    row.style.display = zichtbaar ? 'none' : 'flex';
+    if (!zichtbaar) { document.getElementById('nieuweCatInput').value = ''; document.getElementById('nieuweCatInput').focus(); }
+  }
+
+  async function saveNieuweCat() {
+    const input = document.getElementById('nieuweCatInput');
+    const naam = input.value.trim();
+    if (!naam) return;
+    const { error } = await sb.from('asset_categories').insert({ naam });
+    if (error) {
+      input.style.borderColor = 'var(--red)';
+      input.title = error.code === '23505' ? 'Bestaat al' : error.message;
+      setTimeout(() => { input.style.borderColor = ''; input.title = ''; }, 2000);
+      return;
+    }
+    await loadCategories();
+    vulCategoryDropdowns(naam);
+    toggleNieuweCatRow();
+  }
 
   async function loadEenheden() {
     const { data, error } = await sb.from('eenheden').select('naam').order('naam');
@@ -2334,7 +2370,7 @@
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
 
-  loadAssets().then(() => {
+  Promise.all([loadAssets(), loadCategories()]).then(() => {
     const params = new URLSearchParams(location.search);
     const assetId = params.get('asset');
     if (assetId) openDrawer(assetId);
