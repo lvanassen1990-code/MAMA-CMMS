@@ -306,9 +306,7 @@
   (function() {
     const g = document.getElementById('navOnderhoud');
     if (!g) return;
-    const hasActive = g.querySelector('.active');
-    const saved = localStorage.getItem('navOnderhoud');
-    if (!hasActive && saved === '1') g.classList.add('collapsed');
+    // Onderhoud-groep altijd open
   })();
 </script>
 <script>
