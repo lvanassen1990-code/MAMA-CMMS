@@ -1325,7 +1325,7 @@
         for (const ci of checkItems) {
           const stand = parseFloat(ci.ingevulde_waarde);
           if (isNaN(stand)) continue;
-          await sb.from('meter_aflezingen').insert({ meter_id: ci.meter_id, wo_id: drawerWO.id, stand, afgelezen_op: vandaag, afgelezen_door: door });
+          await sb.from('meter_readings').insert({ meter_id: ci.meter_id, stand, afgelezen_op: vandaag, ingevuld_door: door });
           await sb.from('meters').update({ huidige_stand: stand, laatste_afgelezen_op: vandaag }).eq('id', ci.meter_id);
         }
       }
