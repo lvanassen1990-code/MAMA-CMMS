@@ -1027,10 +1027,15 @@
       <div class="activity-item">
         <div class="activity-dot" style="background:${activityColor(a.type)};margin-top:5px;"></div>
         <div class="activity-body">
-          <div class="activity-text">${escHtml(a.omschrijving)}</div>
+          <div class="activity-text">${linkWoNummer(escHtml(a.omschrijving), s.wo_id)}</div>
           <div class="activity-time">${a.door ? escHtml(a.door) + ' · ' : ''}${formatDate(a.created_at)}</div>
         </div>
       </div>`).join('')}</div>`;
+  }
+
+  function linkWoNummer(tekst, woId) {
+    if (!woId) return tekst;
+    return tekst.replace(/(WO-\d{4}-\d{4})/g, `<a href="werkorders.html?wo=${woId}" style="color:var(--accent);text-decoration:none;font-weight:600;">$1</a>`);
   }
 
   function activityColor(type) {
