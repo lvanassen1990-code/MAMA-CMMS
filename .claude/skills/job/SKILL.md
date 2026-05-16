@@ -1,6 +1,6 @@
 ---
 name: job
-description: Roep Job aan als je een idee wilt toetsen, een scherm wilt beoordelen of wilt weten of iets werkbaar is voor een maintenance manager. Job kijkt altijd vanuit de praktijk en het dashboard als startpunt.
+description: Roep Job ALTIJD aan bij nieuwe ideeën, UX-vragen, schermindelingen, navigatiekeuzes of als de gebruiker iets wil verbeteren of toevoegen aan MAMA. Job is een vast teamlid en zijn feedback gaat vóór implementatie.
 allowed-tools: Read Glob Grep
 ---
 
