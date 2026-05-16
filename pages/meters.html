@@ -415,72 +415,38 @@
       .order('afgelezen_op', { ascending: false })
       .order('created_at', { ascending: false });
 
-    const readings = data || [];
+    // Oudste eerst voor delta-berekening, daarna omdraaien voor weergave
+    const readings = (data || []).slice().reverse();
 
     if (!readings.length) {
       pane.innerHTML = '<div class="empty-msg"><i class="ti ti-list-numbers"></i>Nog geen aflezingen.<br>Gebruik de knop "Aflezing" om de eerste stand in te voeren.</div>';
       return;
     }
 
-    // Haal asset-namen op voor unieke asset_ids
-    const assetIds = [...new Set(readings.map(r => r.asset_id).filter(Boolean))];
-    const assetNamen = {};
-    if (assetIds.length) {
-      const { data: assets } = await sb.from('assets').select('id, name, location').in('id', assetIds);
-      (assets || []).forEach(a => { assetNamen[a.id] = { name: a.name, location: a.location || '' }; });
-    }
-
-    // Uitsplitsing per machine: som van stands per asset
-    const perMachine = {};
-    readings.forEach(r => {
-      const key   = r.asset_id || '__geen__';
-      const label = r.asset_id ? (assetNamen[r.asset_id]?.name || '— Onbekend —') : '— Geen machine —';
-      const loc   = r.asset_id ? (assetNamen[r.asset_id]?.location || '') : '';
-      if (!perMachine[key]) perMachine[key] = { label, locatie: loc, stands: [] };
-      perMachine[key].stands.push(r.stand);
-    });
-
-    const machineBlok = `
-      <div style="margin-bottom:18px;">
-        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">
-          <i class="ti ti-building-factory-2"></i> Uren per machine
-        </div>
-        ${Object.values(perMachine).map(m => {
-          const totaal = m.stands.reduce((a, b) => a + b, 0);
-          const pct = drawerMeter.huidige_stand > 0 ? Math.round(totaal / drawerMeter.huidige_stand * 100) : 0;
-          return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:0.5px solid var(--border);">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:12px;font-weight:500;">${m.label}</div>
-              <div style="font-size:11px;color:var(--text-3);">${m.locatie}</div>
-              <div style="margin-top:5px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
-                <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px;"></div>
-              </div>
-            </div>
-            <div style="text-align:right;flex-shrink:0;">
-              <div style="font-size:15px;font-weight:600;">${fmt(totaal)} <span style="font-size:11px;font-weight:400;color:var(--text-3);">${drawerMeter.eenheid}</span></div>
-              <div style="font-size:10px;color:var(--text-3);">${m.stands.length} aflezing${m.stands.length !== 1 ? 'en' : ''} · ${pct}%</div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>`;
-
-    // Tijdlijn
+    // Tijdlijn — oudste onderaan, nieuwste bovenaan
+    const display = [...readings].reverse();
     const tijdlijn = `
-      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">
-        <i class="ti ti-list-numbers"></i> Alle aflezingen
-      </div>
-      ${readings.map((r, i) => `
+      ${display.map((r, i) => {
+        const prevIdx = readings.findIndex(x => x.id === r.id) - 1;
+        const prev = prevIdx >= 0 ? readings[prevIdx] : null;
+        const delta = prev != null ? r.stand - prev.stand : null;
+        const deltaStr = delta != null
+          ? `<span style="font-size:10px;color:${delta >= 0 ? 'var(--green,#22c55e)' : 'var(--red,#ef4444)'};">
+               ${delta >= 0 ? '+' : ''}${fmt(delta)} ${drawerMeter.eenheid}
+             </span>`
+          : `<span style="font-size:10px;color:var(--text-3);">beginstand</span>`;
+        return `
         <div class="reading-row">
           <div class="reading-stand">${fmt(r.stand)} <span style="font-size:10px;font-weight:400;color:var(--text-3);">${drawerMeter.eenheid}</span></div>
           <div class="reading-meta">
-            ${fmtDate(r.afgelezen_op)} · ${r.ingevuld_door}
-            ${r.asset_id && assetNamen[r.asset_id] ? `<br><span style="font-size:10px;color:var(--accent);"><i class="ti ti-building-factory-2"></i> ${assetNamen[r.asset_id].name}</span>` : ''}
+            ${fmtDate(r.afgelezen_op)} · ${r.ingevuld_door}<br>${deltaStr}
             ${r.gecorrigeerd_van != null ? `<br><span class="corrected-badge">Gecorrigeerd van ${fmt(r.gecorrigeerd_van)} ${drawerMeter.eenheid}</span>` : ''}
           </div>
           ${i === 0 ? `<button class="icon-btn" title="Corrigeer aflezing" onclick="startEditReading('${r.id}',${r.stand},'${r.asset_id||''}')"><i class="ti ti-pencil"></i></button>` : ''}
-        </div>`).join('')}`;
+        </div>`;
+      }).join('')}`;
 
-    pane.innerHTML = machineBlok + tijdlijn;
+    pane.innerHTML = tijdlijn;
   }
 
   async function loadGekoppeldePlannen() {
