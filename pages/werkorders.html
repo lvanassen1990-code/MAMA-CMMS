@@ -471,6 +471,7 @@
           <option value="">— Geen werkinstructie —</option>
         </select>
         <div style="font-size:10px;color:var(--text-3);margin-top:3px;">Koppel een checklist aan dit WO — meterstanden worden automatisch meegeschreven bij afsluiten.</div>
+        <div id="fWiMeterWaarschuwing" style="font-size:11px;margin-top:5px;"></div>
       </div>
       <div class="form-field full">
         <label class="form-label">Notities</label>
@@ -1437,6 +1438,33 @@
     if (drawerWO?.id === statusWoId) openDrawer(statusWoId);
   }
 
+  async function checkWiMeterMatch() {
+    const wiId    = document.getElementById('fWerkinstructie').value;
+    const assetId = document.getElementById('fAsset').value;
+    const el      = document.getElementById('fWiMeterWaarschuwing');
+    if (!el) return;
+    el.textContent = '';
+    if (!wiId || !assetId) return;
+
+    const { data: items } = await sb.from('werkinstructie_items')
+      .select('meter_naam').eq('instructie_id', wiId).not('meter_naam', 'is', null);
+    const meterNamen = [...new Set((items || []).map(i => i.meter_naam).filter(Boolean))];
+    if (!meterNamen.length) return;
+
+    const { data: meters } = await sb.from('meters')
+      .select('naam').eq('asset_id', assetId).in('naam', meterNamen);
+    const gevonden = (meters || []).map(m => m.naam);
+    const ontbrekend = meterNamen.filter(n => !gevonden.includes(n));
+
+    if (ontbrekend.length) {
+      el.innerHTML = `<i class="ti ti-alert-triangle"></i> Meter${ontbrekend.length > 1 ? 's' : ''} <strong>${ontbrekend.join(', ')}</strong> bestaan niet op dit asset — stand wordt niet meegeschreven.`;
+      el.style.color = 'var(--orange, #f59e0b)';
+    } else {
+      el.innerHTML = `<i class="ti ti-circle-check"></i> Alle meters aanwezig op dit asset.`;
+      el.style.color = 'var(--green, #22c55e)';
+    }
+  }
+
   /* ── Nieuwe werkorder ── */
   async function openModal(preAssetId = null) {
     // Haal het hoogste WO-nummer op uit de database (niet uit de lokale array — die kan gefilterd zijn)
@@ -1475,7 +1503,11 @@
     document.getElementById('fType').onchange = function() {
       const show = ['Preventief', 'Inspectie'].includes(this.value);
       document.getElementById('fWiWrap').style.display = show ? '' : 'none';
+      if (!show) { document.getElementById('fWiMeterWaarschuwing').textContent = ''; }
     };
+
+    wiSel.onchange = () => checkWiMeterMatch();
+    document.getElementById('fAsset').addEventListener('change', checkWiMeterMatch, { once: false });
 
     document.getElementById('modalOverlay').classList.add('open');
   }
