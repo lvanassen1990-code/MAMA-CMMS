@@ -251,6 +251,12 @@
         <input type="date" class="form-input" id="fDatum">
       </div>
       <div class="form-group">
+        <label class="form-label">Machine / Asset <span style="font-size:10px;color:var(--text-3);">(optioneel — voor uitsplitsing per machine)</span></label>
+        <select class="form-input" id="fAfgelezenAsset">
+          <option value="">— Geen specifieke machine —</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label class="form-label">Ingevuld door *</label>
         <input type="text" class="form-input" id="fIngevuldDoor" placeholder="Naam monteur">
       </div>
@@ -403,57 +409,69 @@
     const pane = document.getElementById('tabAflesingen');
     pane.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:8px 0;">Laden...</div>';
 
-    const [{ data: readings }, { data: zelfdeNaam }] = await Promise.all([
-      sb.from('meter_readings').select('*').eq('meter_id', drawerMeter.id)
-        .order('afgelezen_op', { ascending: false }).order('created_at', { ascending: false }),
-      sb.from('meters').select('id,naam,huidige_stand,eenheid,laatste_afgelezen_op,assets(name,location)')
-        .eq('naam', drawerMeter.naam).neq('id', drawerMeter.id)
-    ]);
+    const { data } = await sb.from('meter_readings')
+      .select('*, assets(name, location)')
+      .eq('meter_id', drawerMeter.id)
+      .order('afgelezen_op', { ascending: false })
+      .order('created_at', { ascending: false });
 
-    const asset = drawerMeter.assets;
-    const assetBlok = `
-      <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;display:flex;gap:16px;align-items:center;">
-        <i class="ti ti-building-factory-2" style="font-size:22px;color:var(--text-3);flex-shrink:0;"></i>
-        <div>
-          <div style="font-size:13px;font-weight:500;">${asset?.name || '— Geen asset —'}</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${asset?.location || ''}</div>
+    const readings = data || [];
+
+    if (!readings.length) {
+      pane.innerHTML = '<div class="empty-msg"><i class="ti ti-list-numbers"></i>Nog geen aflezingen.<br>Gebruik de knop "Aflezing" om de eerste stand in te voeren.</div>';
+      return;
+    }
+
+    // Uitsplitsing per machine: som van stands per asset
+    const perMachine = {};
+    readings.forEach(r => {
+      const key   = r.asset_id || '__geen__';
+      const label = r.assets?.name || '— Geen machine —';
+      if (!perMachine[key]) perMachine[key] = { label, locatie: r.assets?.location || '', stands: [] };
+      perMachine[key].stands.push(r.stand);
+    });
+
+    const machineBlok = `
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">
+          <i class="ti ti-building-factory-2"></i> Uren per machine
         </div>
+        ${Object.values(perMachine).map(m => {
+          const totaal = m.stands.reduce((a, b) => a + b, 0);
+          const pct = drawerMeter.huidige_stand > 0 ? Math.round(totaal / drawerMeter.huidige_stand * 100) : 0;
+          return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:0.5px solid var(--border);">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:500;">${m.label}</div>
+              <div style="font-size:11px;color:var(--text-3);">${m.locatie}</div>
+              <div style="margin-top:5px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px;"></div>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:15px;font-weight:600;">${fmt(totaal)} <span style="font-size:11px;font-weight:400;color:var(--text-3);">${drawerMeter.eenheid}</span></div>
+              <div style="font-size:10px;color:var(--text-3);">${m.stands.length} aflezing${m.stands.length !== 1 ? 'en' : ''} · ${pct}%</div>
+            </div>
+          </div>`;
+        }).join('')}
       </div>`;
 
-    const rList = (readings || []);
-    const readingsHtml = rList.length
-      ? rList.map((r, i) => `
-          <div class="reading-row">
-            <div class="reading-stand">${fmt(r.stand)} <span style="font-size:10px;font-weight:400;color:var(--text-3);">${drawerMeter.eenheid}</span></div>
-            <div class="reading-meta">
-              ${fmtDate(r.afgelezen_op)}<br>${r.ingevuld_door}
-              ${r.gecorrigeerd_van != null ? `<br><span class="corrected-badge">Gecorrigeerd van ${fmt(r.gecorrigeerd_van)} ${drawerMeter.eenheid}</span>` : ''}
-            </div>
-            ${i === 0 ? `<button class="icon-btn" title="Corrigeer aflezing" onclick="startEditReading('${r.id}',${r.stand})"><i class="ti ti-pencil"></i></button>` : ''}
-          </div>`)
-        .join('')
-      : '<div class="empty-msg"><i class="ti ti-list-numbers"></i>Nog geen aflezingen.<br>Gebruik de knop "Aflezing" om de eerste stand in te voeren.</div>';
+    // Tijdlijn
+    const tijdlijn = `
+      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">
+        <i class="ti ti-list-numbers"></i> Alle aflezingen
+      </div>
+      ${readings.map((r, i) => `
+        <div class="reading-row">
+          <div class="reading-stand">${fmt(r.stand)} <span style="font-size:10px;font-weight:400;color:var(--text-3);">${drawerMeter.eenheid}</span></div>
+          <div class="reading-meta">
+            ${fmtDate(r.afgelezen_op)} · ${r.ingevuld_door}
+            ${r.assets?.name ? `<br><span style="font-size:10px;color:var(--accent);"><i class="ti ti-building-factory-2"></i> ${r.assets.name}</span>` : ''}
+            ${r.gecorrigeerd_van != null ? `<br><span class="corrected-badge">Gecorrigeerd van ${fmt(r.gecorrigeerd_van)} ${drawerMeter.eenheid}</span>` : ''}
+          </div>
+          ${i === 0 ? `<button class="icon-btn" title="Corrigeer aflezing" onclick="startEditReading('${r.id}',${r.stand},'${r.asset_id||''}')"><i class="ti ti-pencil"></i></button>` : ''}
+        </div>`).join('')}`;
 
-    const anderenLijst = (zelfdeNaam || []);
-    const anderenBlok = anderenLijst.length ? `
-      <div style="margin-top:20px;border-top:0.5px solid var(--border);padding-top:14px;">
-        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;">
-          <i class="ti ti-copy"></i> Dezelfde meter op andere assets
-        </div>
-        ${anderenLijst.map(m => `
-          <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:0.5px solid var(--border);">
-            <div style="flex:1;">
-              <div style="font-size:12px;font-weight:500;">${m.assets?.name || '— Geen asset —'}</div>
-              <div style="font-size:11px;color:var(--text-3);">${m.assets?.location || ''}</div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:14px;font-weight:600;">${fmt(m.huidige_stand)} <span style="font-size:11px;font-weight:400;color:var(--text-3);">${m.eenheid}</span></div>
-              <div style="font-size:10px;color:var(--text-3);">${m.laatste_afgelezen_op ? fmtDate(m.laatste_afgelezen_op) : 'Nooit afgelezen'}</div>
-            </div>
-          </div>`).join('')}
-      </div>` : '';
-
-    pane.innerHTML = assetBlok + readingsHtml + anderenBlok;
+    pane.innerHTML = machineBlok + tijdlijn;
   }
 
   async function loadGekoppeldePlannen() {
@@ -469,6 +487,12 @@
   }
 
   // ── Aflezing ─────────────────────────────────────────────
+  function populateAfgelezenAsset(selectedId = '') {
+    const sel = document.getElementById('fAfgelezenAsset');
+    sel.innerHTML = '<option value="">— Geen specifieke machine —</option>' +
+      allAssets.map(a => `<option value="${a.asset_id}" ${a.asset_id === selectedId ? 'selected' : ''}>${a.name}</option>`).join('');
+  }
+
   function openAfgelezenModal() {
     if (!drawerMeter) return;
     editingReadingId = null;
@@ -477,16 +501,18 @@
     document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
     document.getElementById('fIngevuldDoor').value = '';
     document.getElementById('fStandEenheid').textContent = drawerMeter.eenheid;
+    populateAfgelezenAsset(drawerMeter.asset_id || '');
     document.getElementById('afgelezenOverlay').classList.add('open');
   }
 
-  function startEditReading(id, stand) {
+  function startEditReading(id, stand, assetId = '') {
     editingReadingId = id;
     document.getElementById('afgelezenModalTitle').textContent = 'Aflezing corrigeren';
     document.getElementById('fStand').value = stand;
     document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
     document.getElementById('fIngevuldDoor').value = '';
     document.getElementById('fStandEenheid').textContent = drawerMeter.eenheid;
+    populateAfgelezenAsset(assetId);
     document.getElementById('afgelezenOverlay').classList.add('open');
   }
 
@@ -496,13 +522,14 @@
     const stand = parseFloat(document.getElementById('fStand').value);
     const datum = document.getElementById('fDatum').value;
     const door  = document.getElementById('fIngevuldDoor').value.trim();
+    const asset_id = document.getElementById('fAfgelezenAsset').value || null;
     if (isNaN(stand) || !datum || !door) { alert('Vul alle verplichte velden in.'); return; }
 
     if (editingReadingId) {
       const { data: orig } = await sb.from('meter_readings').select('stand').eq('id', editingReadingId).single();
-      await sb.from('meter_readings').update({ stand, afgelezen_op: datum, ingevuld_door: door, gecorrigeerd_van: orig?.stand }).eq('id', editingReadingId);
+      await sb.from('meter_readings').update({ stand, afgelezen_op: datum, ingevuld_door: door, asset_id, gecorrigeerd_van: orig?.stand }).eq('id', editingReadingId);
     } else {
-      await sb.from('meter_readings').insert({ meter_id: drawerMeter.id, stand, afgelezen_op: datum, ingevuld_door: door });
+      await sb.from('meter_readings').insert({ meter_id: drawerMeter.id, stand, afgelezen_op: datum, ingevuld_door: door, asset_id });
     }
 
     const { data: latest } = await sb.from('meter_readings').select('stand, afgelezen_op')
