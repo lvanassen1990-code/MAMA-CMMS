@@ -624,6 +624,7 @@
   let allAssets = [];
   let allParts = [];
   let allWerkinstructies = [];
+  let allWiMeterNamen = {}; // { wiId: ['Draaiuren', ...] }
   let pendingParts = []; // [{part, qty}] for new WO modal
 
   const catIcons = { 'Compressor':'ti-wind','Hydrauliek':'ti-droplet','Ventilatie':'ti-air-conditioning','Transport':'ti-arrows-right-left','Elektrisch':'ti-bolt','Koeling':'ti-snowflake' };
@@ -861,6 +862,16 @@
     allWerkorders = wos || [];
     allAssets = assets || [];
     allWerkinstructies = wis || [];
+
+    // Meter-namen per werkinstructie laden voor dropdown-filtering
+    const { data: wiItems } = await sb.from('werkinstructie_items')
+      .select('instructie_id, meter_naam').not('meter_naam', 'is', null);
+    allWiMeterNamen = {};
+    (wiItems || []).forEach(i => {
+      if (!allWiMeterNamen[i.instructie_id]) allWiMeterNamen[i.instructie_id] = [];
+      if (!allWiMeterNamen[i.instructie_id].includes(i.meter_naam))
+        allWiMeterNamen[i.instructie_id].push(i.meter_naam);
+    });
 
     // Parts afzonderlijk laden zodat een fout hier de rest niet breekt
     try {
@@ -1438,31 +1449,38 @@
     if (drawerWO?.id === statusWoId) openDrawer(statusWoId);
   }
 
-  async function checkWiMeterMatch() {
-    const wiId    = document.getElementById('fWerkinstructie').value;
+  async function updateWiDropdown() {
     const assetId = document.getElementById('fAsset').value;
+    const wiSel   = document.getElementById('fWerkinstructie');
     const el      = document.getElementById('fWiMeterWaarschuwing');
-    if (!el) return;
-    el.textContent = '';
-    if (!wiId || !assetId) return;
+    if (el) el.textContent = '';
 
-    const { data: items } = await sb.from('werkinstructie_items')
-      .select('meter_naam').eq('instructie_id', wiId).not('meter_naam', 'is', null);
-    const meterNamen = [...new Set((items || []).map(i => i.meter_naam).filter(Boolean))];
-    if (!meterNamen.length) return;
-
-    const { data: meters } = await sb.from('meters')
-      .select('naam').eq('asset_id', assetId).in('naam', meterNamen);
-    const gevonden = (meters || []).map(m => m.naam);
-    const ontbrekend = meterNamen.filter(n => !gevonden.includes(n));
-
-    if (ontbrekend.length) {
-      el.innerHTML = `<i class="ti ti-alert-triangle"></i> Meter${ontbrekend.length > 1 ? 's' : ''} <strong>${ontbrekend.join(', ')}</strong> bestaan niet op dit asset — stand wordt niet meegeschreven.`;
-      el.style.color = 'var(--orange, #f59e0b)';
-    } else {
-      el.innerHTML = `<i class="ti ti-circle-check"></i> Alle meters aanwezig op dit asset.`;
-      el.style.color = 'var(--green, #22c55e)';
+    // Meters op het geselecteerde asset ophalen
+    let assetMeterNamen = [];
+    if (assetId) {
+      const { data: meters } = await sb.from('meters').select('naam').eq('asset_id', assetId);
+      assetMeterNamen = (meters || []).map(m => m.naam);
     }
+
+    // Opties updaten: disabled als meter ontbreekt op dit asset
+    Array.from(wiSel.options).forEach(opt => {
+      if (!opt.value) return; // lege optie overslaan
+      const benodigd = allWiMeterNamen[opt.value] || [];
+      const ontbrekend = assetId
+        ? benodigd.filter(n => !assetMeterNamen.includes(n))
+        : [];
+      if (ontbrekend.length) {
+        opt.disabled = true;
+        opt.text = `${allWerkinstructies.find(w => w.id === opt.value)?.naam} (meter ontbreekt: ${ontbrekend.join(', ')})`;
+      } else {
+        opt.disabled = false;
+        opt.text = allWerkinstructies.find(w => w.id === opt.value)?.naam || opt.text;
+      }
+    });
+
+    // Als geselecteerde WI nu disabled is, reset
+    const selected = wiSel.options[wiSel.selectedIndex];
+    if (selected?.disabled) wiSel.value = '';
   }
 
   /* ── Nieuwe werkorder ── */
@@ -1503,11 +1521,11 @@
     document.getElementById('fType').onchange = function() {
       const show = ['Preventief', 'Inspectie'].includes(this.value);
       document.getElementById('fWiWrap').style.display = show ? '' : 'none';
-      if (!show) { document.getElementById('fWiMeterWaarschuwing').textContent = ''; }
+      if (show) updateWiDropdown();
     };
 
-    wiSel.onchange = () => checkWiMeterMatch();
-    document.getElementById('fAsset').addEventListener('change', checkWiMeterMatch, { once: false });
+    document.getElementById('fAsset').onchange = updateWiDropdown;
+    if (preAssetId) await updateWiDropdown();
 
     document.getElementById('modalOverlay').classList.add('open');
   }
