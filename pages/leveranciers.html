@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leveranciers — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../assets/mama.css" />
+  <style>
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-scroll { flex: 1; min-height: 0; padding-bottom: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .settings-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .settings-card-header { padding: 14px 18px; border-bottom: 0.5px solid var(--border); }
+    .settings-card-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .settings-card-title i { font-size: 16px; color: var(--accent); }
+    .settings-card-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+    .lev-row { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-bottom: 0.5px solid var(--border); }
+    .lev-row:last-child { border-bottom: none; }
+    .lev-icon { width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .lev-icon i { font-size: 16px; color: var(--text-3); }
+    .lev-info { flex: 1; min-width: 0; }
+    .lev-naam { font-size: 13px; font-weight: 500; }
+    .lev-meta { display: flex; gap: 14px; margin-top: 2px; flex-wrap: wrap; }
+    .lev-meta-item { font-size: 11px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+    .lev-meta-item i { font-size: 11px; }
+    .lev-meta-item a { color: var(--accent); text-decoration: none; }
+    .lev-meta-item a:hover { text-decoration: underline; }
+    .lev-delete { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 5px 7px; border-radius: var(--radius-sm); transition: background 0.1s, color 0.1s; font-size: 15px; line-height: 1; flex-shrink: 0; }
+    .lev-delete:hover { background: var(--red-bg); color: var(--red-text); }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-3); }
+    .empty-state i { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.3; }
+    .empty-state p { font-size: 12px; }
+
+    /* Add form */
+    .add-form { border-top: 0.5px solid var(--border); background: var(--bg); padding: 14px 18px; display: none; flex-direction: column; gap: 10px; }
+    .add-form.open { display: flex; }
+    .add-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-field { display: flex; flex-direction: column; gap: 4px; }
+    .form-label { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12px; font-family: inherit; outline: none; background: var(--surface); color: var(--text); width: 100%; box-sizing: border-box; }
+    .form-input:focus { border-color: var(--accent); }
+    .add-form-footer { display: flex; justify-content: flex-end; gap: 8px; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <img src="../assets/logo-mark.svg" alt="MAMA" style="width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0;" />
+      <div><div class="logo-name">MAMA</div><div class="logo-sub">Maintenance Manager</div></div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNav('navOnderhoud')">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders</a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen</a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <div class="nav-group" id="navGegevens">
+    <div class="nav-group-header" onclick="toggleNav('navGegevens')">
+      <span class="nav-group-header-left"><i class="ti ti-database"></i> Gegevens</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="bedrijf.html" class="nav-item nav-sub"><i class="ti ti-building"></i> Bedrijfsgegevens</a>
+      <a href="categorieen.html" class="nav-item nav-sub"><i class="ti ti-tag"></i> Categorieën</a>
+      <a href="locaties.html" class="nav-item nav-sub"><i class="ti ti-map-pin"></i> Locaties</a>
+      <a href="medewerkers.html" class="nav-item nav-sub"><i class="ti ti-users"></i> Medewerkers</a>
+      <a href="leveranciers.html" class="nav-item nav-sub active"><i class="ti ti-truck"></i> Leveranciers</a>
+    </div>
+  </div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div><div class="user-name">Leon</div><div class="user-role">Board / Owner</div></div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Leveranciers</div>
+      <div class="topbar-sub">Leveranciers van onderdelen en diensten</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn primary" onclick="openAddForm()"><i class="ti ti-plus"></i> Nieuwe leverancier</button>
+    </div>
+  </div>
+  <div class="content">
+  <div class="content-scroll">
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-title"><i class="ti ti-truck"></i> Leveranciers</div>
+        <div class="settings-card-desc">Contactgegevens van leveranciers die gebruikt worden bij onderdelen en werkorders</div>
+      </div>
+      <div id="lijst"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
+      <div class="add-form" id="addForm">
+        <div class="add-form-grid">
+          <div class="form-field">
+            <label class="form-label">Bedrijfsnaam <span style="color:var(--red)">*</span></label>
+            <input class="form-input" id="fNaam" type="text" placeholder="bijv. Bosch Supplies BV" onkeydown="if(event.key==='Enter')voegToe()" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Contactpersoon</label>
+            <input class="form-input" id="fContact" type="text" placeholder="bijv. Peter Smit" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">E-mail</label>
+            <input class="form-input" id="fEmail" type="email" placeholder="bijv. info@bosch.nl" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Telefoon</label>
+            <input class="form-input" id="fTelefoon" type="tel" placeholder="bijv. 010-1234567" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Plaats</label>
+            <input class="form-input" id="fPlaats" type="text" placeholder="bijv. Rotterdam" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Land</label>
+            <input class="form-input" id="fLand" type="text" placeholder="bijv. Nederland" value="Nederland" />
+          </div>
+          <div class="form-field" style="grid-column:1/-1;">
+            <label class="form-label">Website</label>
+            <input class="form-input" id="fWebsite" type="url" placeholder="bijv. https://www.bosch.nl" />
+          </div>
+        </div>
+        <div class="add-form-footer">
+          <button class="btn" onclick="closeAddForm()">Annuleren</button>
+          <button class="btn primary" onclick="voegToe()"><i class="ti ti-check"></i> Toevoegen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  function toggleNav(id) {
+    const g = document.getElementById(id);
+    g.classList.toggle('collapsed');
+    localStorage.setItem(id, g.classList.contains('collapsed') ? '1' : '0');
+  }
+  document.getElementById('navOnderhoud').classList.remove('collapsed');
+  document.getElementById('navGegevens').classList.remove('collapsed');
+
+  const sb = supabase.createClient(
+    'https://mtghxnllimxhlnjtshjq.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8'
+  );
+
+  let items = [];
+
+  async function load() {
+    const { data } = await sb.from('leveranciers').select('*').order('naam');
+    items = data || [];
+    render();
+  }
+
+  function render() {
+    const el = document.getElementById('lijst');
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-state"><i class="ti ti-truck"></i><p>Nog geen leveranciers toegevoegd</p></div>';
+      return;
+    }
+    el.innerHTML = items.map(l => `
+      <div class="lev-row" id="r-${l.id}">
+        <div class="lev-icon"><i class="ti ti-building-store"></i></div>
+        <div class="lev-info">
+          <div class="lev-naam">${escHtml(l.naam)}</div>
+          <div class="lev-meta">
+            ${l.contactpersoon ? `<span class="lev-meta-item"><i class="ti ti-user"></i>${escHtml(l.contactpersoon)}</span>` : ''}
+            ${l.email ? `<span class="lev-meta-item"><i class="ti ti-mail"></i><a href="mailto:${escHtml(l.email)}">${escHtml(l.email)}</a></span>` : ''}
+            ${l.telefoon ? `<span class="lev-meta-item"><i class="ti ti-phone"></i>${escHtml(l.telefoon)}</span>` : ''}
+            ${(l.plaats || l.land) ? `<span class="lev-meta-item"><i class="ti ti-map-pin"></i>${[l.plaats, l.land].filter(Boolean).map(escHtml).join(', ')}</span>` : ''}
+            ${l.website ? `<span class="lev-meta-item"><i class="ti ti-world"></i><a href="${escHtml(l.website)}" target="_blank">Website</a></span>` : ''}
+          </div>
+        </div>
+        <button class="lev-delete" onclick="verwijder('${l.id}','${escHtml(l.naam).replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i> Verwijderen</button>
+      </div>`).join('');
+  }
+
+  function openAddForm() {
+    document.getElementById('addForm').classList.add('open');
+    document.getElementById('fNaam').focus();
+  }
+
+  function closeAddForm() {
+    document.getElementById('addForm').classList.remove('open');
+    ['fNaam','fContact','fEmail','fTelefoon','fPlaats','fWebsite'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fLand').value = 'Nederland';
+  }
+
+  async function voegToe() {
+    const naam = document.getElementById('fNaam').value.trim();
+    if (!naam) {
+      document.getElementById('fNaam').style.borderColor = 'var(--red)';
+      setTimeout(() => document.getElementById('fNaam').style.borderColor = '', 2000);
+      return;
+    }
+    const { error } = await sb.from('leveranciers').insert({
+      naam,
+      contactpersoon: document.getElementById('fContact').value.trim() || null,
+      email:          document.getElementById('fEmail').value.trim()   || null,
+      telefoon:       document.getElementById('fTelefoon').value.trim()|| null,
+      plaats:         document.getElementById('fPlaats').value.trim()  || null,
+      land:           document.getElementById('fLand').value.trim()    || null,
+      website:        document.getElementById('fWebsite').value.trim() || null,
+    });
+    if (error) {
+      const inp = document.getElementById('fNaam');
+      inp.style.borderColor = 'var(--red)';
+      inp.title = error.code === '23505' ? 'Bestaat al' : error.message;
+      setTimeout(() => { inp.style.borderColor = ''; inp.title = ''; }, 2000);
+      return;
+    }
+    closeAddForm();
+    await load();
+  }
+
+  async function verwijder(id, naam) {
+    if (!confirm(`"${naam}" verwijderen?`)) return;
+    await sb.from('leveranciers').delete().eq('id', id);
+    items = items.filter(r => r.id !== id);
+    render();
+  }
+
+  function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  load();
+</script>
+</body>
+</html>

@@ -158,7 +158,7 @@
           <div class="list-sub">${m.email ? escHtml(m.email) : '—'}</div>
         </div>
         <span class="rol-badge">${escHtml(m.rol || 'Monteur')}</span>
-        <button class="list-delete" onclick="verwijder('${m.id}','${escHtml(m.naam).replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i></button>
+        <button class="list-delete" onclick="verwijder('${m.id}','${escHtml(m.naam).replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i> Verwijderen</button>
       </div>`).join('');
   }
 
