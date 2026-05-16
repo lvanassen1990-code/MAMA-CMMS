@@ -307,12 +307,14 @@
       <button type="button" class="drawer-tab active" onclick="switchDrawerTab('details',this)"><i class="ti ti-info-circle"></i> Details</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('werkorder',this)"><i class="ti ti-clipboard-list"></i> Werkorder</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('notities',this)"><i class="ti ti-note"></i> Notities</button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('activiteiten',this);renderTabActiviteiten(currentStoring)"><i class="ti ti-activity"></i> Activiteiten</button>
     </div>
 
     <div class="drawer-tab-content">
       <div class="drawer-tab-pane active" id="tabDetails"></div>
       <div class="drawer-tab-pane" id="tabWerkorder"></div>
       <div class="drawer-tab-pane" id="tabNotities"></div>
+      <div class="drawer-tab-pane" id="tabActiviteiten"></div>
     </div>
 
     <div class="drawer-footer">
@@ -430,6 +432,42 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeStatusModal()">Annuleren</button>
       <button class="btn primary" onclick="saveStatus()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Markeer opgelost -->
+<div class="modal-overlay" id="oplosModalOverlay" onclick="if(event.target===this)closeOplosModal()">
+  <div class="modal" style="width:440px;">
+    <div class="modal-header">
+      <div class="modal-title">Storing oplossen</div>
+      <button class="modal-close" onclick="closeOplosModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field full">
+        <label class="form-label">Wat is er gedaan? <span style="color:var(--red)">*</span></label>
+        <textarea class="form-input" id="oplosOmschrijving" rows="4" placeholder="Beschrijf de uitgevoerde werkzaamheden…" style="resize:vertical;"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Hersteltijd (min)</label>
+          <input class="form-input" id="oplosHersteltijd" type="number" min="0" placeholder="bijv. 45" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Uitgevoerd door</label>
+          <select class="form-input" id="oplosGemeld">
+            <option>J. de Vries</option>
+            <option>M. Bakker</option>
+            <option>P. Jansen</option>
+            <option>R. Smit</option>
+            <option>K. van Dam</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeOplosModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveOpgelost()"><i class="ti ti-check"></i> Bevestig oplossing</button>
     </div>
   </div>
 </div>
@@ -778,12 +816,36 @@
 
   // ── Drawer actions ────────────────────────────────────────────────────────
 
-  async function markOpgelost() {
+  function markOpgelost() {
     if (!currentStoring) return;
-    const herstel = prompt('Hersteltijd in minuten (leeg = onbekend):');
-    const payload = { status: 'Opgelost' };
-    if (herstel && !isNaN(parseInt(herstel))) payload.herstel_tijd = parseInt(herstel);
+    document.getElementById('oplosOmschrijving').value = '';
+    document.getElementById('oplosOmschrijving').style.borderColor = '';
+    document.getElementById('oplosHersteltijd').value = '';
+    document.getElementById('oplosModalOverlay').classList.add('open');
+  }
+
+  function closeOplosModal() {
+    document.getElementById('oplosModalOverlay').classList.remove('open');
+  }
+
+  async function saveOpgelost() {
+    const omschrijving = document.getElementById('oplosOmschrijving').value.trim();
+    if (!omschrijving) {
+      document.getElementById('oplosOmschrijving').style.borderColor = 'var(--red)';
+      return;
+    }
+    const herstel = parseInt(document.getElementById('oplosHersteltijd').value) || null;
+    const door = document.getElementById('oplosGemeld').value;
+    const payload = { status: 'Opgelost', oplossing_omschrijving: omschrijving };
+    if (herstel) payload.herstel_tijd = herstel;
     await sb.from('storingen').update(payload).eq('id', currentStoring.id);
+    await sb.from('storing_activiteiten').insert({
+      storing_id: currentStoring.id,
+      type: 'status_wijziging',
+      omschrijving: `Opgelost door ${door}: ${omschrijving}`,
+      door,
+    });
+    closeOplosModal();
     await loadStoringen();
     const updated = allStoringen.find(s => s.id === currentStoring.id);
     if (updated) openDrawer(updated);
@@ -813,6 +875,12 @@
     if (error) { alert('Fout bij aanmaken werkorder: ' + error.message); return; }
 
     await sb.from('storingen').update({ wo_id: wo.id, status: 'Werkorder aangemaakt' }).eq('id', currentStoring.id);
+    await sb.from('storing_activiteiten').insert({
+      storing_id: currentStoring.id,
+      type: 'werkorder_aangemaakt',
+      omschrijving: `Werkorder ${woNum} aangemaakt`,
+      door: null,
+    });
     await loadStoringen();
     const updated = allStoringen.find(s => s.id === currentStoring.id);
     if (updated) openDrawer(updated);
@@ -838,9 +906,16 @@
     if (!currentStoring) return;
     const newStatus = document.getElementById('statusSelect').value;
     const herstel   = parseInt(document.getElementById('statusHerstel').value) || null;
+    const note      = document.getElementById('statusNote').value.trim();
     const payload   = { status: newStatus };
     if (herstel) payload.herstel_tijd = herstel;
     await sb.from('storingen').update(payload).eq('id', currentStoring.id);
+    await sb.from('storing_activiteiten').insert({
+      storing_id: currentStoring.id,
+      type: 'status_wijziging',
+      omschrijving: `Status gewijzigd naar ${newStatus}${note ? ': ' + note : ''}`,
+      door: null,
+    });
     closeStatusModal();
     await loadStoringen();
     const updated = allStoringen.find(s => s.id === currentStoring.id);
@@ -897,7 +972,8 @@
       herhaal = (prev?.length > 0);
     }
 
-    const { error } = await sb.from('storingen').insert({
+    const gemeldDoor = document.getElementById('fGemeld').value;
+    const { data: newSt, error } = await sb.from('storingen').insert({
       storing_number:    stNum,
       description:       desc,
       asset_id:          assetId,
@@ -905,15 +981,55 @@
       oorzaak_categorie: oorzaak,
       herstel_tijd:      herstel,
       herhaalstoring:    herhaal,
-      gemeld_door:       document.getElementById('fGemeld').value,
+      gemeld_door:       gemeldDoor,
       notes:             document.getElementById('fNotes').value.trim() || null,
       status:            'Open',
-    });
+    }).select('id').single();
 
     if (error) { alert('Fout bij opslaan: ' + error.message); return; }
+    if (newSt?.id) {
+      await sb.from('storing_activiteiten').insert({
+        storing_id: newSt.id,
+        type: 'status_wijziging',
+        omschrijving: `Storing gemeld door ${gemeldDoor}`,
+        door: gemeldDoor,
+      });
+    }
     closeModal();
     await loadStoringen();
     updateSidebarBadges();
+  }
+
+  async function renderTabActiviteiten(s) {
+    if (!s) return;
+    const pane = document.getElementById('tabActiviteiten');
+    pane.innerHTML = '<div style="padding:20px;color:var(--text-3);font-size:12px;">Laden…</div>';
+    const { data, error } = await sb.from('storing_activiteiten')
+      .select('*')
+      .eq('storing_id', s.id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      pane.innerHTML = '<div style="padding:20px;color:var(--text-3);font-size:12px;">Kon activiteiten niet laden.</div>';
+      return;
+    }
+    if (!data?.length) {
+      pane.innerHTML = '<div style="padding:20px;color:var(--text-3);font-size:12px;">Geen activiteiten geregistreerd.</div>';
+      return;
+    }
+    pane.innerHTML = `<div style="padding:16px 20px;">${data.map(a => `
+      <div class="activity-item">
+        <div class="activity-dot" style="background:${activityColor(a.type)};margin-top:5px;"></div>
+        <div class="activity-body">
+          <div class="activity-text">${escHtml(a.omschrijving)}</div>
+          <div class="activity-time">${a.door ? escHtml(a.door) + ' · ' : ''}${formatDate(a.created_at)}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+
+  function activityColor(type) {
+    if (type === 'werkorder_aangemaakt') return 'var(--amber)';
+    if (type === 'status_wijziging')     return 'var(--blue)';
+    return 'var(--text-3)';
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
