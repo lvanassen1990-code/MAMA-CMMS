@@ -1345,10 +1345,11 @@
     // Meterstanden doorschrijven vanuit checklist
     try {
       const { data: checkItems } = await sb.from('werkorder_checklist_items')
-        .select('meter_id,ingevulde_waarde,eenheid').eq('wo_id', drawerWO.id).eq('type', 'meting').not('meter_id', 'is', null);
-      if (checkItems && checkItems.length) {
+        .select('meter_id,ingevulde_waarde,eenheid').eq('wo_id', drawerWO.id).eq('type', 'meting');
+      const meterItems = (checkItems || []).filter(ci => ci.meter_id);
+      if (meterItems.length) {
         const vandaag = nu.toISOString().split('T')[0];
-        for (const ci of checkItems) {
+        for (const ci of meterItems) {
           const stand = parseFloat(ci.ingevulde_waarde);
           if (isNaN(stand)) continue;
           await sb.from('meter_readings').insert({ meter_id: ci.meter_id, stand, afgelezen_op: vandaag, ingevuld_door: door });
@@ -1653,7 +1654,9 @@
             min_waarde: item.min_waarde,
             max_waarde: item.max_waarde,
             opties: item.opties,
-            meter_id: item.meter_naam ? (meterNaamMap[item.meter_naam] || null) : null,
+            meter_id: item.meter_naam
+              ? (meterNaamMap[item.meter_naam] || null)
+              : (item.meter_id || null), // fallback: oud item met directe meter_id
           })));
         }
       }
