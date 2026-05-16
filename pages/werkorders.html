@@ -471,7 +471,6 @@
           <option value="">— Geen werkinstructie —</option>
         </select>
         <div style="font-size:10px;color:var(--text-3);margin-top:3px;">Koppel een checklist aan dit WO — meterstanden worden automatisch meegeschreven bij afsluiten.</div>
-        <div id="fWiMeterWaarschuwing" style="font-size:11px;margin-top:5px;"></div>
       </div>
       <div class="form-field full">
         <label class="form-label">Notities</label>
@@ -624,7 +623,6 @@
   let allAssets = [];
   let allParts = [];
   let allWerkinstructies = [];
-  let allWiMeterNamen = {}; // { wiId: ['Draaiuren', ...] }
   let pendingParts = []; // [{part, qty}] for new WO modal
 
   const catIcons = { 'Compressor':'ti-wind','Hydrauliek':'ti-droplet','Ventilatie':'ti-air-conditioning','Transport':'ti-arrows-right-left','Elektrisch':'ti-bolt','Koeling':'ti-snowflake' };
@@ -863,15 +861,6 @@
     allAssets = assets || [];
     allWerkinstructies = wis || [];
 
-    // Meter-namen per werkinstructie laden voor dropdown-filtering
-    const { data: wiItems } = await sb.from('werkinstructie_items')
-      .select('instructie_id, meter_naam').not('meter_naam', 'is', null);
-    allWiMeterNamen = {};
-    (wiItems || []).forEach(i => {
-      if (!allWiMeterNamen[i.instructie_id]) allWiMeterNamen[i.instructie_id] = [];
-      if (!allWiMeterNamen[i.instructie_id].includes(i.meter_naam))
-        allWiMeterNamen[i.instructie_id].push(i.meter_naam);
-    });
 
     // Parts afzonderlijk laden zodat een fout hier de rest niet breekt
     try {
@@ -1449,39 +1438,6 @@
     if (drawerWO?.id === statusWoId) openDrawer(statusWoId);
   }
 
-  async function updateWiDropdown() {
-    const assetId = document.getElementById('fAsset').value;
-    const wiSel   = document.getElementById('fWerkinstructie');
-    const el      = document.getElementById('fWiMeterWaarschuwing');
-    if (el) el.textContent = '';
-
-    // Meters op het geselecteerde asset ophalen
-    let assetMeterNamen = [];
-    if (assetId) {
-      const { data: meters } = await sb.from('meters').select('naam').eq('asset_id', assetId);
-      assetMeterNamen = (meters || []).map(m => m.naam);
-    }
-
-    // Opties updaten: disabled als meter ontbreekt op dit asset
-    Array.from(wiSel.options).forEach(opt => {
-      if (!opt.value) return; // lege optie overslaan
-      const benodigd = allWiMeterNamen[opt.value] || [];
-      const ontbrekend = assetId
-        ? benodigd.filter(n => !assetMeterNamen.includes(n))
-        : [];
-      if (ontbrekend.length) {
-        opt.disabled = true;
-        opt.text = `${allWerkinstructies.find(w => w.id === opt.value)?.naam} (meter ontbreekt: ${ontbrekend.join(', ')})`;
-      } else {
-        opt.disabled = false;
-        opt.text = allWerkinstructies.find(w => w.id === opt.value)?.naam || opt.text;
-      }
-    });
-
-    // Als geselecteerde WI nu disabled is, reset
-    const selected = wiSel.options[wiSel.selectedIndex];
-    if (selected?.disabled) wiSel.value = '';
-  }
 
   /* ── Nieuwe werkorder ── */
   async function openModal(preAssetId = null) {
@@ -1521,11 +1477,7 @@
     document.getElementById('fType').onchange = function() {
       const show = ['Preventief', 'Inspectie'].includes(this.value);
       document.getElementById('fWiWrap').style.display = show ? '' : 'none';
-      if (show) updateWiDropdown();
     };
-
-    document.getElementById('fAsset').onchange = updateWiDropdown;
-    if (preAssetId) await updateWiDropdown();
 
     document.getElementById('modalOverlay').classList.add('open');
   }
