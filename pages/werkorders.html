@@ -863,14 +863,25 @@
     allWerkinstructies = wis || [];
 
     // Meter-namen per werkinstructie ophalen voor dropdown-filtering
+    // Haal ook meter_id op als fallback voor items gemaakt vóór meter_naam-fix
     const { data: wiItems } = await sb.from('werkinstructie_items')
-      .select('instructie_id, meter_naam');
+      .select('instructie_id, meter_naam, meter_id');
     allWiMeterNamen = {};
+
+    const itemsMetIdMaarGeenNaam = (wiItems || []).filter(i => i.meter_id && !i.meter_naam);
+    let meterIdNaamMap = {};
+    if (itemsMetIdMaarGeenNaam.length) {
+      const ids = [...new Set(itemsMetIdMaarGeenNaam.map(i => i.meter_id))];
+      const { data: meterRows } = await sb.from('meters').select('id, naam').in('id', ids);
+      (meterRows || []).forEach(m => { meterIdNaamMap[m.id] = m.naam; });
+    }
+
     (wiItems || []).forEach(i => {
-      if (!i.meter_naam) return;
+      const naam = i.meter_naam || meterIdNaamMap[i.meter_id] || null;
+      if (!naam) return;
       if (!allWiMeterNamen[i.instructie_id]) allWiMeterNamen[i.instructie_id] = [];
-      if (!allWiMeterNamen[i.instructie_id].includes(i.meter_naam))
-        allWiMeterNamen[i.instructie_id].push(i.meter_naam);
+      if (!allWiMeterNamen[i.instructie_id].includes(naam))
+        allWiMeterNamen[i.instructie_id].push(naam);
     });
 
 
