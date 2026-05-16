@@ -379,6 +379,7 @@
 
     <div class="drawer-tabs">
       <button type="button" class="drawer-tab active" onclick="switchDrawerTab('activity',this)"><i class="ti ti-list-details"></i> Activiteit</button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('checklist',this)"><i class="ti ti-list-check"></i> Checklist</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('parts',this)"><i class="ti ti-box"></i> Onderdelen</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)"><i class="ti ti-note"></i> Notities</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('verloop',this)"><i class="ti ti-timeline"></i> Verloop</button>
@@ -386,6 +387,7 @@
 
     <div class="drawer-tab-content">
       <div class="drawer-tab-pane active" id="tabActivity"></div>
+      <div class="drawer-tab-pane" id="tabChecklist"></div>
       <div class="drawer-tab-pane" id="tabParts"><div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="font-size:24px;"></i></div></div>
       <div class="drawer-tab-pane" id="tabNotes"></div>
       <div class="drawer-tab-pane" id="tabVerloop"></div>
@@ -462,6 +464,13 @@
           <label class="form-label">Deadline</label>
           <input class="form-input" id="fDue" type="date" />
         </div>
+      </div>
+      <div class="form-field full" id="fWiWrap" style="display:none;">
+        <label class="form-label"><i class="ti ti-list-check"></i> Werkinstructie <span style="font-size:10px;color:var(--text-3);">(optioneel)</span></label>
+        <select class="form-input" id="fWerkinstructie">
+          <option value="">— Geen werkinstructie —</option>
+        </select>
+        <div style="font-size:10px;color:var(--text-3);margin-top:3px;">Koppel een checklist aan dit WO — meterstanden worden automatisch meegeschreven bij afsluiten.</div>
       </div>
       <div class="form-field full">
         <label class="form-label">Notities</label>
@@ -613,6 +622,7 @@
   let allWerkorders = [];
   let allAssets = [];
   let allParts = [];
+  let allWerkinstructies = [];
   let pendingParts = []; // [{part, qty}] for new WO modal
 
   const catIcons = { 'Compressor':'ti-wind','Hydrauliek':'ti-droplet','Ventilatie':'ti-air-conditioning','Transport':'ti-arrows-right-left','Elektrisch':'ti-bolt','Koeling':'ti-snowflake' };
@@ -837,9 +847,10 @@
     const tbody = document.getElementById('woBody');
     tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Laden…</td></tr>`;
 
-    const [{ data: wos, error: woErr }, { data: assets }] = await Promise.all([
+    const [{ data: wos, error: woErr }, { data: assets }, { data: wis }] = await Promise.all([
       sb.from('werkorders').select('*').order('created_at', { ascending: false }),
       sb.from('assets').select('asset_id,name,category,location,photo_url'),
+      sb.from('werkinstructies').select('id,naam').eq('actief', true).order('naam'),
     ]);
 
     if (woErr) {
@@ -848,6 +859,7 @@
     }
     allWerkorders = wos || [];
     allAssets = assets || [];
+    allWerkinstructies = wis || [];
 
     // Parts afzonderlijk laden zodat een fout hier de rest niet breekt
     try {
@@ -971,6 +983,7 @@
 
     loadDrawerParts(wo.id);
     loadVerloop(wo);
+    loadDrawerChecklist(wo.id);
     document.getElementById('drawerOverlay').classList.add('open');
   }
 
@@ -1303,6 +1316,22 @@
       return;
     }
 
+    // Meterstanden doorschrijven vanuit checklist
+    try {
+      const { data: checkItems } = await sb.from('werkorder_checklist_items')
+        .select('meter_id,ingevulde_waarde,eenheid').eq('wo_id', drawerWO.id).eq('type', 'meting').not('meter_id', 'is', null);
+      if (checkItems && checkItems.length) {
+        const vandaag = nu.toISOString().split('T')[0];
+        for (const ci of checkItems) {
+          const stand = parseFloat(ci.ingevulde_waarde);
+          if (isNaN(stand)) continue;
+          await sb.from('meter_aflezingen').insert({ meter_id: ci.meter_id, wo_id: drawerWO.id, stand, afgelezen_op: vandaag, afgelezen_door: door });
+          await sb.from('meters').update({ huidige_stand: stand, laatste_afgelezen_op: vandaag }).eq('id', ci.meter_id);
+        }
+      }
+    } catch(e) { console.error('Fout bij doorschrijven meterstanden:', e); }
+
+
     // Vervolgwerkorder aanmaken indien gewenst
     let vervolgWoNum = null;
     if (document.getElementById('afrondVervolgToggle').checked) {
@@ -1431,10 +1460,23 @@
     document.getElementById('fNotes').value = '';
     document.getElementById('fDue').value = '';
     document.getElementById('fAsset').value = preAssetId || '';
+    document.getElementById('fType').value = 'Correctief';
     pendingParts = [];
     renderModalParts();
     document.getElementById('partPickerInput').value = '';
     document.getElementById('partsDropdown').style.display = 'none';
+
+    // Werkinstructie dropdown vullen
+    const wiSel = document.getElementById('fWerkinstructie');
+    wiSel.innerHTML = '<option value="">— Geen werkinstructie —</option>' +
+      allWerkinstructies.map(w => `<option value="${w.id}">${w.naam}</option>`).join('');
+    wiSel.value = '';
+    document.getElementById('fWiWrap').style.display = 'none';
+    document.getElementById('fType').onchange = function() {
+      const show = ['Preventief', 'Inspectie'].includes(this.value);
+      document.getElementById('fWiWrap').style.display = show ? '' : 'none';
+    };
+
     document.getElementById('modalOverlay').classList.add('open');
   }
 
@@ -1521,20 +1563,116 @@
       await logActivity(inserted[0].id, 'aangemaakt', { new_status: 'Open', gedaan_door: payload.assigned_to || null });
     }
 
-    if (pendingParts.length && inserted && inserted[0]) {
+    if (inserted && inserted[0]) {
       const woId = inserted[0].id;
-      const partRows = pendingParts.map(pp => ({
-        wo_id: woId,
-        part_id: pp.part.id,
-        qty_reserved: pp.qty,
-        qty_used: 0,
-        status: 'Gereserveerd'
-      }));
-      await sb.from('werkorder_parts').insert(partRows);
+
+      // Onderdelen reserveren
+      if (pendingParts.length) {
+        await sb.from('werkorder_parts').insert(pendingParts.map(pp => ({
+          wo_id: woId, part_id: pp.part.id, qty_reserved: pp.qty, qty_used: 0, status: 'Gereserveerd'
+        })));
+      }
+
+      // Werkinstructie snapshot kopiëren
+      const wiId = document.getElementById('fWerkinstructie').value;
+      if (wiId) {
+        await sb.from('werkorders').update({ werkinstructie_id: wiId }).eq('id', woId);
+        const { data: items } = await sb.from('werkinstructie_items').select('*').eq('instructie_id', wiId).order('volgorde');
+        if (items && items.length) {
+          await sb.from('werkorder_checklist_items').insert(items.map(item => ({
+            wo_id: woId,
+            label: item.label,
+            type: item.type,
+            verplicht: item.verplicht,
+            volgorde: item.volgorde,
+            eenheid: item.eenheid,
+            min_waarde: item.min_waarde,
+            max_waarde: item.max_waarde,
+            opties: item.opties,
+            meter_id: item.meter_id,
+          })));
+        }
+      }
     }
     pendingParts = [];
     closeModal();
     loadData();
+  }
+
+  /* ── Checklist tab ── */
+  async function loadDrawerChecklist(woId) {
+    const pane = document.getElementById('tabChecklist');
+    pane.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-3);">Laden…</div>';
+
+    const { data: items } = await sb.from('werkorder_checklist_items')
+      .select('*').eq('wo_id', woId).order('volgorde');
+
+    if (!items || !items.length) {
+      pane.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-3);">
+        <i class="ti ti-list-check" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.4;"></i>
+        <p style="font-size:12px;">Geen checklist gekoppeld aan dit WO.<br>Kies een werkinstructie bij het aanmaken van een Preventief of Inspectie WO.</p>
+      </div>`;
+      return;
+    }
+
+    // Haal huidige meterstanden op voor meting-items met meter_id
+    const meterIds = [...new Set(items.filter(i => i.meter_id).map(i => i.meter_id))];
+    let meterMap = {};
+    if (meterIds.length) {
+      const { data: meters } = await sb.from('meters').select('id,naam,huidige_stand,eenheid').in('id', meterIds);
+      (meters || []).forEach(m => { meterMap[m.id] = m; });
+    }
+
+    const isAfgesloten = drawerWO.status === 'Voltooid' || drawerWO.status === 'Geannuleerd';
+
+    function itemHtml(item) {
+      if (item.type === 'checkbox') {
+        const checked = item.ingevulde_waarde === 'true';
+        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);">
+          <input type="checkbox" ${checked ? 'checked' : ''} ${isAfgesloten ? 'disabled' : ''}
+            style="width:18px;height:18px;cursor:pointer;flex-shrink:0;"
+            onchange="saveChecklistValue('${item.id}', this.checked ? 'true' : 'false')" />
+          <span style="font-size:13px;${item.verplicht ? 'font-weight:500;' : ''}">${item.label}${item.verplicht ? ' <span style="color:var(--red);">*</span>' : ''}</span>
+        </div>`;
+      }
+      if (item.type === 'meting') {
+        const meter = item.meter_id ? meterMap[item.meter_id] : null;
+        const placeholder = meter ? `Huidige stand: ${meter.huidige_stand ?? 0} ${meter.eenheid || ''}` : (item.eenheid || '');
+        const norm = (item.min_waarde != null || item.max_waarde != null)
+          ? `<span style="font-size:10px;color:var(--text-3);"> (norm: ${item.min_waarde ?? '?'}–${item.max_waarde ?? '?'})</span>` : '';
+        const meterTag = meter ? `<span style="font-size:10px;background:var(--blue-bg);color:var(--blue-text);padding:1px 6px;border-radius:3px;"><i class="ti ti-gauge"></i> ${meter.naam}</span>` : '';
+        return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border);">
+          <div style="font-size:13px;font-weight:500;margin-bottom:5px;">${item.label}${item.verplicht ? ' <span style="color:var(--red);">*</span>' : ''} ${norm} ${meterTag}</div>
+          <input type="number" class="form-input" style="max-width:200px;" ${isAfgesloten ? 'disabled' : ''}
+            value="${item.ingevulde_waarde || ''}" placeholder="${placeholder}"
+            onchange="saveChecklistValue('${item.id}', this.value)" />
+          ${item.eenheid ? `<span style="font-size:12px;color:var(--text-3);margin-left:6px;">${item.eenheid}</span>` : ''}
+        </div>`;
+      }
+      if (item.type === 'keuzelijst') {
+        const opties = (item.opties || '').split(',').map(o => o.trim()).filter(Boolean);
+        return `<div style="padding:10px 0;border-bottom:0.5px solid var(--border);">
+          <div style="font-size:13px;font-weight:500;margin-bottom:5px;">${item.label}${item.verplicht ? ' <span style="color:var(--red);">*</span>' : ''}</div>
+          <select class="form-input" style="max-width:240px;" ${isAfgesloten ? 'disabled' : ''}
+            onchange="saveChecklistValue('${item.id}', this.value)">
+            <option value="">— Kies —</option>
+            ${opties.map(o => `<option value="${o}" ${item.ingevulde_waarde === o ? 'selected' : ''}>${o}</option>`).join('')}
+          </select>
+        </div>`;
+      }
+      return '';
+    }
+
+    const filled = items.filter(i => i.ingevulde_waarde).length;
+    pane.innerHTML = `
+      <div style="padding:16px 20px;">
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">${filled}/${items.length} ingevuld${isAfgesloten ? ' · <em>Afgesloten WO</em>' : ''}</div>
+        ${items.map(itemHtml).join('')}
+      </div>`;
+  }
+
+  async function saveChecklistValue(itemId, value) {
+    await sb.from('werkorder_checklist_items').update({ ingevulde_waarde: String(value) }).eq('id', itemId);
   }
 
   /* ── Init ── */

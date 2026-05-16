@@ -272,9 +272,9 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let allWI = [], drawerWI = null, drawerItems = [], allEenheden = [];
+  let allWI = [], drawerWI = null, drawerItems = [], allEenheden = [], allMeters = [];
 
-  document.addEventListener('DOMContentLoaded', () => { loadWerkinstructies(); loadEenheden(); });
+  document.addEventListener('DOMContentLoaded', () => { loadWerkinstructies(); loadEenheden(); loadMeters(); });
 
   async function loadWerkinstructies() {
     const { data, error } = await sb.from('werkinstructies').select('*, werkinstructie_items(id)').order('naam');
@@ -288,10 +288,20 @@
   async function loadEenheden() {
     const { data } = await sb.from('eenheden').select('naam').order('naam');
     allEenheden = (data || []).map(e => e.naam);
-    const sel = document.getElementById('iEenheid');
-    if (!sel) return;
-    sel.innerHTML = '<option value="">— kies eenheid —</option>' +
+  }
+
+  async function loadMeters() {
+    const { data } = await sb.from('meters').select('id,naam,eenheid,assets(name)').order('naam');
+    allMeters = data || [];
+  }
+
+  function populateItemFormDropdowns() {
+    const eenh = document.getElementById('iEenheid');
+    if (eenh) eenh.innerHTML = '<option value="">— kies eenheid —</option>' +
       allEenheden.map(n => `<option value="${n}">${n}</option>`).join('');
+    const meter = document.getElementById('iMeter');
+    if (meter) meter.innerHTML = '<option value="">— Geen meter —</option>' +
+      allMeters.map(m => `<option value="${m.id}">${m.naam}${m.assets ? ' · ' + m.assets.name : ''}${m.eenheid ? ' (' + m.eenheid + ')' : ''}</option>`).join('');
   }
 
   async function updateKPIs() {
@@ -377,7 +387,9 @@
   function typeBadge(item) {
     if (item.type === 'meting') {
       const norm = (item.min_waarde != null || item.max_waarde != null) ? ` · ${item.min_waarde ?? '?'}–${item.max_waarde ?? '?'}` : '';
-      return `<span class="type-badge type-meting"><i class="ti ti-ruler"></i> Meting${item.eenheid ? ' · ' + item.eenheid : ''}${norm}</span>`;
+      const meter = item.meter_id ? allMeters.find(m => m.id === item.meter_id) : null;
+      const meterTag = meter ? ` <span style="background:var(--blue-bg);color:var(--blue-text);padding:1px 5px;border-radius:3px;font-size:10px;"><i class="ti ti-gauge"></i> ${meter.naam}</span>` : '';
+      return `<span class="type-badge type-meting"><i class="ti ti-ruler"></i> Meting${item.eenheid ? ' · ' + item.eenheid : ''}${norm}</span>${meterTag}`;
     }
     if (item.type === 'keuzelijst') return `<span class="type-badge type-keuzelijst"><i class="ti ti-list"></i> Keuzelijst</span>`;
     return `<span class="type-badge type-checkbox"><i class="ti ti-check"></i> Checkbox</span>`;
@@ -404,6 +416,7 @@
 
     pane.innerHTML = `
       <div class="items-header">Controlepunten (${drawerItems.length})</div>
+
       ${listHtml}
       <div class="add-item-wrap">
         <div class="add-item-title">Nieuw punt toevoegen</div>
@@ -429,12 +442,10 @@
           </div>
         </div>
         <div id="iMetingFields" style="display:none;margin-bottom:10px;">
-          <div class="form-row-3">
+          <div class="form-row-3" style="margin-bottom:8px;">
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Eenheid</label>
-              <select class="form-input" id="iEenheid">
-                <option value="">— kies eenheid —</option>
-              </select>
+              <select class="form-input" id="iEenheid"><option value="">— kies eenheid —</option></select>
             </div>
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Min</label>
@@ -444,6 +455,10 @@
               <label class="form-label">Max</label>
               <input type="number" class="form-input" id="iMaxWaarde">
             </div>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Meter koppelen <span style="font-size:10px;color:var(--text-3);">(optioneel — stand wordt meegeschreven bij WO afsluiten)</span></label>
+            <select class="form-input" id="iMeter"><option value="">— Geen meter —</option></select>
           </div>
         </div>
         <div id="iKeuzelijstFields" style="display:none;margin-bottom:10px;">
@@ -455,6 +470,7 @@
         <button class="btn primary" onclick="addItem()" style="width:100%;"><i class="ti ti-plus"></i> Punt toevoegen</button>
       </div>
     `;
+    populateItemFormDropdowns();
   }
 
   function toggleTypeFields() {
@@ -472,10 +488,11 @@
     const payload = {
       instructie_id: drawerWI.id, label, type, verplicht,
       volgorde: drawerItems.length,
-      eenheid:    type === 'meting'     ? (document.getElementById('iEenheid').value.trim() || null)  : null,
+      eenheid:    type === 'meting'     ? (document.getElementById('iEenheid').value || null)  : null,
       min_waarde: type === 'meting'     ? (parseFloat(document.getElementById('iMinWaarde').value) || null) : null,
       max_waarde: type === 'meting'     ? (parseFloat(document.getElementById('iMaxWaarde').value) || null) : null,
       opties:     type === 'keuzelijst' ? (document.getElementById('iOpties').value.trim() || null)   : null,
+      meter_id:   type === 'meting'     ? (document.getElementById('iMeter').value || null) : null,
     };
 
     const { error } = await sb.from('werkinstructie_items').insert(payload);
