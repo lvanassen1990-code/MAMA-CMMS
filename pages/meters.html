@@ -410,7 +410,7 @@
     pane.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:8px 0;">Laden...</div>';
 
     const { data } = await sb.from('meter_readings')
-      .select('*, assets(name, location)')
+      .select('id, stand, afgelezen_op, ingevuld_door, asset_id, gecorrigeerd_van')
       .eq('meter_id', drawerMeter.id)
       .order('afgelezen_op', { ascending: false })
       .order('created_at', { ascending: false });
@@ -422,12 +422,21 @@
       return;
     }
 
+    // Haal asset-namen op voor unieke asset_ids
+    const assetIds = [...new Set(readings.map(r => r.asset_id).filter(Boolean))];
+    const assetNamen = {};
+    if (assetIds.length) {
+      const { data: assets } = await sb.from('assets').select('id, name, location').in('id', assetIds);
+      (assets || []).forEach(a => { assetNamen[a.id] = { name: a.name, location: a.location || '' }; });
+    }
+
     // Uitsplitsing per machine: som van stands per asset
     const perMachine = {};
     readings.forEach(r => {
       const key   = r.asset_id || '__geen__';
-      const label = r.assets?.name || '— Geen machine —';
-      if (!perMachine[key]) perMachine[key] = { label, locatie: r.assets?.location || '', stands: [] };
+      const label = r.asset_id ? (assetNamen[r.asset_id]?.name || '— Onbekend —') : '— Geen machine —';
+      const loc   = r.asset_id ? (assetNamen[r.asset_id]?.location || '') : '';
+      if (!perMachine[key]) perMachine[key] = { label, locatie: loc, stands: [] };
       perMachine[key].stands.push(r.stand);
     });
 
@@ -465,7 +474,7 @@
           <div class="reading-stand">${fmt(r.stand)} <span style="font-size:10px;font-weight:400;color:var(--text-3);">${drawerMeter.eenheid}</span></div>
           <div class="reading-meta">
             ${fmtDate(r.afgelezen_op)} · ${r.ingevuld_door}
-            ${r.assets?.name ? `<br><span style="font-size:10px;color:var(--accent);"><i class="ti ti-building-factory-2"></i> ${r.assets.name}</span>` : ''}
+            ${r.asset_id && assetNamen[r.asset_id] ? `<br><span style="font-size:10px;color:var(--accent);"><i class="ti ti-building-factory-2"></i> ${assetNamen[r.asset_id].name}</span>` : ''}
             ${r.gecorrigeerd_van != null ? `<br><span class="corrected-badge">Gecorrigeerd van ${fmt(r.gecorrigeerd_van)} ${drawerMeter.eenheid}</span>` : ''}
           </div>
           ${i === 0 ? `<button class="icon-btn" title="Corrigeer aflezing" onclick="startEditReading('${r.id}',${r.stand},'${r.asset_id||''}')"><i class="ti ti-pencil"></i></button>` : ''}
