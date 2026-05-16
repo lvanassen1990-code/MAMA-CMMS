@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medewerkers — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../assets/mama.css" />
+  <style>
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-scroll { flex: 1; min-height: 0; padding-bottom: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .settings-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .settings-card-header { padding: 14px 18px; border-bottom: 0.5px solid var(--border); }
+    .settings-card-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .settings-card-title i { font-size: 16px; color: var(--accent); }
+    .settings-card-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .list-row { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 0.5px solid var(--border); }
+    .list-row:last-child { border-bottom: none; }
+    .mon-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-bg); color: var(--blue-text); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+    .list-info { flex: 1; }
+    .list-naam { font-size: 13px; font-weight: 500; }
+    .list-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+    .rol-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: var(--bg); border: 0.5px solid var(--border-strong); color: var(--text-2); }
+    .list-delete { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px 6px; border-radius: var(--radius-sm); transition: background 0.1s, color 0.1s; font-size: 15px; line-height: 1; }
+    .list-delete:hover { background: var(--red-bg); color: var(--red-text); }
+    .add-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; padding: 10px 18px; border-top: 0.5px solid var(--border); background: var(--bg); align-items: center; }
+    .add-input { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12px; font-family: inherit; outline: none; background: var(--surface); color: var(--text); }
+    .add-input:focus { border-color: var(--accent); }
+    .empty-state { text-align: center; padding: 32px 20px; color: var(--text-3); }
+    .empty-state i { font-size: 28px; display: block; margin-bottom: 8px; opacity: 0.4; }
+    .empty-state p { font-size: 12px; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <img src="../assets/logo-mark.svg" alt="MAMA" style="width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0;" />
+      <div><div class="logo-name">MAMA</div><div class="logo-sub">Maintenance Manager</div></div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNav('navOnderhoud')">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders</a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen</a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <div class="nav-group" id="navGegevens">
+    <div class="nav-group-header" onclick="toggleNav('navGegevens')">
+      <span class="nav-group-header-left"><i class="ti ti-database"></i> Gegevens</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="bedrijf.html" class="nav-item nav-sub"><i class="ti ti-building"></i> Bedrijfsgegevens</a>
+      <a href="categorieen.html" class="nav-item nav-sub"><i class="ti ti-tag"></i> Categorieën</a>
+      <a href="locaties.html" class="nav-item nav-sub"><i class="ti ti-map-pin"></i> Locaties</a>
+      <a href="medewerkers.html" class="nav-item nav-sub active"><i class="ti ti-users"></i> Medewerkers</a>
+    </div>
+  </div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div><div class="user-name">Leon</div><div class="user-role">Board / Owner</div></div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Medewerkers</div>
+      <div class="topbar-sub">Monteurs en medewerkers die in het systeem gebruikt worden</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn primary" onclick="document.getElementById('nieuwNaam').focus()"><i class="ti ti-plus"></i> Nieuwe medewerker</button>
+    </div>
+  </div>
+  <div class="content">
+  <div class="content-scroll">
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div class="settings-card-title"><i class="ti ti-users"></i> Medewerkers</div>
+        <div class="settings-card-desc">Namen worden gebruikt in werkorder-toewijzingen en storingsmeldingen</div>
+      </div>
+      <div id="lijst"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
+      <div class="add-row">
+        <input class="add-input" id="nieuwNaam" type="text" placeholder="Naam…" maxlength="60" onkeydown="if(event.key==='Enter')voegToe()" />
+        <input class="add-input" id="nieuwEmail" type="email" placeholder="E-mail (optioneel)…" onkeydown="if(event.key==='Enter')voegToe()" />
+        <select class="add-input" id="nieuwRol" style="min-width:110px;">
+          <option value="Monteur">Monteur</option>
+          <option value="Manager">Manager</option>
+          <option value="Admin">Admin</option>
+        </select>
+        <button class="btn primary" onclick="voegToe()"><i class="ti ti-plus"></i> Toevoegen</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  function toggleNav(id) {
+    const g = document.getElementById(id);
+    g.classList.toggle('collapsed');
+    localStorage.setItem(id, g.classList.contains('collapsed') ? '1' : '0');
+  }
+  document.getElementById('navOnderhoud').classList.remove('collapsed');
+  document.getElementById('navGegevens').classList.remove('collapsed');
+
+  const sb = supabase.createClient(
+    'https://mtghxnllimxhlnjtshjq.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8'
+  );
+
+  let items = [];
+
+  async function load() {
+    const { data } = await sb.from('monteurs').select('id, naam, email, rol').order('naam');
+    items = data || [];
+    render();
+  }
+
+  function initials(naam) {
+    return naam.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  }
+
+  function render() {
+    const el = document.getElementById('lijst');
+    if (!items.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-users"></i><p>Nog geen medewerkers</p></div>'; return; }
+    el.innerHTML = items.map(m => `
+      <div class="list-row" id="r-${m.id}">
+        <div class="mon-avatar">${initials(m.naam)}</div>
+        <div class="list-info">
+          <div class="list-naam">${escHtml(m.naam)}</div>
+          <div class="list-sub">${m.email ? escHtml(m.email) : '—'}</div>
+        </div>
+        <span class="rol-badge">${escHtml(m.rol || 'Monteur')}</span>
+        <button class="list-delete" onclick="verwijder('${m.id}','${escHtml(m.naam).replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i></button>
+      </div>`).join('');
+  }
+
+  async function voegToe() {
+    const naam  = document.getElementById('nieuwNaam').value.trim();
+    const email = document.getElementById('nieuwEmail').value.trim();
+    const rol   = document.getElementById('nieuwRol').value;
+    if (!naam) { document.getElementById('nieuwNaam').style.borderColor = 'var(--red)'; setTimeout(() => document.getElementById('nieuwNaam').style.borderColor = '', 2000); return; }
+    const { error } = await sb.from('monteurs').insert({ naam, email: email || null, rol });
+    if (error) {
+      const inp = document.getElementById('nieuwNaam');
+      inp.style.borderColor = 'var(--red)';
+      inp.title = error.code === '23505' ? 'Bestaat al' : error.message;
+      setTimeout(() => { inp.style.borderColor = ''; inp.title = ''; }, 2000);
+      return;
+    }
+    document.getElementById('nieuwNaam').value = '';
+    document.getElementById('nieuwEmail').value = '';
+    await load();
+  }
+
+  async function verwijder(id, naam) {
+    if (!confirm(`"${naam}" verwijderen?`)) return;
+    await sb.from('monteurs').delete().eq('id', id);
+    items = items.filter(r => r.id !== id);
+    render();
+  }
+
+  function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  load();
+</script>
+</body>
+</html>

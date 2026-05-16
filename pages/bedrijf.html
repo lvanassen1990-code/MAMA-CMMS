@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bedrijfsgegevens — MAMA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
+  <link rel="stylesheet" href="../assets/mama.css" />
+  <style>
+    .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+    .content-scroll { flex: 1; min-height: 0; padding-bottom: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .settings-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .settings-card-header { padding: 14px 18px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .settings-card-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .settings-card-title i { font-size: 16px; color: var(--accent); }
+    .settings-card-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .bedrijf-form { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-field { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-input { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 13px; font-family: inherit; outline: none; background: var(--surface); color: var(--text); width: 100%; box-sizing: border-box; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-footer { padding: 12px 18px; border-top: 0.5px solid var(--border); background: var(--bg); display: flex; justify-content: space-between; align-items: center; }
+    .save-indicator { font-size: 11px; color: var(--green,#22c55e); display: flex; align-items: center; gap: 4px; opacity: 0; transition: opacity 0.3s; }
+    .save-indicator.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <img src="../assets/logo-mark.svg" alt="MAMA" style="width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0;" />
+      <div><div class="logo-name">MAMA</div><div class="logo-sub">Maintenance Manager</div></div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNav('navOnderhoud')">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders</a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen</a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <div class="nav-group" id="navGegevens">
+    <div class="nav-group-header" onclick="toggleNav('navGegevens')">
+      <span class="nav-group-header-left"><i class="ti ti-database"></i> Gegevens</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="bedrijf.html" class="nav-item nav-sub active"><i class="ti ti-building"></i> Bedrijfsgegevens</a>
+      <a href="categorieen.html" class="nav-item nav-sub"><i class="ti ti-tag"></i> Categorieën</a>
+      <a href="locaties.html" class="nav-item nav-sub"><i class="ti ti-map-pin"></i> Locaties</a>
+      <a href="medewerkers.html" class="nav-item nav-sub"><i class="ti ti-users"></i> Medewerkers</a>
+    </div>
+  </div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">LB</div>
+      <div><div class="user-name">Leon</div><div class="user-role">Board / Owner</div></div>
+      <i class="ti ti-settings" style="font-size:15px;color:var(--text-3);margin-left:auto;cursor:pointer;"></i>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Bedrijfsgegevens</div>
+      <div class="topbar-sub">Naam, adres en contactinformatie van uw organisatie</div>
+    </div>
+  </div>
+  <div class="content">
+  <div class="content-scroll">
+    <div class="settings-card">
+      <div class="settings-card-header">
+        <div>
+          <div class="settings-card-title"><i class="ti ti-building"></i> Bedrijfsgegevens</div>
+          <div class="settings-card-desc">Deze gegevens worden gebruikt in rapporten en exports</div>
+        </div>
+      </div>
+      <div class="bedrijf-form">
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="form-label">Bedrijfsnaam</label>
+            <input class="form-input" id="bNaam" type="text" placeholder="bijv. Metaal Noord BV" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Contactpersoon</label>
+            <input class="form-input" id="bContact" type="text" placeholder="bijv. Jan de Vries" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Adres</label>
+          <input class="form-input" id="bAdres" type="text" placeholder="bijv. Industrieweg 14" />
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="form-label">Postcode</label>
+            <input class="form-input" id="bPostcode" type="text" placeholder="bijv. 1234 AB" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Plaats</label>
+            <input class="form-input" id="bPlaats" type="text" placeholder="bijv. Amsterdam" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label class="form-label">E-mailadres</label>
+            <input class="form-input" id="bEmail" type="email" placeholder="bijv. info@bedrijf.nl" />
+          </div>
+          <div class="form-field">
+            <label class="form-label">Telefoonnummer</label>
+            <input class="form-input" id="bTelefoon" type="tel" placeholder="bijv. 020-1234567" />
+          </div>
+        </div>
+      </div>
+      <div class="form-footer">
+        <span class="save-indicator" id="savedInd"><i class="ti ti-check"></i> Opgeslagen</span>
+        <button class="btn primary" onclick="saveBedrijf()"><i class="ti ti-device-floppy"></i> Opslaan</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  function toggleNav(id) {
+    const g = document.getElementById(id);
+    g.classList.toggle('collapsed');
+    localStorage.setItem(id, g.classList.contains('collapsed') ? '1' : '0');
+  }
+  document.getElementById('navOnderhoud').classList.remove('collapsed');
+  document.getElementById('navGegevens').classList.remove('collapsed');
+
+  const sb = supabase.createClient(
+    'https://mtghxnllimxhlnjtshjq.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8'
+  );
+
+  let bedrijfId = null;
+
+  async function load() {
+    const { data } = await sb.from('bedrijf').select('*').limit(1).single();
+    if (!data) return;
+    bedrijfId = data.id;
+    document.getElementById('bNaam').value     = data.naam     || '';
+    document.getElementById('bContact').value  = data.contact  || '';
+    document.getElementById('bAdres').value    = data.adres    || '';
+    document.getElementById('bPostcode').value = data.postcode || '';
+    document.getElementById('bPlaats').value   = data.plaats   || '';
+    document.getElementById('bEmail').value    = data.email    || '';
+    document.getElementById('bTelefoon').value = data.telefoon || '';
+  }
+
+  async function saveBedrijf() {
+    const payload = {
+      naam: document.getElementById('bNaam').value.trim(),
+      contact: document.getElementById('bContact').value.trim(),
+      adres: document.getElementById('bAdres').value.trim(),
+      postcode: document.getElementById('bPostcode').value.trim(),
+      plaats: document.getElementById('bPlaats').value.trim(),
+      email: document.getElementById('bEmail').value.trim(),
+      telefoon: document.getElementById('bTelefoon').value.trim(),
+    };
+    if (bedrijfId) {
+      await sb.from('bedrijf').update(payload).eq('id', bedrijfId);
+    } else {
+      const { data } = await sb.from('bedrijf').insert(payload).select('id').single();
+      bedrijfId = data?.id;
+    }
+    const ind = document.getElementById('savedInd');
+    ind.classList.add('visible');
+    setTimeout(() => ind.classList.remove('visible'), 2500);
+  }
+
+  load();
+</script>
+</body>
+</html>
