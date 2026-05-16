@@ -396,6 +396,19 @@
 
     /* Modal */
     .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* Meters in modal */
+    .modal-section-header { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; padding: 6px 0 4px; border-top: 0.5px solid var(--border); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+    .modal-section-header i { font-size: 14px; }
+    .meter-rows { display: flex; flex-direction: column; gap: 6px; }
+    .meter-row { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; }
+    .meter-row input, .meter-row select { border: none; background: transparent; outline: none; font-size: 12px; font-family: inherit; color: var(--text); }
+    .meter-row input { flex: 1; min-width: 0; }
+    .meter-row select { width: 110px; flex-shrink: 0; }
+    .meter-row-divider { width: 0.5px; height: 16px; background: var(--border-strong); flex-shrink: 0; }
+    .meter-row-del { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 2px 4px; border-radius: 4px; font-size: 15px; line-height: 1; flex-shrink: 0; }
+    .meter-row-del:hover { background: var(--red-bg); color: var(--red-text); }
+    .add-meter-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--accent); cursor: pointer; padding: 4px 0; background: none; border: none; font-family: inherit; font-weight: 500; }
     .photo-upload-area {
       border: 1.5px dashed var(--border-strong);
       border-radius: var(--radius);
@@ -742,6 +755,11 @@
         <label class="form-label">Notities</label>
         <textarea class="form-input" id="fNotes" rows="3" placeholder="Aanvullende informatie over dit asset…" style="resize:vertical;"></textarea>
       </div>
+      <div>
+        <div class="modal-section-header"><i class="ti ti-gauge"></i> Meters</div>
+        <div class="meter-rows" id="meterRows"></div>
+        <button class="add-meter-btn" onclick="addMeterRow()"><i class="ti ti-plus"></i> Meter toevoegen</button>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()">Annuleren</button>
@@ -952,6 +970,43 @@
 
   let allAssets = [];
   let expandedNodes = new Set();
+  let allEenheden = [];
+
+  async function loadEenheden() {
+    const { data } = await sb.from('eenheden').select('naam').order('naam');
+    allEenheden = (data || []).map(e => e.naam);
+  }
+
+  function meterEenheidOptions(selected = '') {
+    return '<option value="">— eenheid —</option>' +
+      allEenheden.map(n => `<option value="${n}"${n === selected ? ' selected' : ''}>${n}</option>`).join('');
+  }
+
+  let meterRowCount = 0;
+  function addMeterRow() {
+    meterRowCount++;
+    const id = `mr${meterRowCount}`;
+    const div = document.createElement('div');
+    div.className = 'meter-row';
+    div.id = id;
+    div.innerHTML = `
+      <input type="text" placeholder="Meternaam (bijv. Bedrijfsuren)" id="${id}naam" />
+      <span class="meter-row-divider"></span>
+      <select id="${id}eenh">${meterEenheidOptions()}</select>
+      <button class="meter-row-del" onclick="document.getElementById('${id}').remove()"><i class="ti ti-x"></i></button>
+    `;
+    document.getElementById('meterRows').appendChild(div);
+  }
+
+  function getMeterRows() {
+    return [...document.getElementById('meterRows').querySelectorAll('.meter-row')]
+      .map(row => {
+        const naam = row.querySelector('input').value.trim();
+        const eenheid = row.querySelector('select').value;
+        return naam ? { naam, eenheid: eenheid || null } : null;
+      })
+      .filter(Boolean);
+  }
 
   // ── Koppelmodus (drag & drop) ──
   let dragMode = false;
@@ -1534,9 +1589,19 @@
       photo_url:            photoUrl,
     };
     const { error } = await sb.from('assets').insert(payload);
+    if (error) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
+      alert('Fout: ' + error.message);
+      return;
+    }
+    const meterRows = getMeterRows();
+    if (meterRows.length) {
+      btn.innerHTML = '<i class="ti ti-loader"></i> Meters opslaan…';
+      await sb.from('meters').insert(meterRows.map(m => ({ ...m, asset_id: assetId, huidige_stand: 0 })));
+    }
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-check"></i> Asset opslaan';
-    if (error) { alert('Fout: ' + error.message); return; }
     closeModal();
     loadAssets();
   }
@@ -2162,6 +2227,8 @@
   }
 
   function openModal(presetParentId = null) {
+    document.getElementById('meterRows').innerHTML = '';
+    meterRowCount = 0;
     document.getElementById('fPhoto').value = '';
     document.getElementById('photoPreview').innerHTML =
       `<i class="ti ti-camera" style="font-size:22px;color:var(--text-3);"></i>
@@ -2198,6 +2265,7 @@
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
 
+  loadEenheden();
   loadAssets().then(() => {
     const params = new URLSearchParams(location.search);
     const assetId = params.get('asset');
