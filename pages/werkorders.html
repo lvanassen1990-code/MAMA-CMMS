@@ -1579,6 +1579,16 @@
         await sb.from('werkorders').update({ werkinstructie_id: wiId }).eq('id', woId);
         const { data: items } = await sb.from('werkinstructie_items').select('*').eq('instructie_id', wiId).order('volgorde');
         if (items && items.length) {
+          const assetId = payload.asset_id;
+
+          // Resolve meter_naam → meter_id op het gekozen asset
+          const meterNamen = [...new Set(items.filter(i => i.meter_naam).map(i => i.meter_naam))];
+          let meterNaamMap = {};
+          if (meterNamen.length && assetId) {
+            const { data: meters } = await sb.from('meters').select('id,naam').eq('asset_id', assetId).in('naam', meterNamen);
+            (meters || []).forEach(m => { meterNaamMap[m.naam] = m.id; });
+          }
+
           await sb.from('werkorder_checklist_items').insert(items.map(item => ({
             wo_id: woId,
             label: item.label,
@@ -1589,7 +1599,7 @@
             min_waarde: item.min_waarde,
             max_waarde: item.max_waarde,
             opties: item.opties,
-            meter_id: item.meter_id,
+            meter_id: item.meter_naam ? (meterNaamMap[item.meter_naam] || null) : null,
           })));
         }
       }

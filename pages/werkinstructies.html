@@ -301,7 +301,7 @@
       allEenheden.map(n => `<option value="${n}">${n}</option>`).join('');
     const meter = document.getElementById('iMeter');
     if (meter) meter.innerHTML = '<option value="">— Geen meter —</option>' +
-      allMeters.map(m => `<option value="${m.id}">${m.naam}${m.assets ? ' · ' + m.assets.name : ''}${m.eenheid ? ' (' + m.eenheid + ')' : ''}</option>`).join('');
+      allMeters.map(m => `<option value="${m.naam}">${m.naam}${m.assets ? ' · ' + m.assets.name : ''}${m.eenheid ? ' (' + m.eenheid + ')' : ''}</option>`).join('');
   }
 
   async function updateKPIs() {
@@ -387,8 +387,7 @@
   function typeBadge(item) {
     if (item.type === 'meting') {
       const norm = (item.min_waarde != null || item.max_waarde != null) ? ` · ${item.min_waarde ?? '?'}–${item.max_waarde ?? '?'}` : '';
-      const meter = item.meter_id ? allMeters.find(m => m.id === item.meter_id) : null;
-      const meterTag = meter ? ` <span style="background:var(--blue-bg);color:var(--blue-text);padding:1px 5px;border-radius:3px;font-size:10px;"><i class="ti ti-gauge"></i> ${meter.naam}</span>` : '';
+      const meterTag = item.meter_naam ? ` <span style="background:var(--blue-bg);color:var(--blue-text);padding:1px 5px;border-radius:3px;font-size:10px;"><i class="ti ti-gauge"></i> ${item.meter_naam}</span>` : '';
       return `<span class="type-badge type-meting"><i class="ti ti-ruler"></i> Meting${item.eenheid ? ' · ' + item.eenheid : ''}${norm}</span>${meterTag}`;
     }
     if (item.type === 'keuzelijst') return `<span class="type-badge type-keuzelijst"><i class="ti ti-list"></i> Keuzelijst</span>`;
@@ -492,7 +491,7 @@
       min_waarde: type === 'meting'     ? (parseFloat(document.getElementById('iMinWaarde').value) || null) : null,
       max_waarde: type === 'meting'     ? (parseFloat(document.getElementById('iMaxWaarde').value) || null) : null,
       opties:     type === 'keuzelijst' ? (document.getElementById('iOpties').value.trim() || null)   : null,
-      meter_id:   type === 'meting'     ? (document.getElementById('iMeter').value || null) : null,
+      meter_naam: type === 'meting'     ? (document.getElementById('iMeter').value || null) : null,
     };
 
     const { error } = await sb.from('werkinstructie_items').insert(payload);
