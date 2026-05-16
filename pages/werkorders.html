@@ -1031,28 +1031,42 @@
     const pane = document.getElementById('tabVerloop');
     pane.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-3);">Laden…</div>';
 
-    const [parentRes, childrenRes] = await Promise.all([
+    const [parentRes, childrenRes, storingRes] = await Promise.all([
       wo.parent_wo_id
         ? sb.from('werkorders').select('id,wo_number,description,status,completed_at,completed_by').eq('id', wo.parent_wo_id).single()
         : Promise.resolve({ data: null }),
       sb.from('werkorders').select('id,wo_number,description,status,created_at').eq('parent_wo_id', wo.id),
+      sb.from('storingen').select('id,storing_number,description,status').eq('wo_id', wo.id).maybeSingle(),
     ]);
-    const parent   = parentRes.data;
-    const children = childrenRes.data || [];
+    const parent    = parentRes.data;
+    const children  = childrenRes.data || [];
+    const storing   = storingRes.data || null;
 
     // ── Keten ──
     const ketenItems = [];
-    if (parent) ketenItems.push({ wo: parent, type: 'parent' });
-    ketenItems.push({ wo, type: 'current' });
-    children.forEach(c => ketenItems.push({ wo: c, type: 'child' }));
+    if (storing) ketenItems.push({ type: 'storing', storing });
+    if (parent)  ketenItems.push({ type: 'parent',  wo: parent });
+    ketenItems.push({ type: 'current', wo });
+    children.forEach(c => ketenItems.push({ type: 'child', wo: c }));
 
     const ketenHTML = ketenItems.map((item, i) => {
+      const arrow = i < ketenItems.length - 1 ? '<div class="verloop-arrow">→</div>' : '';
+      if (item.type === 'storing') {
+        const s = item.storing;
+        const desc = s.description.length > 28 ? s.description.slice(0,28)+'…' : s.description;
+        return `<div style="display:flex;align-items:center;gap:4px;">
+          <div class="verloop-node">
+            <a href="storingen.html?storing=${s.id}" class="verloop-node-btn" style="text-decoration:none;border-color:var(--red);color:var(--red-text);background:var(--red-bg);"><i class="ti ti-alert-triangle" style="font-size:13px;"></i>${escHtml(s.storing_number)}</a>
+            <span class="verloop-node-label">Herkomst storing · ${escHtml(desc)}</span>
+          </div>
+          ${arrow}
+        </div>`;
+      }
       const isCurrent = item.type === 'current';
       const label = item.type === 'parent' ? 'Vorige WO' : item.type === 'child' ? 'Vervolg' : 'Huidig';
       const btn = isCurrent
         ? `<button class="verloop-node-btn current" disabled><i class="ti ti-clipboard-list" style="font-size:13px;"></i>${item.wo.wo_number}</button>`
         : `<button class="verloop-node-btn" onclick="openDrawer('${item.wo.id}')"><i class="ti ti-clipboard-list" style="font-size:13px;"></i>${item.wo.wo_number}</button>`;
-      const arrow = i < ketenItems.length - 1 ? '<div class="verloop-arrow">→</div>' : '';
       return `<div style="display:flex;align-items:center;gap:4px;">
         <div class="verloop-node">
           ${btn}

@@ -505,9 +505,16 @@
     await loadAssets();
     await Promise.all([loadStoringen(), loadInstellingen()]);
     updateSidebarBadges();
-    const filter = new URLSearchParams(location.search).get('filter');
+    const params = new URLSearchParams(location.search);
+    const filter = params.get('filter');
     if (filter === 'open') setStoringFilterFromUrl(['Open'], 'open storingen');
     else if (filter === 'vandaag') setStoringFilterFromUrl(['Open', 'In behandeling', 'Werkorder aangemaakt'], 'storingen van vandaag');
+    const storingId = params.get('storing');
+    if (storingId) {
+      activeChips = new Set(['Open','In behandeling','Werkorder aangemaakt','Opgelost','Geannuleerd']);
+      const s = allStoringen.find(x => x.id === storingId);
+      if (s) openDrawer(s);
+    }
   }
 
   async function loadInstellingen() {
