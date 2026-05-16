@@ -134,6 +134,13 @@
       </div>
     </div>
 
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;">
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);cursor:pointer;user-select:none;">
+        <input type="checkbox" id="toonInactiefToggle" onchange="toggleToonInactief()" style="width:15px;height:15px;cursor:pointer;" />
+        Toon inactieve meters
+      </label>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -162,6 +169,7 @@
       <div style="display:flex;gap:8px;">
         <button type="button" class="btn" onclick="openAfgelezenModal()"><i class="ti ti-plus"></i> Aflezing</button>
         <button type="button" class="btn" onclick="openBewerkenModal()"><i class="ti ti-pencil"></i> Bewerken</button>
+        <button type="button" class="btn" id="btnActief" onclick="toggleMeterActief()"></button>
       </div>
     </div>
 
@@ -316,7 +324,7 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let allMeters = [], allAssets = [], drawerMeter = null, editingReadingId = null;
+  let allMeters = [], allAssets = [], drawerMeter = null, editingReadingId = null, toonInactief = false;
 
   document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
@@ -352,20 +360,28 @@
     document.getElementById('kpiGekoppeld').textContent = count ?? 0;
   }
 
+  function toggleToonInactief() {
+    toonInactief = document.getElementById('toonInactiefToggle').checked;
+    renderMeters();
+  }
+
   function renderMeters() {
     const tbody = document.getElementById('metersBody');
     tbody.innerHTML = '';
-    if (!allMeters.length) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-3);">Geen meters. Maak de eerste meter aan.</td></tr>';
+    const zichtbaar = allMeters.filter(m => toonInactief || m.actief !== false);
+    if (!zichtbaar.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-3);">Geen meters gevonden.</td></tr>';
       return;
     }
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
-    allMeters.forEach(m => {
+    zichtbaar.forEach(m => {
       const isStale = !m.laatste_afgelezen_op || new Date(m.laatste_afgelezen_op) < cutoff;
       const tr = document.createElement('tr');
       tr.ondblclick = () => openDrawer(m);
+      const inactief = m.actief === false;
+      if (inactief) tr.style.opacity = '0.45';
       tr.innerHTML = `
-        <td style="font-weight:500;">${m.naam}</td>
+        <td style="font-weight:500;">${m.naam}${inactief ? ' <span style="font-size:10px;color:var(--text-3);font-weight:400;">(inactief)</span>' : ''}</td>
         <td style="color:var(--text-3);">${m.eenheid}</td>
         <td style="color:var(--text-3);">${m.assets?.name || '—'}</td>
         <td><span class="stand-val">${fmt(m.huidige_stand)}</span><span class="eenheid-dim">${m.eenheid}</span></td>
@@ -386,9 +402,25 @@
     document.getElementById('drawerAsset').textContent = m.assets?.name || 'Geen asset gekoppeld';
     document.getElementById('drawerStand').innerHTML = `${fmt(m.huidige_stand)}<span class="hero-eenheid">${m.eenheid}</span>`;
     document.getElementById('drawerMeta').textContent = m.laatste_afgelezen_op ? `Laatste aflezing: ${fmtDate(m.laatste_afgelezen_op)}` : 'Nog geen aflezingen';
+    const btnActief = document.getElementById('btnActief');
+    if (m.actief === false) {
+      btnActief.innerHTML = '<i class="ti ti-player-play"></i> Activeren';
+    } else {
+      btnActief.innerHTML = '<i class="ti ti-player-pause"></i> Deactiveren';
+    }
     switchTab('aflesingen', document.querySelector('.drawer-tab'));
     await loadAflesingen();
     document.getElementById('drawerOverlay').classList.add('open');
+  }
+
+  async function toggleMeterActief() {
+    if (!drawerMeter) return;
+    const nieuw = drawerMeter.actief === false ? true : false;
+    const { error } = await sb.from('meters').update({ actief: nieuw }).eq('id', drawerMeter.id);
+    if (error) { alert('Fout: ' + error.message); return; }
+    await loadMeters();
+    const updated = allMeters.find(m => m.id === drawerMeter.id);
+    if (updated) openDrawer(updated);
   }
 
   function closeDrawer() {
