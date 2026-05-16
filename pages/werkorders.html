@@ -864,9 +864,10 @@
 
     // Meter-namen per werkinstructie ophalen voor dropdown-filtering
     const { data: wiItems } = await sb.from('werkinstructie_items')
-      .select('instructie_id, meter_naam').not('meter_naam', 'is', null);
+      .select('instructie_id, meter_naam');
     allWiMeterNamen = {};
     (wiItems || []).forEach(i => {
+      if (!i.meter_naam) return;
       if (!allWiMeterNamen[i.instructie_id]) allWiMeterNamen[i.instructie_id] = [];
       if (!allWiMeterNamen[i.instructie_id].includes(i.meter_naam))
         allWiMeterNamen[i.instructie_id].push(i.meter_naam);
@@ -1453,6 +1454,7 @@
   async function vulWiDropdown() {
     const assetId = document.getElementById('fAsset').value;
     const wiSel   = document.getElementById('fWerkinstructie');
+    const huidig  = wiSel.value;
 
     let assetMeterNamen = [];
     if (assetId) {
@@ -1460,17 +1462,16 @@
       assetMeterNamen = (meters || []).map(m => m.naam);
     }
 
-    // Toon alleen werkinstructies zonder meter OF waarvan alle meters op dit asset bestaan
     const zichtbaar = allWerkinstructies.filter(w => {
       const benodigd = allWiMeterNamen[w.id] || [];
-      if (!benodigd.length) return true; // geen meters → altijd zichtbaar
-      if (!assetId) return true;         // geen asset gekozen → alles tonen
+      if (!benodigd.length) return true;
+      if (!assetId) return true;
       return benodigd.every(n => assetMeterNamen.includes(n));
     });
 
     wiSel.innerHTML = '<option value="">— Geen werkinstructie —</option>' +
       zichtbaar.map(w => `<option value="${w.id}">${w.naam}</option>`).join('');
-    if (!zichtbaar.find(w => w.id === wiSel.value)) wiSel.value = '';
+    wiSel.value = zichtbaar.find(w => w.id === huidig) ? huidig : '';
   }
 
   /* ── Nieuwe werkorder ── */
@@ -1513,6 +1514,7 @@
       document.getElementById('fWiWrap').style.display = show ? '' : 'none';
       if (show) await vulWiDropdown();
     };
+    // Direct laden zodat de dropdown klaar is als het type al Preventief/Inspectie is
     await vulWiDropdown();
 
     document.getElementById('modalOverlay').classList.add('open');
