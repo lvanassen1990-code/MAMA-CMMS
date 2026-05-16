@@ -429,13 +429,25 @@
   <div class="sidebar-section">Navigatie</div>
   <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
   <a href="assets.html" class="nav-item active"><i class="ti ti-building-factory-2"></i> Assets</a>
-  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
-  <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
-  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNavOnderhoud()">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
   <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
 
   <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
   <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
@@ -504,6 +516,13 @@
         <div class="kpi-value" style="color:var(--red);" id="kpiCrit">—</div>
         <div class="kpi-sub">Directe actie vereist</div>
       </div>
+    </div>
+
+    <!-- Status filter banner -->
+    <div id="statusFilterBanner" style="display:none;align-items:center;gap:10px;background:var(--red-bg);border-bottom:0.5px solid var(--red);padding:8px 24px;font-size:12px;color:var(--red-text);">
+      <i class="ti ti-filter"></i>
+      <span>Filter actief: alleen assets met status <strong id="bannerLabel"></strong></span>
+      <button id="bannerClear" style="margin-left:auto;font-size:11px;padding:2px 10px;border-radius:8px;border:0.5px solid var(--red);background:transparent;color:var(--red-text);cursor:pointer;">Filter wissen</button>
     </div>
 
     <!-- Filter bar -->
@@ -915,6 +934,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  function toggleNavOnderhoud() {
+    const g = document.getElementById('navOnderhoud');
+    g.classList.toggle('collapsed');
+    localStorage.setItem('navOnderhoud', g.classList.contains('collapsed') ? '1' : '0');
+  }
+  (function() {
+    const g = document.getElementById('navOnderhoud');
+    if (!g) return;
+    if (!g.querySelector('.active') && localStorage.getItem('navOnderhoud') === '1') g.classList.add('collapsed');
+  })();
+</script>
+<script>
   const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1244,7 +1275,7 @@
          </span>`
       : '';
 
-    return `<tr class="clickable-row${depth > 0 ? ' child-row' : ''}" data-assetid="${a.asset_id}" style="${depth > 0 ? 'background:var(--bg);' : ''}" onclick="openDrawer('${a.asset_id}')" ${dragAttrs(a.asset_id)}>
+    return `<tr class="clickable-row${depth > 0 ? ' child-row' : ''}" data-assetid="${a.asset_id}" style="${depth > 0 ? 'background:var(--bg);' : ''}" ondblclick="openDrawer('${a.asset_id}')" ${dragAttrs(a.asset_id)}>
       <td class="asset-id" style="padding-left:${8 + indent}px;">
         <div style="display:flex;align-items:center;gap:2px;">
           ${expandBtn}
@@ -1359,7 +1390,7 @@
         : `<i class="ti ${icon}"></i>`;
       const [dc, dt] = dueCls(a.next_maintenance);
       const nameSafe = (a.name||'').replace(/'/g,"\\'");
-      return `<div class="asset-card" onclick="openDrawer('${a.asset_id}')" style="cursor:pointer;" ${dragAttrs(a.asset_id)}>
+      return `<div class="asset-card" ondblclick="openDrawer('${a.asset_id}')" style="cursor:pointer;" ${dragAttrs(a.asset_id)}>
         <div class="asset-card-photo">
           ${thumb}
           <div class="asset-card-status">${statusBadge(a.status)}</div>
@@ -1387,6 +1418,37 @@
 
   function toggleChip(btn) {
     btn.classList.toggle('active');
+    clearStatusBanner();
+    filterTable();
+  }
+
+  function clearStatusBanner() {
+    const banner = document.getElementById('statusFilterBanner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  function setStatusFilterFromUrl(status) {
+    // Deactiveer alle chips, activeer alleen de gevraagde
+    document.querySelectorAll('#statusChips .status-chip').forEach(c => c.classList.remove('active'));
+    const chip = document.querySelector(`#statusChips .status-chip[data-status="${status}"]`);
+    if (chip) chip.classList.add('active');
+
+    // Toon banner
+    const banner = document.getElementById('statusFilterBanner');
+    if (banner) {
+      banner.style.display = 'flex';
+      banner.querySelector('#bannerLabel').textContent = status;
+      banner.querySelector('#bannerClear').onclick = () => {
+        // Herstel alle standaard chips
+        document.querySelectorAll('#statusChips .status-chip').forEach(c => {
+          const s = c.dataset.status;
+          if (['Operationeel','Let op','Storing','In onderhoud'].includes(s)) c.classList.add('active');
+          else c.classList.remove('active');
+        });
+        clearStatusBanner();
+        filterTable();
+      };
+    }
     filterTable();
   }
 
@@ -2136,7 +2198,15 @@
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
 
-  loadAssets();
+  loadAssets().then(() => {
+    const params = new URLSearchParams(location.search);
+    const assetId = params.get('asset');
+    if (assetId) openDrawer(assetId);
+    const filter = params.get('filter');
+    if (filter === 'storing')       setStatusFilterFromUrl('Storing');
+    else if (filter === 'onderhoud') setStatusFilterFromUrl('In onderhoud');
+    else if (filter === 'letop')    setStatusFilterFromUrl('Let op');
+  });
   (async () => {
     try {
       const { count: woCount } = await sb.from('werkorders').select('id', { count: 'exact', head: true }).lte('due_date', new Date().toISOString().split('T')[0]).neq('status', 'Voltooid').neq('status', 'Geannuleerd');

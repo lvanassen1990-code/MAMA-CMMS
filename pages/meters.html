@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meters — MAMA</title>
+  <link rel="stylesheet" href="../assets/mama.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { background: var(--surface); border: var(--border-width) solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+    .kpi-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .kpi-value { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    .table-wrap { background: var(--surface); border: var(--border-width) solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--bg); }
+    thead th { padding: 10px 14px; font-size: 11px; font-weight: 500; color: var(--text-3); text-align: left; border-bottom: var(--border-width) solid var(--border); white-space: nowrap; }
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.1s; cursor: pointer; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    tbody td { padding: 10px 14px; font-size: 12px; vertical-align: middle; }
+
+    .stand-val { font-size: 13px; font-weight: 600; color: var(--text); }
+    .eenheid-dim { font-size: 11px; color: var(--text-3); margin-left: 3px; }
+    .stale-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); margin-right: 5px; vertical-align: middle; }
+
+    /* Drawer hero */
+    .meter-hero { height: 180px; background: var(--bg); border-bottom: var(--border-width) solid var(--border); display: flex; align-items: stretch; }
+    .meter-hero-icon { width: 150px; min-width: 150px; display: flex; align-items: center; justify-content: center; border-right: var(--border-width) solid var(--border); }
+    .meter-icon-big { width: 60px; height: 60px; border-radius: 14px; background: var(--blue-bg); display: flex; align-items: center; justify-content: center; }
+    .meter-icon-big i { font-size: 28px; color: var(--blue-text); }
+    .meter-hero-right { flex: 1; padding: 18px 22px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+    .hero-naam { font-size: 16px; font-weight: 600; color: var(--text); }
+    .hero-asset { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+    .hero-stand { font-size: 30px; font-weight: 700; color: var(--text); line-height: 1; }
+    .hero-eenheid { font-size: 14px; font-weight: 400; color: var(--text-3); margin-left: 4px; }
+    .hero-meta { font-size: 11px; color: var(--text-3); }
+
+    /* Reading rows */
+    .reading-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .reading-row:last-child { border-bottom: none; }
+    .reading-stand { font-size: 14px; font-weight: 600; color: var(--text); min-width: 90px; }
+    .reading-meta { flex: 1; font-size: 11px; color: var(--text-3); line-height: 1.6; }
+    .corrected-badge { display: inline-block; font-size: 10px; color: var(--amber-text); background: var(--amber-bg); padding: 1px 6px; border-radius: 4px; }
+    .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 5px; border-radius: 4px; transition: background 0.1s, color 0.1s; font-size: 15px; }
+    .icon-btn:hover { background: var(--bg); color: var(--text); }
+
+    .plan-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; }
+    .plan-row:last-child { border-bottom: none; }
+
+    .empty-msg { padding: 32px 0; text-align: center; color: var(--text-3); font-size: 13px; }
+    .empty-msg i { font-size: 28px; display: block; margin-bottom: 8px; opacity: 0.4; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <img src="../assets/logo-mark.svg" alt="MAMA" style="width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0;" />
+      <div>
+        <div class="logo-name">MAMA</div>
+        <div class="logo-sub">Maintenance Manager</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNavOnderhoud()">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders</a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen</a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub active"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="#" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">L</div>
+      <div>
+        <div class="user-name">Leon van Assen</div>
+        <div class="user-role">Beheerder</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Meters</div>
+      <div class="topbar-sub" id="topbarSub">Laden...</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn primary" onclick="openNieuweMeterModal()"><i class="ti ti-plus"></i> Nieuwe meter</button>
+    </div>
+  </div>
+
+  <div class="content">
+  <div class="content-top">
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-gauge"></i> Totaal meters</div>
+        <div class="kpi-value" id="kpiTotaal">—</div>
+        <div class="kpi-sub">Geconfigureerd</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-clock-exclamation"></i> Niet bijgewerkt</div>
+        <div class="kpi-value" id="kpiStale">—</div>
+        <div class="kpi-sub">&gt; 30 dagen geen aflezing</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-link"></i> Gekoppeld aan plan</div>
+        <div class="kpi-value" id="kpiGekoppeld">—</div>
+        <div class="kpi-sub">Onderhoudsplannen</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Naam</th>
+            <th>Eenheid</th>
+            <th>Asset</th>
+            <th>Huidige stand</th>
+            <th>Laatste aflezing</th>
+          </tr>
+        </thead>
+        <tbody id="metersBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<!-- Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      <div class="drawer-title" id="drawerTitle">Meter</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn" onclick="openAfgelezenModal()"><i class="ti ti-plus"></i> Aflezing</button>
+        <button type="button" class="btn" onclick="openBewerkenModal()"><i class="ti ti-pencil"></i> Bewerken</button>
+      </div>
+    </div>
+
+    <div class="meter-hero">
+      <div class="meter-hero-icon">
+        <div class="meter-icon-big"><i class="ti ti-gauge"></i></div>
+      </div>
+      <div class="meter-hero-right">
+        <div>
+          <div class="hero-naam" id="drawerNaam">—</div>
+          <div class="hero-asset" id="drawerAsset">—</div>
+        </div>
+        <div>
+          <div class="hero-stand" id="drawerStand">—</div>
+          <div class="hero-meta" id="drawerMeta">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-tabs">
+      <button type="button" class="drawer-tab active" onclick="switchTab('aflesingen',this)"><i class="ti ti-list-numbers"></i> Aflesingen</button>
+      <button type="button" class="drawer-tab" onclick="switchTab('plannen',this)"><i class="ti ti-clipboard-text"></i> Gekoppelde plannen</button>
+    </div>
+
+    <div class="drawer-tab-content">
+      <div id="tabAflesingen" class="drawer-tab-pane active" style="display:block;"></div>
+      <div id="tabPlannen" class="drawer-tab-pane"></div>
+    </div>
+
+    <div class="drawer-footer">
+      <button type="button" class="btn" onclick="closeDrawer()"><i class="ti ti-x"></i> Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nieuwe meter -->
+<div class="modal-overlay" id="nieuweMeterOverlay" onclick="if(event.target===this)closeNieuweMeterModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nieuwe meter</div>
+      <button class="modal-close" onclick="closeNieuweMeterModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Naam *</label>
+        <input type="text" class="form-input" id="fNaam" placeholder="bijv. Bedrijfsuren compressor">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Eenheid *</label>
+        <input type="text" class="form-input" id="fEenheid" placeholder="bijv. uur, cyclus, km, stuks">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Asset (optioneel)</label>
+        <select class="form-input" id="fAsset">
+          <option value="">— Geen asset —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beginstand</label>
+        <input type="number" class="form-input" id="fBeginstand" value="0" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeNieuweMeterModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveMeter()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Aflezing -->
+<div class="modal-overlay" id="afgelezenOverlay" onclick="if(event.target===this)closeAfgelezenModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="afgelezenModalTitle">Aflezing invoeren</div>
+      <button class="modal-close" onclick="closeAfgelezenModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Stand *</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" class="form-input" id="fStand" placeholder="0" min="0" step="0.01" style="flex:1;">
+          <span id="fStandEenheid" style="font-size:12px;color:var(--text-3);white-space:nowrap;min-width:40px;"></span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Datum *</label>
+        <input type="date" class="form-input" id="fDatum">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ingevuld door *</label>
+        <input type="text" class="form-input" id="fIngevuldDoor" placeholder="Naam monteur">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAfgelezenModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveAflezing()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Meter bewerken -->
+<div class="modal-overlay" id="bewerkenOverlay" onclick="if(event.target===this)closeBewerkenModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Meter bewerken</div>
+      <button class="modal-close" onclick="closeBewerkenModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Naam *</label>
+        <input type="text" class="form-input" id="fBewerkenNaam">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Eenheid *</label>
+        <input type="text" class="form-input" id="fBewerkenEenheid">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Asset (optioneel)</label>
+        <select class="form-input" id="fBewerkenAsset">
+          <option value="">— Geen asset —</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeBewerkenModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveBewerken()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  function toggleNavOnderhoud() {
+    const g = document.getElementById('navOnderhoud');
+    g.classList.toggle('collapsed');
+    localStorage.setItem('navOnderhoud', g.classList.contains('collapsed') ? '1' : '0');
+  }
+  (function() {
+    const g = document.getElementById('navOnderhoud');
+    if (!g) return;
+    if (!g.querySelector('.active') && localStorage.getItem('navOnderhoud') === '1') g.classList.add('collapsed');
+  })();
+</script>
+<script>
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let allMeters = [], allAssets = [], drawerMeter = null, editingReadingId = null;
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
+    await Promise.all([loadAssets(), loadMeters()]);
+  });
+
+  async function loadAssets() {
+    const { data } = await sb.from('assets').select('asset_id, name').neq('status', 'Afgeschreven').order('name');
+    allAssets = data || [];
+    ['fAsset', 'fBewerkenAsset'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      while (sel.options.length > 1) sel.remove(1);
+      allAssets.forEach(a => sel.add(new Option(a.name, a.asset_id)));
+    });
+  }
+
+  async function loadMeters() {
+    const { data, error } = await sb.from('meters').select('*, assets(name)').order('naam');
+    if (error) { console.error(error); return; }
+    allMeters = data || [];
+    renderMeters();
+    updateKPIs();
+    document.getElementById('topbarSub').textContent = `${allMeters.length} meter${allMeters.length !== 1 ? 's' : ''} geconfigureerd`;
+  }
+
+  async function updateKPIs() {
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+    const stale = allMeters.filter(m => !m.laatste_afgelezen_op || new Date(m.laatste_afgelezen_op) < cutoff);
+    document.getElementById('kpiTotaal').textContent = allMeters.length;
+    document.getElementById('kpiStale').textContent = stale.length;
+    const { count } = await sb.from('maintenance_plans').select('id', { count: 'exact', head: true }).not('meter_id', 'is', null);
+    document.getElementById('kpiGekoppeld').textContent = count ?? 0;
+  }
+
+  function renderMeters() {
+    const tbody = document.getElementById('metersBody');
+    tbody.innerHTML = '';
+    if (!allMeters.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-3);">Geen meters. Maak de eerste meter aan.</td></tr>';
+      return;
+    }
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+    allMeters.forEach(m => {
+      const isStale = !m.laatste_afgelezen_op || new Date(m.laatste_afgelezen_op) < cutoff;
+      const tr = document.createElement('tr');
+      tr.ondblclick = () => openDrawer(m);
+      tr.innerHTML = `
+        <td style="font-weight:500;">${m.naam}</td>
+        <td style="color:var(--text-3);">${m.eenheid}</td>
+        <td style="color:var(--text-3);">${m.assets?.name || '—'}</td>
+        <td><span class="stand-val">${fmt(m.huidige_stand)}</span><span class="eenheid-dim">${m.eenheid}</span></td>
+        <td>${isStale ? '<span class="stale-dot"></span>' : ''}<span style="color:${isStale ? 'var(--amber-text)' : 'var(--text-2)'};">${m.laatste_afgelezen_op ? fmtDate(m.laatste_afgelezen_op) : 'Nooit'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function fmt(v) { return v == null ? '0' : Number(v).toLocaleString('nl-NL', { maximumFractionDigits: 2 }); }
+  function fmtDate(d) { return d ? new Date(d).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
+
+  // ── Drawer ────────────────────────────────────────────────
+  async function openDrawer(m) {
+    drawerMeter = m;
+    document.getElementById('drawerTitle').textContent = m.naam;
+    document.getElementById('drawerNaam').textContent = m.naam;
+    document.getElementById('drawerAsset').textContent = m.assets?.name || 'Geen asset gekoppeld';
+    document.getElementById('drawerStand').innerHTML = `${fmt(m.huidige_stand)}<span class="hero-eenheid">${m.eenheid}</span>`;
+    document.getElementById('drawerMeta').textContent = m.laatste_afgelezen_op ? `Laatste aflezing: ${fmtDate(m.laatste_afgelezen_op)}` : 'Nog geen aflezingen';
+    switchTab('aflesingen', document.querySelector('.drawer-tab'));
+    await loadAflesingen();
+    document.getElementById('drawerOverlay').classList.add('open');
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawerOverlay').classList.remove('open');
+    drawerMeter = null;
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.drawer-tab-pane').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+    const pane = document.getElementById(tab === 'aflesingen' ? 'tabAflesingen' : 'tabPlannen');
+    pane.style.display = 'block'; pane.classList.add('active');
+    if (tab === 'plannen') loadGekoppeldePlannen();
+  }
+
+  async function loadAflesingen() {
+    const pane = document.getElementById('tabAflesingen');
+    pane.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:8px 0;">Laden...</div>';
+    const { data } = await sb.from('meter_readings').select('*').eq('meter_id', drawerMeter.id)
+      .order('afgelezen_op', { ascending: false }).order('created_at', { ascending: false });
+    const readings = data || [];
+    if (!readings.length) {
+      pane.innerHTML = '<div class="empty-msg"><i class="ti ti-list-numbers"></i>Nog geen aflezingen.<br>Gebruik de knop "Aflezing" om de eerste stand in te voeren.</div>';
+      return;
+    }
+    pane.innerHTML = readings.map((r, i) => `
+      <div class="reading-row">
+        <div class="reading-stand">${fmt(r.stand)} <span style="font-size:10px;font-weight:400;color:var(--text-3);">${drawerMeter.eenheid}</span></div>
+        <div class="reading-meta">
+          ${fmtDate(r.afgelezen_op)}<br>${r.ingevuld_door}
+          ${r.gecorrigeerd_van != null ? `<br><span class="corrected-badge">Gecorrigeerd van ${fmt(r.gecorrigeerd_van)} ${drawerMeter.eenheid}</span>` : ''}
+        </div>
+        ${i === 0 ? `<button class="icon-btn" title="Corrigeer aflezing" onclick="startEditReading('${r.id}',${r.stand})"><i class="ti ti-pencil"></i></button>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function loadGekoppeldePlannen() {
+    const pane = document.getElementById('tabPlannen');
+    pane.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:8px 0;">Laden...</div>';
+    const { data } = await sb.from('maintenance_plans').select('id, naam').eq('meter_id', drawerMeter.id);
+    const plannen = data || [];
+    if (!plannen.length) {
+      pane.innerHTML = '<div class="empty-msg"><i class="ti ti-clipboard-text"></i>Geen onderhoudsplannen gekoppeld.</div>';
+      return;
+    }
+    pane.innerHTML = plannen.map(p => `<div class="plan-row"><i class="ti ti-clipboard-text" style="color:var(--text-3);"></i><span>${p.naam}</span></div>`).join('');
+  }
+
+  // ── Aflezing ─────────────────────────────────────────────
+  function openAfgelezenModal() {
+    if (!drawerMeter) return;
+    editingReadingId = null;
+    document.getElementById('afgelezenModalTitle').textContent = 'Aflezing invoeren';
+    document.getElementById('fStand').value = '';
+    document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
+    document.getElementById('fIngevuldDoor').value = '';
+    document.getElementById('fStandEenheid').textContent = drawerMeter.eenheid;
+    document.getElementById('afgelezenOverlay').classList.add('open');
+  }
+
+  function startEditReading(id, stand) {
+    editingReadingId = id;
+    document.getElementById('afgelezenModalTitle').textContent = 'Aflezing corrigeren';
+    document.getElementById('fStand').value = stand;
+    document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
+    document.getElementById('fIngevuldDoor').value = '';
+    document.getElementById('fStandEenheid').textContent = drawerMeter.eenheid;
+    document.getElementById('afgelezenOverlay').classList.add('open');
+  }
+
+  function closeAfgelezenModal() { document.getElementById('afgelezenOverlay').classList.remove('open'); }
+
+  async function saveAflezing() {
+    const stand = parseFloat(document.getElementById('fStand').value);
+    const datum = document.getElementById('fDatum').value;
+    const door  = document.getElementById('fIngevuldDoor').value.trim();
+    if (isNaN(stand) || !datum || !door) { alert('Vul alle verplichte velden in.'); return; }
+
+    if (editingReadingId) {
+      const { data: orig } = await sb.from('meter_readings').select('stand').eq('id', editingReadingId).single();
+      await sb.from('meter_readings').update({ stand, afgelezen_op: datum, ingevuld_door: door, gecorrigeerd_van: orig?.stand }).eq('id', editingReadingId);
+    } else {
+      await sb.from('meter_readings').insert({ meter_id: drawerMeter.id, stand, afgelezen_op: datum, ingevuld_door: door });
+    }
+
+    const { data: latest } = await sb.from('meter_readings').select('stand, afgelezen_op')
+      .eq('meter_id', drawerMeter.id).order('afgelezen_op', { ascending: false }).limit(1).single();
+    if (latest) await sb.from('meters').update({ huidige_stand: latest.stand, laatste_afgelezen_op: latest.afgelezen_op }).eq('id', drawerMeter.id);
+
+    closeAfgelezenModal();
+    await loadMeters();
+    const updated = allMeters.find(m => m.id === drawerMeter.id);
+    if (updated) {
+      drawerMeter = updated;
+      document.getElementById('drawerStand').innerHTML = `${fmt(updated.huidige_stand)}<span class="hero-eenheid">${updated.eenheid}</span>`;
+      document.getElementById('drawerMeta').textContent = `Laatste aflezing: ${fmtDate(updated.laatste_afgelezen_op)}`;
+    }
+    await loadAflesingen();
+  }
+
+  // ── Nieuwe meter ─────────────────────────────────────────
+  function openNieuweMeterModal() {
+    document.getElementById('fNaam').value = '';
+    document.getElementById('fEenheid').value = '';
+    document.getElementById('fAsset').value = '';
+    document.getElementById('fBeginstand').value = '0';
+    document.getElementById('nieuweMeterOverlay').classList.add('open');
+  }
+  function closeNieuweMeterModal() { document.getElementById('nieuweMeterOverlay').classList.remove('open'); }
+
+  async function saveMeter() {
+    const naam = document.getElementById('fNaam').value.trim();
+    const eenheid = document.getElementById('fEenheid').value.trim();
+    const asset_id = document.getElementById('fAsset').value || null;
+    const huidige_stand = parseFloat(document.getElementById('fBeginstand').value) || 0;
+    if (!naam || !eenheid) { alert('Naam en eenheid zijn verplicht.'); return; }
+    const { error } = await sb.from('meters').insert({ naam, eenheid, asset_id, huidige_stand });
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeNieuweMeterModal();
+    await loadMeters();
+  }
+
+  // ── Bewerken ─────────────────────────────────────────────
+  function openBewerkenModal() {
+    if (!drawerMeter) return;
+    document.getElementById('fBewerkenNaam').value = drawerMeter.naam;
+    document.getElementById('fBewerkenEenheid').value = drawerMeter.eenheid;
+    const sel = document.getElementById('fBewerkenAsset');
+    while (sel.options.length > 1) sel.remove(1);
+    allAssets.forEach(a => sel.add(new Option(a.name, a.asset_id)));
+    sel.value = drawerMeter.asset_id || '';
+    document.getElementById('bewerkenOverlay').classList.add('open');
+  }
+  function closeBewerkenModal() { document.getElementById('bewerkenOverlay').classList.remove('open'); }
+
+  async function saveBewerken() {
+    const naam = document.getElementById('fBewerkenNaam').value.trim();
+    const eenheid = document.getElementById('fBewerkenEenheid').value.trim();
+    const asset_id = document.getElementById('fBewerkenAsset').value || null;
+    if (!naam || !eenheid) { alert('Naam en eenheid zijn verplicht.'); return; }
+    const { error } = await sb.from('meters').update({ naam, eenheid, asset_id }).eq('id', drawerMeter.id);
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeBewerkenModal();
+    await loadMeters();
+    const updated = allMeters.find(m => m.id === drawerMeter.id);
+    if (updated) {
+      drawerMeter = updated;
+      document.getElementById('drawerNaam').textContent = updated.naam;
+      document.getElementById('drawerTitle').textContent = updated.naam;
+      document.getElementById('drawerAsset').textContent = updated.assets?.name || 'Geen asset gekoppeld';
+    }
+  }
+</script>
+</body>
+</html>

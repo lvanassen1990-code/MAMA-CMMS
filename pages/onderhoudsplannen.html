@@ -135,13 +135,25 @@
   <div class="sidebar-section">Navigatie</div>
   <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
   <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
-  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
-  <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
-  <a href="onderhoudsplannen.html" class="nav-item active"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNavOnderhoud()">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub active"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
   <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
   <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
   <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
   <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
@@ -239,6 +251,18 @@
         <div class="task-editor" id="taskEditor"></div>
         <button type="button" class="add-task-btn" onclick="addTaskRow()"><i class="ti ti-plus"></i> Taak toevoegen</button>
       </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label"><i class="ti ti-gauge" style="font-size:12px;"></i> Meter (optioneel)</label>
+          <select class="form-input" id="fPlanMeter">
+            <option value="">— Geen meter —</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Drempelwaarde</label>
+          <input class="form-input" id="fPlanDrempel" type="number" min="1" placeholder="bijv. 500" />
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('planModal')">Annuleren</button>
@@ -267,11 +291,23 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  function toggleNavOnderhoud() {
+    const g = document.getElementById('navOnderhoud');
+    g.classList.toggle('collapsed');
+    localStorage.setItem('navOnderhoud', g.classList.contains('collapsed') ? '1' : '0');
+  }
+  (function() {
+    const g = document.getElementById('navOnderhoud');
+    if (!g) return;
+    if (!g.querySelector('.active') && localStorage.getItem('navOnderhoud') === '1') g.classList.add('collapsed');
+  })();
+</script>
+<script>
   const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let plans = [], allAssets = [], selectedPlan = null;
+  let plans = [], allAssets = [], allMeters = [], selectedPlan = null;
   let showActief = true, showInactief = false;
 
   function togglePlanChip(btn, key) {
@@ -303,12 +339,18 @@
 
   /* ── Load ── */
   async function loadAll() {
-    const [{ data: p }, { data: a }] = await Promise.all([
+    const [{ data: p }, { data: a }, { data: m }] = await Promise.all([
       sb.from('maintenance_plans').select('*, maintenance_tasks(*)').order('name'),
       sb.from('assets').select('asset_id, name, location, status').order('asset_id'),
+      sb.from('meters').select('id, naam, eenheid').order('naam'),
     ]);
     plans = p || [];
     allAssets = a || [];
+    allMeters = m || [];
+    // Vul meter dropdown
+    const sel = document.getElementById('fPlanMeter');
+    while (sel.options.length > 1) sel.remove(1);
+    allMeters.forEach(m => sel.add(new Option(`${m.naam} (${m.eenheid})`, m.id)));
     const actief = plans.filter(x => x.is_active !== false).length;
     document.getElementById('topbarSub').textContent = `${actief} actieve plannen · ${plans.length - actief} inactief`;
     renderPlansList();
@@ -464,6 +506,8 @@
     document.getElementById('fPlanInterval').value = 'Kwartaal';
     document.getElementById('fPlanDays').value = 90;
     document.getElementById('fPlanDuration').value = '';
+    document.getElementById('fPlanMeter').value = '';
+    document.getElementById('fPlanDrempel').value = '';
     document.getElementById('planModalTitle').textContent = 'Nieuw onderhoudsplan';
     taskRows = [''];
     renderTaskEditor();
@@ -478,6 +522,8 @@
     document.getElementById('fPlanInterval').value = p.interval_type;
     document.getElementById('fPlanDays').value = p.interval_days;
     document.getElementById('fPlanDuration').value = p.estimated_duration || '';
+    document.getElementById('fPlanMeter').value = p.meter_id || '';
+    document.getElementById('fPlanDrempel').value = p.meter_drempel || '';
     document.getElementById('planModalTitle').textContent = 'Plan bewerken';
     const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
     taskRows = tasks.map(t => t.description);
@@ -498,6 +544,8 @@
         interval_type: document.getElementById('fPlanInterval').value,
         interval_days: parseInt(document.getElementById('fPlanDays').value) || 90,
         estimated_duration: parseInt(document.getElementById('fPlanDuration').value) || null,
+        meter_id: document.getElementById('fPlanMeter').value || null,
+        meter_drempel: parseFloat(document.getElementById('fPlanDrempel').value) || null,
       };
       if (!payload.name) {
         alert('Vul een naam in.');

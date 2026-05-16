@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Werkinstructies — MAMA</title>
+  <link rel="stylesheet" href="../assets/mama.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { background: var(--surface); border: var(--border-width) solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+    .kpi-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+    .kpi-value { font-size: 28px; font-weight: 600; color: var(--text); line-height: 1; }
+    .kpi-sub { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+    .table-wrap { background: var(--surface); border: var(--border-width) solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--bg); }
+    thead th { padding: 10px 14px; font-size: 11px; font-weight: 500; color: var(--text-3); text-align: left; border-bottom: var(--border-width) solid var(--border); white-space: nowrap; }
+    tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.1s; cursor: pointer; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    tbody td { padding: 10px 14px; font-size: 12px; vertical-align: middle; }
+
+    .versie-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; background: var(--bg); border: 0.5px solid var(--border-strong); font-size: 10px; font-weight: 600; color: var(--text-3); }
+    .type-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 500; }
+    .type-checkbox   { background: var(--green-bg);  color: var(--green-text); }
+    .type-meting     { background: var(--blue-bg);   color: var(--blue-text); }
+    .type-keuzelijst { background: var(--purple-bg); color: var(--purple-text); }
+    .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+    .dot-green { background: var(--green); }
+    .dot-grey  { background: var(--text-3); }
+
+    /* Drawer hero */
+    .wi-hero { height: 140px; background: var(--bg); border-bottom: var(--border-width) solid var(--border); display: flex; align-items: center; padding: 0 22px; gap: 18px; }
+    .wi-icon-big { width: 54px; height: 54px; border-radius: 14px; background: var(--green-bg); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .wi-icon-big i { font-size: 26px; color: var(--green-text); }
+    .wi-hero-info { flex: 1; overflow: hidden; }
+    .wi-hero-naam { font-size: 16px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wi-hero-omschrijving { font-size: 12px; color: var(--text-3); margin-top: 4px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .wi-hero-badges { display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+
+    /* Items */
+    .items-header { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .item-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+    .item-row:last-child { border-bottom: none; }
+    .item-num { font-size: 11px; color: var(--text-3); min-width: 18px; padding-top: 2px; text-align: right; }
+    .item-body { flex: 1; }
+    .item-label { font-size: 13px; color: var(--text); }
+    .item-sub { margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .item-actions { display: flex; gap: 2px; }
+    .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px 5px; border-radius: 4px; font-size: 14px; transition: background 0.1s, color 0.1s; }
+    .icon-btn:hover { background: var(--bg); color: var(--text); }
+    .icon-btn:disabled { opacity: 0.25; pointer-events: none; }
+    .icon-btn.danger:hover { color: var(--red); background: var(--red-bg, #fff0f0); }
+
+    /* Add item form */
+    .add-item-wrap { background: var(--bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; margin-top: 16px; }
+    .add-item-title { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+    .plan-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); font-size: 12px; color: var(--text-2); }
+    .plan-row:last-child { border-bottom: none; }
+
+    .empty-msg { padding: 32px 0; text-align: center; color: var(--text-3); font-size: 13px; }
+    .empty-msg i { font-size: 28px; display: block; margin-bottom: 8px; opacity: 0.4; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <img src="../assets/logo-mark.svg" alt="MAMA" style="width:32px;height:32px;border-radius:8px;display:block;flex-shrink:0;" />
+      <div>
+        <div class="logo-name">MAMA</div>
+        <div class="logo-sub">Maintenance Manager</div>
+      </div>
+    </div>
+  </div>
+  <div class="sidebar-section">Navigatie</div>
+  <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
+  <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
+  <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNavOnderhoud()">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders</a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen</a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub active"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
+  <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
+  <a href="#" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
+  <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
+  <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
+  <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
+  <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar">L</div>
+      <div>
+        <div class="user-name">Leon van Assen</div>
+        <div class="user-role">Beheerder</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Werkinstructies</div>
+      <div class="topbar-sub" id="topbarSub">Laden...</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn primary" onclick="openNieuweModal()"><i class="ti ti-plus"></i> Nieuwe werkinstructie</button>
+    </div>
+  </div>
+
+  <div class="content">
+  <div class="content-top">
+
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-list-check"></i> Totaal</div>
+        <div class="kpi-value" id="kpiTotaal">—</div>
+        <div class="kpi-sub">Werkinstructies</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-circle-check"></i> Actief</div>
+        <div class="kpi-value" id="kpiActief">—</div>
+        <div class="kpi-sub">In gebruik</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-link"></i> Gekoppeld</div>
+        <div class="kpi-value" id="kpiGekoppeld">—</div>
+        <div class="kpi-sub">Aan onderhoudsplannen</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Naam</th>
+            <th>Omschrijving</th>
+            <th>Items</th>
+            <th>Versie</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="wiBody"></tbody>
+      </table>
+    </div>
+
+  </div>
+  </div>
+</div>
+
+<!-- Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer">
+    <div class="drawer-header">
+      <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      <div class="drawer-title" id="drawerTitle">Werkinstructie</div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn" id="btnToggleActief" onclick="toggleActief()"></button>
+        <button type="button" class="btn" onclick="openBewerkenModal()"><i class="ti ti-pencil"></i> Bewerken</button>
+      </div>
+    </div>
+
+    <div class="wi-hero">
+      <div class="wi-icon-big"><i class="ti ti-list-check"></i></div>
+      <div class="wi-hero-info">
+        <div class="wi-hero-naam" id="drawerNaam">—</div>
+        <div class="wi-hero-omschrijving" id="drawerOmschrijving">—</div>
+        <div class="wi-hero-badges">
+          <span class="versie-badge" id="drawerVersie">v1</span>
+          <span id="drawerActiefBadge"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-tabs">
+      <button type="button" class="drawer-tab active" onclick="switchTab('items',this)"><i class="ti ti-list"></i> Items</button>
+      <button type="button" class="drawer-tab" onclick="switchTab('plannen',this)"><i class="ti ti-clipboard-text"></i> Gekoppelde plannen</button>
+    </div>
+
+    <div class="drawer-tab-content">
+      <div id="tabItems" class="drawer-tab-pane active" style="display:block;"></div>
+      <div id="tabPlannen" class="drawer-tab-pane"></div>
+    </div>
+
+    <div class="drawer-footer">
+      <button type="button" class="btn" onclick="closeDrawer()"><i class="ti ti-x"></i> Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nieuwe werkinstructie -->
+<div class="modal-overlay" id="nieuweOverlay" onclick="if(event.target===this)closeNieuweModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nieuwe werkinstructie</div>
+      <button class="modal-close" onclick="closeNieuweModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Naam *</label>
+        <input type="text" class="form-input" id="fNaam" placeholder="bijv. Maandelijkse inspectie hydrauliek">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Omschrijving</label>
+        <textarea class="form-input" id="fOmschrijving" rows="3" placeholder="Optionele toelichting..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeNieuweModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveNieuwe()"><i class="ti ti-check"></i> Aanmaken</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Bewerken -->
+<div class="modal-overlay" id="bewerkenOverlay" onclick="if(event.target===this)closeBewerkenModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Werkinstructie bewerken</div>
+      <button class="modal-close" onclick="closeBewerkenModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Naam *</label>
+        <input type="text" class="form-input" id="fBewerkenNaam">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Omschrijving</label>
+        <textarea class="form-input" id="fBewerkenOmschrijving" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeBewerkenModal()">Annuleren</button>
+      <button class="btn primary" onclick="saveBewerken()"><i class="ti ti-check"></i> Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  function toggleNavOnderhoud() {
+    const g = document.getElementById('navOnderhoud');
+    g.classList.toggle('collapsed');
+    localStorage.setItem('navOnderhoud', g.classList.contains('collapsed') ? '1' : '0');
+  }
+  (function() {
+    const g = document.getElementById('navOnderhoud');
+    if (!g) return;
+    if (!g.querySelector('.active') && localStorage.getItem('navOnderhoud') === '1') g.classList.add('collapsed');
+  })();
+</script>
+<script>
+  const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let allWI = [], drawerWI = null, drawerItems = [], allEenheden = [];
+
+  document.addEventListener('DOMContentLoaded', () => { loadWerkinstructies(); loadEenheden(); });
+
+  async function loadWerkinstructies() {
+    const { data, error } = await sb.from('werkinstructies').select('*, werkinstructie_items(id)').order('naam');
+    if (error) { console.error(error); return; }
+    allWI = data || [];
+    renderTable();
+    updateKPIs();
+    document.getElementById('topbarSub').textContent = `${allWI.length} werkinstructie${allWI.length !== 1 ? 's' : ''}`;
+  }
+
+  async function loadEenheden() {
+    const { data } = await sb.from('eenheden').select('naam').order('naam');
+    allEenheden = (data || []).map(e => e.naam);
+    const sel = document.getElementById('iEenheid');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— kies eenheid —</option>' +
+      allEenheden.map(n => `<option value="${n}">${n}</option>`).join('');
+  }
+
+  async function updateKPIs() {
+    document.getElementById('kpiTotaal').textContent = allWI.length;
+    document.getElementById('kpiActief').textContent = allWI.filter(w => w.actief).length;
+    const { count } = await sb.from('plan_werkinstructies').select('id', { count: 'exact', head: true });
+    document.getElementById('kpiGekoppeld').textContent = count ?? 0;
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('wiBody');
+    tbody.innerHTML = '';
+    if (!allWI.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-3);">Nog geen werkinstructies. Maak de eerste aan.</td></tr>';
+      return;
+    }
+    allWI.forEach(w => {
+      const tr = document.createElement('tr');
+      if (!w.actief) tr.style.opacity = '0.5';
+      tr.ondblclick = () => openDrawer(w);
+      tr.innerHTML = `
+        <td style="font-weight:500;">${w.naam}</td>
+        <td style="color:var(--text-3);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${w.omschrijving || '—'}</td>
+        <td>${w.werkinstructie_items?.length ?? 0}</td>
+        <td><span class="versie-badge">v${w.versie}</span></td>
+        <td>
+          <span class="status-dot ${w.actief ? 'dot-green' : 'dot-grey'}"></span>
+          <span style="color:var(--text-3);">${w.actief ? 'Actief' : 'Inactief'}</span>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ── Drawer ────────────────────────────────────────────────
+  async function openDrawer(w) {
+    drawerWI = w;
+    document.getElementById('drawerTitle').textContent = w.naam;
+    document.getElementById('drawerNaam').textContent = w.naam;
+    document.getElementById('drawerOmschrijving').textContent = w.omschrijving || 'Geen omschrijving';
+    document.getElementById('drawerVersie').textContent = `v${w.versie}`;
+    updateActiefUI();
+    switchTab('items', document.querySelector('.drawer-tab'));
+    await loadItems();
+    document.getElementById('drawerOverlay').classList.add('open');
+  }
+
+  function updateActiefUI() {
+    const btn = document.getElementById('btnToggleActief');
+    const badge = document.getElementById('drawerActiefBadge');
+    if (drawerWI.actief) {
+      btn.innerHTML = '<i class="ti ti-eye-off"></i> Deactiveren';
+      badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:4px;background:var(--green-bg);color:var(--green-text);font-size:11px;font-weight:500;"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;"></span>Actief</span>';
+    } else {
+      btn.innerHTML = '<i class="ti ti-eye"></i> Activeren';
+      badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:4px;background:var(--bg);border:0.5px solid var(--border-strong);color:var(--text-3);font-size:11px;font-weight:500;">Inactief</span>';
+    }
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawerOverlay').classList.remove('open');
+    drawerWI = null;
+    drawerItems = [];
+  }
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.drawer-tab-pane').forEach(p => { p.style.display = 'none'; p.classList.remove('active'); });
+    const pane = document.getElementById(tab === 'items' ? 'tabItems' : 'tabPlannen');
+    pane.style.display = 'block'; pane.classList.add('active');
+    if (tab === 'plannen') loadGekoppeldePlannen();
+  }
+
+  async function loadItems() {
+    const pane = document.getElementById('tabItems');
+    pane.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:8px 0;">Laden...</div>';
+    const { data } = await sb.from('werkinstructie_items').select('*').eq('instructie_id', drawerWI.id).order('volgorde');
+    drawerItems = data || [];
+    renderItems();
+  }
+
+  function typeBadge(item) {
+    if (item.type === 'meting') {
+      const norm = (item.min_waarde != null || item.max_waarde != null) ? ` · ${item.min_waarde ?? '?'}–${item.max_waarde ?? '?'}` : '';
+      return `<span class="type-badge type-meting"><i class="ti ti-ruler"></i> Meting${item.eenheid ? ' · ' + item.eenheid : ''}${norm}</span>`;
+    }
+    if (item.type === 'keuzelijst') return `<span class="type-badge type-keuzelijst"><i class="ti ti-list"></i> Keuzelijst</span>`;
+    return `<span class="type-badge type-checkbox"><i class="ti ti-check"></i> Checkbox</span>`;
+  }
+
+  function renderItems() {
+    const pane = document.getElementById('tabItems');
+    const listHtml = drawerItems.length
+      ? drawerItems.map((item, i) => `
+          <div class="item-row">
+            <span class="item-num">${i + 1}</span>
+            <div class="item-body">
+              <div class="item-label">${item.label}${item.verplicht ? ' <span style="color:var(--red);font-size:11px;">*</span>' : ''}</div>
+              <div class="item-sub">${typeBadge(item)}</div>
+            </div>
+            <div class="item-actions">
+              <button class="icon-btn" title="Omhoog" onclick="moveItem('${item.id}',-1)" ${i === 0 ? 'disabled' : ''}><i class="ti ti-chevron-up"></i></button>
+              <button class="icon-btn" title="Omlaag" onclick="moveItem('${item.id}',1)" ${i === drawerItems.length - 1 ? 'disabled' : ''}><i class="ti ti-chevron-down"></i></button>
+              <button class="icon-btn danger" title="Verwijder" onclick="deleteItem('${item.id}')"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>`)
+        .join('')
+      : '<div class="empty-msg"><i class="ti ti-list"></i>Nog geen controlepunten.<br>Voeg hieronder het eerste punt toe.</div>';
+
+    pane.innerHTML = `
+      <div class="items-header">Controlepunten (${drawerItems.length})</div>
+      ${listHtml}
+      <div class="add-item-wrap">
+        <div class="add-item-title">Nieuw punt toevoegen</div>
+        <div class="form-group">
+          <label class="form-label">Label *</label>
+          <input type="text" class="form-input" id="iLabel" placeholder="bijv. Olieniveau controleren">
+        </div>
+        <div class="form-row-2" style="margin-bottom:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Type</label>
+            <select class="form-input" id="iType" onchange="toggleTypeFields()">
+              <option value="checkbox">Checkbox</option>
+              <option value="meting">Meting (waarde)</option>
+              <option value="keuzelijst">Keuzelijst</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Verplicht</label>
+            <select class="form-input" id="iVerplicht">
+              <option value="false">Nee</option>
+              <option value="true">Ja</option>
+            </select>
+          </div>
+        </div>
+        <div id="iMetingFields" style="display:none;margin-bottom:10px;">
+          <div class="form-row-3">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Eenheid</label>
+              <select class="form-input" id="iEenheid">
+                <option value="">— kies eenheid —</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Min</label>
+              <input type="number" class="form-input" id="iMinWaarde">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Max</label>
+              <input type="number" class="form-input" id="iMaxWaarde">
+            </div>
+          </div>
+        </div>
+        <div id="iKeuzelijstFields" style="display:none;margin-bottom:10px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Opties (komma-gescheiden)</label>
+            <input type="text" class="form-input" id="iOpties" placeholder="Goed, Let op, Vervangen">
+          </div>
+        </div>
+        <button class="btn primary" onclick="addItem()" style="width:100%;"><i class="ti ti-plus"></i> Punt toevoegen</button>
+      </div>
+    `;
+  }
+
+  function toggleTypeFields() {
+    const type = document.getElementById('iType').value;
+    document.getElementById('iMetingFields').style.display    = type === 'meting'     ? '' : 'none';
+    document.getElementById('iKeuzelijstFields').style.display = type === 'keuzelijst' ? '' : 'none';
+  }
+
+  async function addItem() {
+    const label    = document.getElementById('iLabel').value.trim();
+    const type     = document.getElementById('iType').value;
+    const verplicht = document.getElementById('iVerplicht').value === 'true';
+    if (!label) { alert('Vul een label in.'); return; }
+
+    const payload = {
+      instructie_id: drawerWI.id, label, type, verplicht,
+      volgorde: drawerItems.length,
+      eenheid:    type === 'meting'     ? (document.getElementById('iEenheid').value.trim() || null)  : null,
+      min_waarde: type === 'meting'     ? (parseFloat(document.getElementById('iMinWaarde').value) || null) : null,
+      max_waarde: type === 'meting'     ? (parseFloat(document.getElementById('iMaxWaarde').value) || null) : null,
+      opties:     type === 'keuzelijst' ? (document.getElementById('iOpties').value.trim() || null)   : null,
+    };
+
+    const { error } = await sb.from('werkinstructie_items').insert(payload);
+    if (error) { alert('Fout: ' + error.message); return; }
+
+    const newVersie = (drawerWI.versie || 1) + 1;
+    await sb.from('werkinstructies').update({ versie: newVersie }).eq('id', drawerWI.id);
+    drawerWI.versie = newVersie;
+    document.getElementById('drawerVersie').textContent = `v${newVersie}`;
+
+    await loadItems();
+    await loadWerkinstructies();
+  }
+
+  async function moveItem(id, dir) {
+    const idx = drawerItems.findIndex(i => i.id === id);
+    const swapIdx = idx + dir;
+    if (swapIdx < 0 || swapIdx >= drawerItems.length) return;
+    const a = drawerItems[idx], b = drawerItems[swapIdx];
+    await Promise.all([
+      sb.from('werkinstructie_items').update({ volgorde: b.volgorde }).eq('id', a.id),
+      sb.from('werkinstructie_items').update({ volgorde: a.volgorde }).eq('id', b.id),
+    ]);
+    await loadItems();
+  }
+
+  async function deleteItem(id) {
+    if (!confirm('Dit controlepunt verwijderen?')) return;
+    await sb.from('werkinstructie_items').delete().eq('id', id);
+    const newVersie = (drawerWI.versie || 1) + 1;
+    await sb.from('werkinstructies').update({ versie: newVersie }).eq('id', drawerWI.id);
+    drawerWI.versie = newVersie;
+    document.getElementById('drawerVersie').textContent = `v${newVersie}`;
+    await loadItems();
+    await loadWerkinstructies();
+  }
+
+  async function loadGekoppeldePlannen() {
+    const pane = document.getElementById('tabPlannen');
+    pane.innerHTML = '<div style="color:var(--text-3);font-size:12px;padding:8px 0;">Laden...</div>';
+    const { data } = await sb.from('plan_werkinstructies').select('maintenance_plans(id, naam)').eq('instructie_id', drawerWI.id);
+    const plannen = (data || []).map(r => r.maintenance_plans).filter(Boolean);
+    if (!plannen.length) {
+      pane.innerHTML = '<div class="empty-msg"><i class="ti ti-clipboard-text"></i>Geen onderhoudsplannen gekoppeld.</div>';
+      return;
+    }
+    pane.innerHTML = plannen.map(p => `<div class="plan-row"><i class="ti ti-clipboard-text" style="color:var(--text-3);"></i><span>${p.naam}</span></div>`).join('');
+  }
+
+  async function toggleActief() {
+    if (!drawerWI) return;
+    drawerWI.actief = !drawerWI.actief;
+    await sb.from('werkinstructies').update({ actief: drawerWI.actief }).eq('id', drawerWI.id);
+    updateActiefUI();
+    await loadWerkinstructies();
+  }
+
+  // ── Nieuwe werkinstructie ─────────────────────────────────
+  function openNieuweModal() {
+    document.getElementById('fNaam').value = '';
+    document.getElementById('fOmschrijving').value = '';
+    document.getElementById('nieuweOverlay').classList.add('open');
+  }
+  function closeNieuweModal() { document.getElementById('nieuweOverlay').classList.remove('open'); }
+
+  async function saveNieuwe() {
+    const naam = document.getElementById('fNaam').value.trim();
+    const omschrijving = document.getElementById('fOmschrijving').value.trim() || null;
+    if (!naam) { alert('Naam is verplicht.'); return; }
+    const { error } = await sb.from('werkinstructies').insert({ naam, omschrijving });
+    if (error) { alert('Fout: ' + error.message); return; }
+    closeNieuweModal();
+    await loadWerkinstructies();
+  }
+
+  // ── Bewerken ─────────────────────────────────────────────
+  function openBewerkenModal() {
+    if (!drawerWI) return;
+    document.getElementById('fBewerkenNaam').value = drawerWI.naam;
+    document.getElementById('fBewerkenOmschrijving').value = drawerWI.omschrijving || '';
+    document.getElementById('bewerkenOverlay').classList.add('open');
+  }
+  function closeBewerkenModal() { document.getElementById('bewerkenOverlay').classList.remove('open'); }
+
+  async function saveBewerken() {
+    const naam = document.getElementById('fBewerkenNaam').value.trim();
+    const omschrijving = document.getElementById('fBewerkenOmschrijving').value.trim() || null;
+    if (!naam) { alert('Naam is verplicht.'); return; }
+    await sb.from('werkinstructies').update({ naam, omschrijving }).eq('id', drawerWI.id);
+    drawerWI.naam = naam;
+    drawerWI.omschrijving = omschrijving;
+    document.getElementById('drawerNaam').textContent = naam;
+    document.getElementById('drawerTitle').textContent = naam;
+    document.getElementById('drawerOmschrijving').textContent = omschrijving || 'Geen omschrijving';
+    closeBewerkenModal();
+    await loadWerkinstructies();
+  }
+</script>
+</body>
+</html>

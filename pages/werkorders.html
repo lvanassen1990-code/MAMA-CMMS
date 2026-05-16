@@ -15,8 +15,10 @@
     .content-scroll { flex: 1; min-height: 0; padding-bottom: 20px; display: flex; flex-direction: column; gap: 12px; }
 
     /* KPI row */
-    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .kpi-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .kpi-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+    .kpi-card:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.08); }
+    .kpi-card.active-filter { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
     .kpi-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
     .kpi-label i { font-size: 13px; }
     .kpi-value { font-size: 26px; font-weight: 500; line-height: 1; }
@@ -54,6 +56,11 @@
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: var(--bg); }
     tbody tr.clickable-row { cursor: default; }
+    tbody tr.row-afgesloten { opacity: 0.55; }
+    tbody tr.row-afgesloten:hover { opacity: 0.75; background: var(--bg); }
+
+    .afgesloten-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 6px; background: var(--bg); border: 0.5px solid var(--border-strong); font-size: 11px; color: var(--text-3); font-weight: 500; }
+    .drawer-footer .btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
     tbody td { padding: 10px 14px; font-size: 12px; vertical-align: middle; }
 
     .wo-number { font-family: monospace; font-size: 11px; color: var(--text-3); }
@@ -93,7 +100,7 @@
     .drawer { position:fixed; top:0; left:220px; right:0; bottom:0; transform:translateX(100%); transition:transform .26s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column; overflow:hidden; background:var(--surface); border-left:.5px solid var(--border); box-shadow:-8px 0 32px rgba(0,0,0,.1); z-index:50; }
     .drawer-overlay.open .drawer { transform:translateX(0); }
 
-    .drawer-hero { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
+    .drawer-hero { display: flex; flex-shrink: 0; border-bottom: 0.5px solid var(--border); height: 210px; }
     .drawer-hero-left { width: 300px; flex-shrink: 0; border-right: 0.5px solid var(--border); display: flex; flex-direction: column; }
     .drawer-asset-photo { flex: 1; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; min-height: 160px; }
     .drawer-asset-photo img { width: 100%; height: 100%; object-fit: cover; }
@@ -102,13 +109,13 @@
     .drawer-asset-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
     .drawer-asset-id { font-size: 10px; font-family: monospace; color: var(--text-3); }
 
-    .drawer-hero-right { flex: 1; padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
-    .drawer-meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 20px; }
-    .drawer-field { display: flex; flex-direction: column; gap: 3px; }
+    .drawer-hero-right { flex: 1; padding: 14px 20px; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+    .drawer-meta-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 16px; }
+    .drawer-field { display: flex; flex-direction: column; gap: 2px; }
     .drawer-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; }
-    .drawer-value { font-size: 13px; font-weight: 500; }
+    .drawer-value { font-size: 12px; font-weight: 500; }
     .drawer-value.muted { color: var(--text-2); font-weight: 400; }
-    .drawer-notes-box { background: var(--bg); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--text-2); line-height: 1.6; border: 0.5px solid var(--border); }
+    .drawer-notes-box { background: var(--bg); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; color: var(--text-2); line-height: 1.5; border: 0.5px solid var(--border); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
     /* Parts in drawer */
     .parts-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
@@ -144,6 +151,31 @@
     .activity-time { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
     .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; max-height: 60vh; overflow-y: auto; }
+
+    /* Verloop tab */
+    .verloop-wrap { padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+    .verloop-section-title { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+
+    .verloop-keten { display: flex; align-items: center; gap: 0; flex-wrap: wrap; gap: 4px; }
+    .verloop-node { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+    .verloop-node-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--surface); font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: background 0.1s; color: var(--text-2); }
+    .verloop-node-btn:hover { background: var(--bg); color: var(--text); }
+    .verloop-node-btn.current { border-color: var(--accent); background: var(--blue-bg); color: var(--blue-text); cursor: default; }
+    .verloop-node-label { font-size: 10px; color: var(--text-3); padding-left: 4px; }
+    .verloop-arrow { font-size: 16px; color: var(--text-3); padding: 0 4px; line-height: 1; margin-top: -2px; }
+
+    .verloop-timeline { display: flex; flex-direction: column; gap: 0; }
+    .verloop-event { display: flex; gap: 14px; padding: 10px 0; position: relative; }
+    .verloop-event:not(:last-child)::before { content: ''; position: absolute; left: 7px; top: 24px; bottom: -2px; width: 1px; background: var(--border); }
+    .verloop-dot { width: 15px; height: 15px; border-radius: 50%; flex-shrink: 0; margin-top: 1px; border: 2px solid var(--surface); box-shadow: 0 0 0 1.5px var(--border-strong); }
+    .verloop-event-body { flex: 1; }
+    .verloop-event-title { font-size: 12px; font-weight: 500; color: var(--text); }
+    .verloop-event-time { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .verloop-event-sub { font-size: 11px; color: var(--text-2); margin-top: 3px; background: var(--bg); border-radius: var(--radius-sm); padding: 6px 10px; border: 0.5px solid var(--border); line-height: 1.5; }
+
+    /* Parent WO badge in drawer hero */
+    .parent-wo-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: var(--radius-sm); background: var(--purple-bg); border: 0.5px solid var(--purple); color: var(--purple-text); font-size: 11px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .parent-wo-badge:hover { opacity: 0.8; }
   </style>
 </head>
 <body>
@@ -162,13 +194,25 @@
   <div class="sidebar-section">Navigatie</div>
   <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
   <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
-  <a href="werkorders.html" class="nav-item active"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="sidebarBadge"></span></a>
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
-  <a href="storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
-  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNavOnderhoud()">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub active"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="sidebarBadge"></span></a>
+      <a href="storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
   <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
   <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
   <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
   <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
@@ -202,26 +246,38 @@
 
     <!-- KPIs -->
     <div class="kpi-row">
-      <div class="kpi-card">
+      <div class="kpi-card" id="kpiCardOpen" onclick="setStatusFilter('Open')">
         <div class="kpi-label"><i class="ti ti-clipboard-list"></i> Open</div>
         <div class="kpi-value" style="color:var(--blue);" id="kpiOpen">—</div>
         <div class="kpi-sub">Wacht op uitvoering</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card" id="kpiCardBezig" onclick="setStatusFilter('In uitvoering')">
         <div class="kpi-label" style="color:var(--amber-text);"><i class="ti ti-player-play"></i> In uitvoering</div>
         <div class="kpi-value" style="color:var(--amber);" id="kpiBezig">—</div>
         <div class="kpi-sub">Actief bezig</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card" id="kpiCardLate" onclick="setVerlopenFilter(true)">
         <div class="kpi-label" style="color:var(--red-text);"><i class="ti ti-alert-circle"></i> Verlopen</div>
         <div class="kpi-value" style="color:var(--red);" id="kpiLate">—</div>
         <div class="kpi-sub">Deadline overschreden</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card" id="kpiCardDone" onclick="setStatusFilter('Voltooid')">
         <div class="kpi-label" style="color:var(--green-text);"><i class="ti ti-circle-check"></i> Voltooid</div>
         <div class="kpi-value" style="color:var(--green);" id="kpiDone">—</div>
         <div class="kpi-sub">Afgerond</div>
       </div>
+      <div class="kpi-card" id="kpiCardUnassigned" onclick="setUnassignedFilter()">
+        <div class="kpi-label"><i class="ti ti-user-off"></i> Niet toegewezen</div>
+        <div class="kpi-value" style="color:var(--text-2);" id="kpiUnassigned">—</div>
+        <div class="kpi-sub">Zonder eigenaar</div>
+      </div>
+    </div>
+
+    <!-- Verlopen filter banner -->
+    <div id="verlopenBanner" style="display:none;align-items:center;gap:10px;background:var(--red-bg);border-bottom:0.5px solid var(--red);padding:8px 24px;font-size:12px;color:var(--red-text);">
+      <i class="ti ti-filter"></i>
+      <span>Filter actief: alleen <strong>verlopen werkorders</strong></span>
+      <button onclick="setVerlopenFilter(false)" style="margin-left:auto;font-size:11px;padding:2px 10px;border-radius:8px;border:0.5px solid var(--red);background:transparent;color:var(--red-text);cursor:pointer;">Filter wissen</button>
     </div>
 
     <!-- Filter bar -->
@@ -297,7 +353,10 @@
   <div class="drawer">
     <div class="drawer-header">
       <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
-      <div class="drawer-title" id="drawerTitle">Werkorder</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="drawer-title" id="drawerTitle">Werkorder</div>
+        <span class="afgesloten-badge" id="afgeslotenBadge" style="display:none;"><i class="ti ti-lock" style="font-size:11px;"></i> Afgesloten</span>
+      </div>
       <div style="display:flex;gap:8px;">
         <button type="button" class="btn" id="drawerStatusBtn" onclick="openStatusFromDrawer()"><i class="ti ti-refresh"></i> Status wijzigen</button>
       </div>
@@ -322,12 +381,14 @@
       <button type="button" class="drawer-tab active" onclick="switchDrawerTab('activity',this)"><i class="ti ti-list-details"></i> Activiteit</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('parts',this)"><i class="ti ti-box"></i> Onderdelen</button>
       <button type="button" class="drawer-tab" onclick="switchDrawerTab('notes',this)"><i class="ti ti-note"></i> Notities</button>
+      <button type="button" class="drawer-tab" onclick="switchDrawerTab('verloop',this)"><i class="ti ti-timeline"></i> Verloop</button>
     </div>
 
     <div class="drawer-tab-content">
       <div class="drawer-tab-pane active" id="tabActivity"></div>
       <div class="drawer-tab-pane" id="tabParts"><div style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="font-size:24px;"></i></div></div>
       <div class="drawer-tab-pane" id="tabNotes"></div>
+      <div class="drawer-tab-pane" id="tabVerloop"></div>
     </div>
 
     <div class="drawer-footer">
@@ -389,6 +450,7 @@
         <div class="form-field">
           <label class="form-label">Toegewezen aan</label>
           <select class="form-input" id="fAssigned">
+            <option value="">— Niet toegewezen —</option>
             <option>J. de Vries</option>
             <option>M. Bakker</option>
             <option>P. Jansen</option>
@@ -455,7 +517,94 @@
   </div>
 </div>
 
+<!-- Modal: Werkorder afronden -->
+<div class="modal-overlay" id="afrondModalOverlay" onclick="if(event.target===this)closeAfrondModal()">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Werkorder afronden</div>
+        <div style="margin-top:2px;font-size:11px;color:var(--text-3);" id="afrondWoNum"></div>
+      </div>
+      <button class="modal-close" onclick="closeAfrondModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field full">
+        <label class="form-label">Afrondingsnotitie <span style="color:var(--red-text);">*</span></label>
+        <textarea class="form-input" id="afrondNotitie" rows="3" placeholder="Wat is er gedaan? Wat is de uitkomst?" style="resize:vertical;"></textarea>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">Verplicht — wordt toegevoegd aan de werkorderhistorie.</div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Afgesloten door</label>
+        <input class="form-input" id="afrondDoor" type="text" placeholder="Jouw naam" />
+      </div>
+
+      <!-- Vervolgwerkorder toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border-radius:var(--radius-sm);border:0.5px solid var(--border);">
+        <div>
+          <div style="font-size:13px;font-weight:500;">Vervolgwerkorder aanmaken</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Is er een vervolgactie nodig na deze werkorder?</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="afrondVervolgToggle" onchange="toggleVervolgBlok()" style="width:16px;height:16px;cursor:pointer;" />
+          <span style="font-size:12px;color:var(--text-2);">Ja</span>
+        </label>
+      </div>
+
+      <!-- Vervolgwerkorder velden (verborgen tenzij toggle aan) -->
+      <div id="vervolgBlok" style="display:none;padding:14px;background:var(--bg);border-radius:var(--radius-sm);border:0.5px solid var(--border);display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;">Vervolgwerkorder</div>
+        <div class="form-field full">
+          <label class="form-label">Omschrijving</label>
+          <textarea class="form-input" id="vervolgDesc" rows="2" style="resize:vertical;"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Prioriteit</label>
+            <select class="form-input" id="vervolgPrio">
+              <option value="Laag">Laag</option>
+              <option value="Normaal" selected>Normaal</option>
+              <option value="Hoog">Hoog</option>
+              <option value="Kritiek">Kritiek</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Deadline</label>
+            <input class="form-input" id="vervolgDue" type="date" />
+          </div>
+        </div>
+        <div class="form-field full">
+          <label class="form-label">Toegewezen aan</label>
+          <select class="form-input" id="vervolgAssigned">
+            <option value="">— Niet toegewezen —</option>
+            <option>J. de Vries</option>
+            <option>M. Bakker</option>
+            <option>P. Jansen</option>
+            <option>R. Smit</option>
+            <option>K. van Dam</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAfrondModal()">Annuleren</button>
+      <button class="btn primary" id="afrondSaveBtn" onclick="saveAfronden()"><i class="ti ti-check"></i> Werkorder afsluiten</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  function toggleNavOnderhoud() {
+    const g = document.getElementById('navOnderhoud');
+    g.classList.toggle('collapsed');
+    localStorage.setItem('navOnderhoud', g.classList.contains('collapsed') ? '1' : '0');
+  }
+  (function() {
+    const g = document.getElementById('navOnderhoud');
+    if (!g) return;
+    if (!g.querySelector('.active') && localStorage.getItem('navOnderhoud') === '1') g.classList.add('collapsed');
+  })();
+</script>
 <script>
   const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
@@ -501,10 +650,12 @@
     const done   = data.filter(w => w.status === 'Voltooid').length;
     const now    = new Date();
     const late   = data.filter(w => w.due_date && new Date(w.due_date) < now && w.status !== 'Voltooid' && w.status !== 'Geannuleerd').length;
-    document.getElementById('kpiOpen').textContent  = open;
-    document.getElementById('kpiBezig').textContent = bezig;
-    document.getElementById('kpiDone').textContent  = done;
-    document.getElementById('kpiLate').textContent  = late;
+    const unassigned = data.filter(w => !w.assigned_to && (w.status === 'Open' || w.status === 'In uitvoering')).length;
+    document.getElementById('kpiOpen').textContent       = open;
+    document.getElementById('kpiBezig').textContent      = bezig;
+    document.getElementById('kpiDone').textContent       = done;
+    document.getElementById('kpiLate').textContent       = late;
+    document.getElementById('kpiUnassigned').textContent = unassigned;
     document.getElementById('topbarSub').textContent = `${data.length} werkorders geladen`;
     const badge = document.getElementById('sidebarBadge');
     badge.textContent = late || '';
@@ -522,8 +673,9 @@
       const asset = allAssets.find(a => a.asset_id === w.asset_id);
       const [dc, dt] = dueCls(w.due_date, w.status);
       const created = new Date(w.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short' });
-      return `<tr class="clickable-row" data-woid="${w.id}">
-        <td class="wo-number">${w.wo_number}</td>
+      const isAfgesloten = w.status === 'Voltooid' || w.status === 'Geannuleerd';
+      return `<tr class="clickable-row${isAfgesloten ? ' row-afgesloten' : ''}" data-woid="${w.id}">
+        <td class="wo-number">${isAfgesloten ? '<i class="ti ti-lock" style="font-size:10px;color:var(--text-3);margin-right:4px;"></i>' : ''}${w.wo_number}</td>
         <td>
           <div class="wo-desc">${w.description}</div>
           ${asset ? `<div class="wo-asset"><i class="ti ti-building-factory-2" style="font-size:10px;"></i> ${asset.name} · ${asset.asset_id}</div>` : ''}
@@ -534,19 +686,19 @@
         <td style="font-size:12px;">${w.assigned_to||'—'}</td>
         <td><span class="${dc}">${dt}</span></td>
         <td style="font-size:11px;color:var(--text-3);">${created}</td>
-        <td><button type="button" class="action-btn" onclick="event.stopPropagation();openStatusModal(event,'${w.id}')"><i class="ti ti-refresh" style="font-size:12px;"></i> Status</button></td>
+        <td>${isAfgesloten ? '' : `<button type="button" class="action-btn" onclick="event.stopPropagation();openStatusModal(event,'${w.id}')"><i class="ti ti-refresh" style="font-size:12px;"></i> Status</button>`}</td>
       </tr>`;
     }).join('');
     document.getElementById('footerCount').textContent = `${data.length} werkorder${data.length !== 1 ? 's' : ''}`;
   }
 
-  function toggleChip(btn) { btn.classList.toggle('active'); filterTable(); }
+  function toggleChip(btn) { btn.classList.toggle('active'); clearKpiHighlight(); filterVerlopen = false; filterUnassigned = false; document.getElementById('verlopenBanner').style.display = 'none'; filterTable(); }
 
   /* ── Sortering ── */
   const prioOrder = { 'Kritiek': 0, 'Hoog': 1, 'Normaal': 2, 'Laag': 3 };
   const statusOrder = { 'Open': 0, 'In uitvoering': 1, 'Wacht op onderdelen': 2, 'Voltooid': 3, 'Geannuleerd': 4 };
-  let sortCol = 'created_at';
-  let sortDir = 'desc';
+  let sortCol = 'due_date';
+  let sortDir = 'asc';
 
   function sortBy(col) {
     if (sortCol === col) {
@@ -583,6 +735,83 @@
     });
   }
 
+  let filterVerlopen = false;
+  let filterUnassigned = false;
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  function clearKpiHighlight() {
+    ['kpiCardOpen','kpiCardBezig','kpiCardLate','kpiCardDone','kpiCardUnassigned'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active-filter');
+    });
+  }
+
+  function setUnassignedFilter() {
+    filterUnassigned = true;
+    filterVerlopen = false;
+    filterDatum = null;
+    clearKpiHighlight();
+    document.getElementById('kpiCardUnassigned')?.classList.add('active-filter');
+    document.getElementById('verlopenBanner').style.display = 'none';
+    document.querySelectorAll('#statusChips .status-chip').forEach(c => c.classList.remove('active'));
+    document.querySelector('#statusChips .status-chip[data-status="Open"]')?.classList.add('active');
+    document.querySelector('#statusChips .status-chip[data-status="In uitvoering"]')?.classList.add('active');
+    filterTable();
+  }
+
+  function setVerlopenFilter(active) {
+    filterVerlopen = active;
+    filterUnassigned = false;
+    clearKpiHighlight();
+    if (active) {
+      document.getElementById('kpiCardLate')?.classList.add('active-filter');
+      // deactiveer status chips zodat verlopen filter alleen telt
+      document.querySelectorAll('#statusChips .status-chip').forEach(c => c.classList.remove('active'));
+    }
+    const banner = document.getElementById('verlopenBanner');
+    if (banner) banner.style.display = active ? 'flex' : 'none';
+    filterTable();
+  }
+
+  let filterDatum = null;
+
+  function setDatumFilter(datum) {
+    filterDatum = datum;
+    filterVerlopen = false;
+    filterUnassigned = false;
+    document.getElementById('verlopenBanner').style.display = 'none';
+    clearKpiHighlight();
+    document.querySelectorAll('#statusChips .status-chip').forEach(c => c.classList.remove('active'));
+    const banner = document.getElementById('verlopenBanner');
+    if (banner) {
+      banner.style.display = 'flex';
+      banner.style.background = 'var(--blue-bg)';
+      banner.style.borderColor = 'var(--accent)';
+      banner.style.color = 'var(--blue-text)';
+      banner.querySelector('span').innerHTML = 'Filter actief: <strong>gepland vandaag</strong>';
+      banner.querySelector('button').style.borderColor = 'var(--accent)';
+      banner.querySelector('button').style.color = 'var(--blue-text)';
+      banner.querySelector('button').onclick = () => { filterDatum = null; banner.style.display = 'none'; filterTable(); };
+    }
+    filterTable();
+  }
+
+  function setStatusFilter(status) {
+    filterVerlopen = false;
+    filterUnassigned = false;
+    document.getElementById('verlopenBanner').style.display = 'none';
+    clearKpiHighlight();
+    // activeer alleen de bijbehorende chip
+    document.querySelectorAll('#statusChips .status-chip').forEach(c => c.classList.remove('active'));
+    const chip = document.querySelector(`#statusChips .status-chip[data-status="${status}"]`);
+    if (chip) chip.classList.add('active');
+    // highlight de kaart
+    const cardMap = { 'Open': 'kpiCardOpen', 'In uitvoering': 'kpiCardBezig', 'Voltooid': 'kpiCardDone' };
+    const cardId = cardMap[status];
+    if (cardId) document.getElementById(cardId)?.classList.add('active-filter');
+    filterTable();
+  }
+
   function filterTable() {
     const q  = document.getElementById('searchInput').value.toLowerCase();
     const pr = document.getElementById('filterPrio').value;
@@ -591,10 +820,15 @@
     const filtered = allWerkorders.filter(w => {
       const asset = allAssets.find(a => a.asset_id === w.asset_id);
       const matchQ = !q || w.wo_number.toLowerCase().includes(q) || w.description.toLowerCase().includes(q) || (asset && asset.name.toLowerCase().includes(q));
+      const isOverdue = w.due_date && w.due_date <= todayStr && w.status !== 'Voltooid' && w.status !== 'Geannuleerd';
+      const isVandaag = w.due_date === filterDatum;
       return matchQ &&
         (!activeStatuses.length || activeStatuses.includes(w.status)) &&
         (!pr || w.priority === pr) &&
-        (!tp || w.wo_type === tp);
+        (!tp || w.wo_type === tp) &&
+        (!filterVerlopen || isOverdue) &&
+        (!filterDatum || isVandaag) &&
+        (!filterUnassigned || !w.assigned_to);
     });
     renderTable(sortData(filtered));
   }
@@ -694,42 +928,262 @@
           <div class="drawer-value muted">${created}</div>
         </div>
       </div>
-      ${wo.notes ? `<div class="drawer-notes-box">${wo.notes}</div>` : ''}`;
+      ${wo.parent_wo_id ? `<div><button type="button" class="parent-wo-badge" id="parentWoBadge" onclick="navigateToParent()"><i class="ti ti-arrow-up"></i> Laden…</button></div>` : ''}
+      ${filteredNotes(wo) ? `<div class="drawer-notes-box">${filteredNotes(wo)}</div>` : ''}`;
 
-    // Activiteit tab
-    document.getElementById('tabActivity').innerHTML = `
-      <div class="activity-item">
-        <div class="activity-dot"></div>
-        <div class="activity-body">
-          <div class="activity-text">Werkorder aangemaakt</div>
-          <div class="activity-time">${new Date(wo.created_at).toLocaleString('nl-NL')}</div>
-        </div>
-      </div>
-      ${wo.status !== 'Open' ? `<div class="activity-item">
-        <div class="activity-dot" style="background:var(--amber);"></div>
-        <div class="activity-body">
-          <div class="activity-text">Status gewijzigd naar "${wo.status}"</div>
-          <div class="activity-time">—</div>
-        </div>
-      </div>` : ''}`;
+    // Laad parent WO badge async
+    if (wo.parent_wo_id) {
+      sb.from('werkorders').select('id,wo_number,description').eq('id', wo.parent_wo_id).single().then(({ data: p }) => {
+        const badge = document.getElementById('parentWoBadge');
+        if (badge && p) {
+          badge._parentId = p.id;
+          badge.innerHTML = `<i class="ti ti-arrow-up"></i> Vervolg op ${p.wo_number} — ${p.description}`;
+        }
+      });
+    }
+
+    // Activiteit tab — laden uit werkorder_activity tabel
+    document.getElementById('tabActivity').innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-3);">Laden…</div>';
+    loadActivity(wo);
 
     // Notities tab
     document.getElementById('tabNotes').innerHTML = wo.notes
       ? `<p style="font-size:13px;color:var(--text-2);line-height:1.7;">${wo.notes}</p>`
       : `<p style="font-size:12px;color:var(--text-3);text-align:center;padding:32px 0;">Geen notities.</p>`;
 
-    // Footer knoppen tonen/verbergen
-    document.getElementById('btnComplete').style.display = ['Voltooid','Geannuleerd'].includes(wo.status) ? 'none' : '';
+    // Afgesloten-badge en knoppen blokkeren zonder layout te verschuiven
+    const isAfgeslotenWO = wo.status === 'Voltooid' || wo.status === 'Geannuleerd';
+    document.getElementById('afgeslotenBadge').style.display        = isAfgeslotenWO ? 'inline-flex' : 'none';
+    document.getElementById('drawerStatusBtn').disabled             = isAfgeslotenWO;
+    document.getElementById('drawerStatusBtn').style.opacity        = isAfgeslotenWO ? '0.35' : '';
+    document.getElementById('btnComplete').disabled                  = isAfgeslotenWO;
+    document.getElementById('btnComplete').style.opacity            = isAfgeslotenWO ? '0.35' : '';
+    const btnStart = document.querySelector('.drawer-footer .btn.primary');
+    if (btnStart) { btnStart.disabled = isAfgeslotenWO; btnStart.style.opacity = isAfgeslotenWO ? '0.35' : ''; }
 
-    // Reset tabs
-    document.querySelectorAll('.drawer-tab').forEach((b,i) => b.classList.toggle('active', i===0));
-    document.querySelectorAll('.drawer-tab-pane').forEach((p,i) => p.classList.toggle('active', i===0));
+    // Onthoud actieve tab als drawer al open is, anders terug naar Activiteit
+    const drawerAlOpen = document.getElementById('drawerOverlay').classList.contains('open');
+    const tabs = [...document.querySelectorAll('.drawer-tab')];
+    const actieveTabIndex = drawerAlOpen ? tabs.findIndex(b => b.classList.contains('active')) : 0;
+    const herstelIndex = actieveTabIndex >= 0 ? actieveTabIndex : 0;
+    tabs.forEach((b,i) => b.classList.toggle('active', i === herstelIndex));
+    document.querySelectorAll('.drawer-tab-pane').forEach((p,i) => p.classList.toggle('active', i === herstelIndex));
 
     loadDrawerParts(wo.id);
+    loadVerloop(wo);
     document.getElementById('drawerOverlay').classList.add('open');
   }
 
+  function filteredNotes(wo) {
+    if (!wo.notes) return '';
+    // Verwijder automatisch gegenereerde "Vervolg op WO-..." eerste regel als parent_wo_id bestaat (wordt getoond als badge)
+    if (wo.parent_wo_id) {
+      return wo.notes.replace(/^Vervolg op WO-\d{4}-\d+\n?/, '').trim();
+    }
+    return wo.notes;
+  }
+
+  function navigateToParent() {
+    const badge = document.getElementById('parentWoBadge');
+    if (badge && badge._parentId) openDrawer(badge._parentId);
+  }
+
+  async function loadVerloop(wo) {
+    const pane = document.getElementById('tabVerloop');
+    pane.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-3);">Laden…</div>';
+
+    const [parentRes, childrenRes] = await Promise.all([
+      wo.parent_wo_id
+        ? sb.from('werkorders').select('id,wo_number,description,status,completed_at,completed_by').eq('id', wo.parent_wo_id).single()
+        : Promise.resolve({ data: null }),
+      sb.from('werkorders').select('id,wo_number,description,status,created_at').eq('parent_wo_id', wo.id),
+    ]);
+    const parent   = parentRes.data;
+    const children = childrenRes.data || [];
+
+    // ── Keten ──
+    const ketenItems = [];
+    if (parent) ketenItems.push({ wo: parent, type: 'parent' });
+    ketenItems.push({ wo, type: 'current' });
+    children.forEach(c => ketenItems.push({ wo: c, type: 'child' }));
+
+    const ketenHTML = ketenItems.map((item, i) => {
+      const isCurrent = item.type === 'current';
+      const label = item.type === 'parent' ? 'Vorige WO' : item.type === 'child' ? 'Vervolg' : 'Huidig';
+      const btn = isCurrent
+        ? `<button class="verloop-node-btn current" disabled><i class="ti ti-clipboard-list" style="font-size:13px;"></i>${item.wo.wo_number}</button>`
+        : `<button class="verloop-node-btn" onclick="openDrawer('${item.wo.id}')"><i class="ti ti-clipboard-list" style="font-size:13px;"></i>${item.wo.wo_number}</button>`;
+      const arrow = i < ketenItems.length - 1 ? '<div class="verloop-arrow">→</div>' : '';
+      return `<div style="display:flex;align-items:center;gap:4px;">
+        <div class="verloop-node">
+          ${btn}
+          <span class="verloop-node-label">${label} · ${item.wo.description.length > 28 ? item.wo.description.slice(0,28)+'…' : item.wo.description}</span>
+        </div>
+        ${arrow}
+      </div>`;
+    }).join('');
+
+    // ── Tijdlijn ──
+    const events = [];
+
+    // Aangemaakt
+    events.push({
+      color: 'var(--text-3)',
+      title: 'Werkorder aangemaakt',
+      time: new Date(wo.created_at).toLocaleString('nl-NL'),
+      sub: null,
+    });
+
+    // Vervolg op (als er een parent is)
+    if (parent) {
+      events.push({
+        color: 'var(--purple)',
+        title: `Vervolg op ${parent.wo_number}`,
+        time: parent.completed_at ? `Vorige WO afgesloten op ${new Date(parent.completed_at).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' })}` : '',
+        sub: parent.completed_by ? `Door ${parent.completed_by}` : null,
+      });
+    }
+
+    // Status tussenstand
+    if (wo.status === 'In uitvoering' || wo.status === 'Wacht op onderdelen') {
+      events.push({
+        color: 'var(--amber)',
+        title: `Status: ${wo.status}`,
+        time: '',
+        sub: null,
+      });
+    }
+
+    // Afgerond
+    if (wo.status === 'Voltooid' && wo.completed_at) {
+      const afrondNota = wo.notes ? wo.notes.split('\n\n').filter(l => l.startsWith('[Afgerond')).join('\n') : null;
+      events.push({
+        color: 'var(--green)',
+        title: `Afgesloten${wo.completed_by ? ` door ${wo.completed_by}` : ''}`,
+        time: new Date(wo.completed_at).toLocaleString('nl-NL'),
+        sub: afrondNota || null,
+      });
+    } else {
+      events.push({
+        color: 'var(--border-strong)',
+        title: 'Nog niet afgesloten',
+        time: wo.due_date ? `Deadline: ${new Date(wo.due_date).toLocaleDateString('nl-NL', { day:'numeric', month:'long', year:'numeric' })}` : 'Geen deadline ingesteld',
+        sub: null,
+      });
+    }
+
+    // Vervolgwerkorders
+    children.forEach(c => {
+      events.push({
+        color: 'var(--blue)',
+        title: `Vervolgwerkorder aangemaakt: ${c.wo_number}`,
+        time: new Date(c.created_at).toLocaleString('nl-NL'),
+        sub: c.description,
+      });
+    });
+
+    const timelineHTML = events.map(ev => `
+      <div class="verloop-event">
+        <div class="verloop-dot" style="background:${ev.color};box-shadow:0 0 0 1.5px ${ev.color};"></div>
+        <div class="verloop-event-body">
+          <div class="verloop-event-title">${ev.title}</div>
+          ${ev.time ? `<div class="verloop-event-time">${ev.time}</div>` : ''}
+          ${ev.sub ? `<div class="verloop-event-sub">${ev.sub}</div>` : ''}
+        </div>
+      </div>`).join('');
+
+    pane.innerHTML = `
+      <div class="verloop-wrap">
+        <div>
+          <div class="verloop-section-title">WO keten</div>
+          <div class="verloop-keten">${ketenHTML}</div>
+        </div>
+        <div>
+          <div class="verloop-section-title">Tijdlijn</div>
+          <div class="verloop-timeline">${timelineHTML}</div>
+        </div>
+      </div>`;
+  }
+
   function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('open'); drawerWO = null; }
+
+  async function logActivity(woId, type, { old_status, new_status, notitie, gedaan_door } = {}) {
+    const { error } = await sb.from('werkorder_activity').insert({
+      wo_id: woId, type,
+      old_status:  old_status  || null,
+      new_status:  new_status  || null,
+      notitie:     notitie     || null,
+      gedaan_door: gedaan_door || null,
+    });
+    if (error) {
+      console.error('logActivity fout:', error.message, { woId, type });
+      showToast(`Activiteit kon niet worden opgeslagen: ${error.message}`);
+    }
+  }
+
+  async function loadActivity(wo) {
+    const pane = document.getElementById('tabActivity');
+    const { data: acts } = await sb.from('werkorder_activity')
+      .select('*').eq('wo_id', wo.id).order('created_at', { ascending: true });
+
+    const typeConfig = {
+      aangemaakt:                 { color: 'var(--text-3)',      icon: 'ti-plus',         label: 'Werkorder aangemaakt' },
+      status_gewijzigd:           { color: 'var(--amber)',       icon: 'ti-refresh',      label: 'Status gewijzigd' },
+      gestart:                    { color: 'var(--amber)',       icon: 'ti-player-play',  label: 'Uitvoering gestart' },
+      afgerond:                   { color: 'var(--green)',       icon: 'ti-circle-check', label: 'Werkorder afgesloten' },
+      vervolgwerkorder_aangemaakt:{ color: 'var(--blue)',        icon: 'ti-clipboard-plus','label': 'Vervolgwerkorder aangemaakt' },
+    };
+
+    // Geen activity-records — werkorder is aangemaakt vóór de activiteitsregistratie
+    if (!acts || !acts.length) {
+      pane.innerHTML = `
+        <div class="verloop-wrap">
+          <div class="verloop-timeline">
+            <div class="verloop-event">
+              <div class="verloop-dot" style="background:var(--text-3);box-shadow:0 0 0 1.5px var(--text-3);"></div>
+              <div class="verloop-event-body">
+                <div class="verloop-event-title">Werkorder aangemaakt</div>
+                <div class="verloop-event-time">${new Date(wo.created_at).toLocaleString('nl-NL')}</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-3);padding-top:4px;">Activiteiten worden bijgehouden vanaf de volgende statuswijziging.</div>
+        </div>`;
+      return;
+    }
+
+    const events = acts.map(a => {
+      const cfg = typeConfig[a.type] || { color:'var(--text-3)', icon:'ti-dot', label: a.type };
+      let title = cfg.label;
+      if (a.type === 'status_gewijzigd' && a.old_status && a.new_status) {
+        title = `Status: ${a.old_status} → ${a.new_status}`;
+        const statusColor = { 'In uitvoering':'var(--amber)','Wacht op onderdelen':'var(--purple)','Voltooid':'var(--green)','Geannuleerd':'var(--text-3)', 'Open':'var(--blue)' };
+        cfg.color = statusColor[a.new_status] || 'var(--text-3)';
+      }
+      if (a.type === 'afgerond' && a.gedaan_door) title = `Afgesloten door ${a.gedaan_door}`;
+      return {
+        color: cfg.color,
+        icon:  cfg.icon,
+        title,
+        time: new Date(a.created_at).toLocaleString('nl-NL'),
+        sub:  a.notitie || null,
+      };
+    });
+
+    pane.innerHTML = `<div class="verloop-wrap"><div class="verloop-timeline">${renderActivityEvents(events)}</div></div>`;
+  }
+
+  function renderActivityEvents(events) {
+    return events.map(ev => `
+      <div class="verloop-event">
+        <div class="verloop-dot" style="background:${ev.color};box-shadow:0 0 0 1.5px ${ev.color};"></div>
+        <div class="verloop-event-body">
+          <div class="verloop-event-title">${ev.title}</div>
+          ${ev.time ? `<div class="verloop-event-time">${ev.time}</div>` : ''}
+          ${ev.sub  ? `<div class="verloop-event-sub">${ev.sub}</div>`  : ''}
+        </div>
+      </div>`).join('');
+  }
 
   async function loadDrawerParts(woId) {
     const pane = document.getElementById('tabParts');
@@ -786,16 +1240,133 @@
 
   async function markInProgress() {
     if (!drawerWO || drawerWO.status === 'In uitvoering') return;
+    const oldStatus = drawerWO.status;
     await sb.from('werkorders').update({ status: 'In uitvoering' }).eq('id', drawerWO.id);
+    await logActivity(drawerWO.id, 'gestart', { old_status: oldStatus, new_status: 'In uitvoering' });
     await loadData();
     openDrawer(drawerWO.id);
   }
 
-  async function markComplete() {
+  function markComplete() {
     if (!drawerWO) return;
-    await sb.from('werkorders').update({ status: 'Voltooid', completed_at: new Date().toISOString() }).eq('id', drawerWO.id);
-    await loadData();
+    // Prefill afrondingsmodal
+    document.getElementById('afrondWoNum').textContent = drawerWO.wo_number;
+    document.getElementById('afrondNotitie').value = '';
+    document.getElementById('afrondDoor').value = '';
+    document.getElementById('afrondVervolgToggle').checked = false;
+    document.getElementById('vervolgBlok').style.display = 'none';
+    document.getElementById('vervolgDesc').value = `Vervolg: ${drawerWO.description}`;
+    document.getElementById('vervolgPrio').value = 'Normaal';
+    document.getElementById('vervolgDue').value = '';
+    document.getElementById('vervolgAssigned').value = '';
+    document.getElementById('afrondModalOverlay').classList.add('open');
+  }
+
+  function toggleVervolgBlok() {
+    const show = document.getElementById('afrondVervolgToggle').checked;
+    document.getElementById('vervolgBlok').style.display = show ? 'flex' : 'none';
+  }
+
+  function closeAfrondModal() {
+    document.getElementById('afrondModalOverlay').classList.remove('open');
+  }
+
+  async function saveAfronden() {
+    const notitie = document.getElementById('afrondNotitie').value.trim();
+    if (!notitie) {
+      document.getElementById('afrondNotitie').style.borderColor = 'var(--red)';
+      document.getElementById('afrondNotitie').focus();
+      return;
+    }
+    document.getElementById('afrondNotitie').style.borderColor = '';
+
+    const btn = document.getElementById('afrondSaveBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
+
+    const door = document.getElementById('afrondDoor').value.trim() || 'Onbekend';
+    const nu = new Date();
+    const datumStr = nu.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+    const afrondingsTekst = `\n\n[Afgerond door ${door} op ${datumStr}]: ${notitie}`;
+    const bestaandeNotities = drawerWO.notes || '';
+
+    const updatePayload = {
+      status:       'Voltooid',
+      completed_at: nu.toISOString(),
+      completed_by: door,
+      notes:        bestaandeNotities + afrondingsTekst,
+    };
+
+    const { error } = await sb.from('werkorders').update(updatePayload).eq('id', drawerWO.id);
+    if (error) {
+      alert('Fout bij afsluiten: ' + error.message);
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Werkorder afsluiten';
+      return;
+    }
+
+    // Vervolgwerkorder aanmaken indien gewenst
+    let vervolgWoNum = null;
+    if (document.getElementById('afrondVervolgToggle').checked) {
+      const vervolgDesc = document.getElementById('vervolgDesc').value.trim();
+      if (vervolgDesc) {
+        // MAX WO-nummer ophalen
+        const { data: last } = await sb.from('werkorders').select('wo_number').order('created_at', { ascending: false }).limit(1);
+        let nextSeq = 1;
+        if (last && last.length > 0) {
+          const match = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
+          if (match) nextSeq = parseInt(match[1], 10) + 1;
+        }
+        const jaar = nu.getFullYear();
+        vervolgWoNum = `WO-${jaar}-${String(nextSeq).padStart(4, '0')}`;
+
+        const vervolgPayload = {
+          wo_number:    vervolgWoNum,
+          description:  vervolgDesc,
+          asset_id:     drawerWO.asset_id || null,
+          wo_type:      drawerWO.wo_type || 'Correctief',
+          priority:     document.getElementById('vervolgPrio').value,
+          due_date:     document.getElementById('vervolgDue').value || null,
+          assigned_to:  document.getElementById('vervolgAssigned').value || null,
+          notes:        `Vervolg op ${drawerWO.wo_number}`,
+          status:       'Open',
+          parent_wo_id: drawerWO.id,
+        };
+        await sb.from('werkorders').insert(vervolgPayload);
+      }
+    }
+
+    // Log afsluiting
+    await logActivity(drawerWO.id, 'afgerond', { old_status: drawerWO.status, new_status: 'Voltooid', notitie, gedaan_door: door });
+
+    // Log vervolgwerkorder als die aangemaakt is
+    if (vervolgWoNum) {
+      await logActivity(drawerWO.id, 'vervolgwerkorder_aangemaakt', { notitie: vervolgWoNum });
+    }
+
+    const afgesloten_nummer = drawerWO.wo_number;
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Werkorder afsluiten';
+    closeAfrondModal();
     closeDrawer();
+    await loadData();
+
+    // Bevestigingsmelding
+    const msg = vervolgWoNum
+      ? `${afgesloten_nummer} afgesloten. Vervolgwerkorder ${vervolgWoNum} aangemaakt.`
+      : `${afgesloten_nummer} afgesloten.`;
+    showToast(msg);
+  }
+
+  function showToast(msg) {
+    let toast = document.getElementById('toastMsg');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toastMsg';
+      toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.2);transition:opacity 0.3s;';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
   }
 
   /* ── Status modal ── */
@@ -804,6 +1375,7 @@
   function openStatusModal(event, woId) {
     const wo = allWerkorders.find(w => w.id === woId);
     if (!wo) return;
+    if (wo.status === 'Voltooid' || wo.status === 'Geannuleerd') return;
     statusWoId = woId;
     document.getElementById('statusWoNum').textContent = wo.wo_number;
     document.getElementById('statusSelect').value = wo.status;
@@ -822,11 +1394,15 @@
     const btn = document.getElementById('saveStatusBtn');
     btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
     const newStatus = document.getElementById('statusSelect').value;
+    const oldWo = allWerkorders.find(w => w.id === statusWoId);
+    const oldStatus = oldWo?.status || null;
+    const notitie = document.getElementById('statusNote').value.trim() || null;
     const payload = { status: newStatus };
     if (newStatus === 'Voltooid') payload.completed_at = new Date().toISOString();
     const { error } = await sb.from('werkorders').update(payload).eq('id', statusWoId);
     btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Opslaan';
     if (error) { alert('Fout: ' + error.message); return; }
+    await logActivity(statusWoId, 'status_gewijzigd', { old_status: oldStatus, new_status: newStatus, notitie });
     closeStatusModal();
     await loadData();
     if (drawerWO?.id === statusWoId) openDrawer(statusWoId);
@@ -941,6 +1517,10 @@
     btn.disabled = false; btn.innerHTML = '<i class="ti ti-check"></i> Aanmaken';
     if (error) { alert('Fout: ' + error.message); return; }
 
+    if (inserted && inserted[0]) {
+      await logActivity(inserted[0].id, 'aangemaakt', { new_status: 'Open', gedaan_door: payload.assigned_to || null });
+    }
+
     if (pendingParts.length && inserted && inserted[0]) {
       const woId = inserted[0].id;
       const partRows = pendingParts.map(pp => ({
@@ -963,7 +1543,18 @@
     if (row) openDrawer(row.dataset.woid);
   });
 
-  loadData();
+  // toon initiële sorteerrichting
+  document.getElementById('si_due_date').textContent = '↑';
+  const thDue = document.querySelector('th[data-col="due_date"]');
+  if (thDue) thDue.classList.add('sort-active');
+
+  loadData().then(() => {
+    const params = new URLSearchParams(location.search);
+    const woId = params.get('wo');
+    if (woId) openDrawer(woId);
+    if (params.get('filter') === 'verlopen') setVerlopenFilter(true);
+    if (params.get('filter') === 'vandaag') setDatumFilter(todayStr);
+  });
   (async () => {
     try {
       const { count } = await sb.from('storingen').select('id', { count: 'exact', head: true }).in('status', ['Open', 'In behandeling']);

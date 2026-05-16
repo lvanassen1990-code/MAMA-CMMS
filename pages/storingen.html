@@ -128,13 +128,25 @@
   <div class="sidebar-section">Navigatie</div>
   <a href="../index.html" class="nav-item"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
   <a href="assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
-  <a href="werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
   <a href="planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
-  <a href="storingen.html" class="nav-item active"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
-  <a href="onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNavOnderhoud()">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
+      <a href="storingen.html" class="nav-item nav-sub active"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
+      <a href="onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
   <a href="onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
   <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
   <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
   <a href="#" class="nav-item"><i class="ti ti-plug"></i> API & Webhooks</a>
@@ -188,6 +200,13 @@
         <div class="kpi-value" id="kpiMttr">—</div>
         <div class="kpi-sub">Minuten (opgeloste storingen)</div>
       </div>
+    </div>
+
+    <!-- Status filter banner -->
+    <div id="storingFilterBanner" style="display:none;align-items:center;gap:10px;background:var(--red-bg);border-bottom:0.5px solid var(--red);padding:8px 24px;font-size:12px;color:var(--red-text);">
+      <i class="ti ti-filter"></i>
+      <span>Filter actief: alleen <strong id="storingBannerLabel"></strong></span>
+      <button id="storingBannerClear" style="margin-left:auto;font-size:11px;padding:2px 10px;border-radius:8px;border:0.5px solid var(--red);background:transparent;color:var(--red-text);cursor:pointer;">Filter wissen</button>
     </div>
 
     <!-- Filter bar -->
@@ -417,6 +436,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  function toggleNavOnderhoud() {
+    const g = document.getElementById('navOnderhoud');
+    g.classList.toggle('collapsed');
+    localStorage.setItem('navOnderhoud', g.classList.contains('collapsed') ? '1' : '0');
+  }
+  (function() {
+    const g = document.getElementById('navOnderhoud');
+    if (!g) return;
+    if (!g.querySelector('.active') && localStorage.getItem('navOnderhoud') === '1') g.classList.add('collapsed');
+  })();
+</script>
+<script>
   const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -434,6 +465,9 @@
     await loadAssets();
     await loadStoringen();
     updateSidebarBadges();
+    const filter = new URLSearchParams(location.search).get('filter');
+    if (filter === 'open') setStoringFilterFromUrl(['Open'], 'open storingen');
+    else if (filter === 'vandaag') setStoringFilterFromUrl(['Open', 'In behandeling', 'Werkorder aangemaakt'], 'storingen van vandaag');
   }
 
   async function loadAssets() {
@@ -507,6 +541,28 @@
     const status = btn.dataset.status;
     if (activeChips.has(status)) { activeChips.delete(status); btn.classList.remove('active'); }
     else                         { activeChips.add(status);    btn.classList.add('active'); }
+    document.getElementById('storingFilterBanner').style.display = 'none';
+    filterTable();
+  }
+
+  function setStoringFilterFromUrl(statuses, label) {
+    activeChips = new Set(statuses);
+    document.querySelectorAll('.status-chips .status-chip').forEach(c => {
+      if (activeChips.has(c.dataset.status)) c.classList.add('active');
+      else c.classList.remove('active');
+    });
+    const banner = document.getElementById('storingFilterBanner');
+    banner.style.display = 'flex';
+    document.getElementById('storingBannerLabel').textContent = label;
+    document.getElementById('storingBannerClear').onclick = () => {
+      activeChips = new Set(['Open', 'In behandeling', 'Werkorder aangemaakt']);
+      document.querySelectorAll('.status-chips .status-chip').forEach(c => {
+        if (activeChips.has(c.dataset.status)) c.classList.add('active');
+        else c.classList.remove('active');
+      });
+      banner.style.display = 'none';
+      filterTable();
+    };
     filterTable();
   }
 
@@ -563,7 +619,6 @@
     rows.forEach(s => {
       const tr = document.createElement('tr');
       tr.ondblclick = () => openDrawer(s);
-      tr.onclick    = () => openDrawer(s);
       tr.innerHTML = `
         <td><span class="st-number">${s.storing_number}</span></td>
         <td>

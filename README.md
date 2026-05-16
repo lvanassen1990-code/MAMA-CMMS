@@ -10,7 +10,7 @@ MAMA is een moderne, Nederlandstalig CMMS-platform (Computerized Maintenance Man
 
 | Module | Status | Beschrijving |
 |---|---|---|
-| **Dashboard** | ✅ Live | KPI's, machinestatus, AI-assistent, uptime-grafiek |
+| **Dashboard** | ✅ Live | Live KPI's, vandaag-blok, klikbare kaarten, machinestatus, AI-assistent |
 | **Assets** | ✅ Live | Assetbeheer, stamkaart, asset hiërarchie (parent/child boom), drag & drop koppelmodus |
 | **Werkorders** | ✅ Live | WO-beheer met prioriteit, type, onderdelen, statusflow |
 | **Planning** | ✅ Live | Maand/week kalender met WO's en onderhoudsplannen |
@@ -129,6 +129,12 @@ MAMA-CMMS/
 - [x] Asset hiërarchie — parent/child boom, uitklap/inklap, sub-assets tab in drawer
 - [x] Drag & drop koppelmodus — assets visueel koppelen/loskoppelen via slepen
 - [x] Edge-detectie op kaarten — rand = loskoppelen, midden = koppelen
+- [x] Dashboard live data — alle KPI's, machinestatus, WO-lijst, donut uit Supabase
+- [x] Vandaag-blok op dashboard — verlopen WO's, gepland vandaag, nieuwe storingen
+- [x] Klikbare dashboard kaarten — deep links naar modules met URL-parameters
+- [x] URL deep links — werkorders.html?wo=ID, ?filter=verlopen, ?filter=vandaag, assets.html?asset=ID
+- [x] Werkorders KPI-kaarten klikbaar — filteren de lijst direct
+- [x] Team skills — Job (maintenance manager) en Klaas (developer) als vaste teamleden
 
 ### Gepland 🔜
 - [ ] Veiligheidsmeldingen zichtbaar in MAMA desktop
@@ -137,6 +143,7 @@ MAMA-CMMS/
 - [ ] MAMA Field: QR-scan asset koppeling
 - [ ] Rapportages module (MTTR, MTBF, kosten)
 - [ ] Power BI API integratie
+- [ ] KPI-kaarten op storingen en assets pagina ook klikbaar/filterbaar
 
 ---
 
@@ -146,6 +153,9 @@ MAMA-CMMS/
 |---|---|
 | Board / Eigenaar | Leon |
 | Development | Claude (Anthropic) |
+| UX & Gebruikerservaring | Job van der Berg (skill: `/job`) |
+| Code review & Techniek | Klaas de Vries (skill: `/klaas`) |
+| Kwaliteit & Compliance | Ronnie Brouwer (skill: `/ronnie`) |
 
 ---
 

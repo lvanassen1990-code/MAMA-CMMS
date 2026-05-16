@@ -25,7 +25,8 @@
     .chip:hover { background: #e8e8ed; }
 
     .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-    .kpi-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .kpi-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: block; text-decoration: none; color: inherit; transition: border-color 0.15s, box-shadow 0.15s; }
+    a.kpi-card:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.08); }
     .kpi-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
     .kpi-label i { font-size: 13px; }
     .kpi-value { font-size: 26px; font-weight: 500; line-height: 1; }
@@ -74,6 +75,27 @@
     .stat-item { text-align: center; }
     .stat-val  { font-size: 17px; font-weight: 500; }
     .stat-lbl  { font-size: 10px; color: var(--text-3); }
+
+    .vandaag-blok { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 0; }
+    .vandaag-header { font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .vandaag-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 0.5px solid var(--border); text-decoration: none; color: inherit; border-radius: 6px; margin: 0 -6px; padding-left: 6px; padding-right: 6px; transition: background 0.12s; }
+    .vandaag-row:last-child { border-bottom: none; }
+    .vandaag-row:hover { background: var(--bg); }
+    .vandaag-icon { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+    .vandaag-icon.rood   { background: var(--red-bg);   color: var(--red-text); }
+    .vandaag-icon.blauw  { background: var(--blue-bg);  color: var(--blue-text); }
+    .vandaag-icon.groen  { background: var(--green-bg); color: var(--green-text); }
+    .vandaag-icon.amber  { background: var(--amber-bg); color: var(--amber-text); }
+    .vandaag-label { font-size: 12px; flex: 1; }
+    .vandaag-count { font-size: 18px; font-weight: 600; min-width: 28px; text-align: right; }
+    .vandaag-arrow { font-size: 11px; color: var(--text-3); }
+
+    a.wo-row-link, a.asset-row-link, a.bar-row-link {
+      display: flex; text-decoration: none; color: inherit; cursor: pointer;
+      border-radius: 6px; margin: 0 -6px; padding-left: 6px; padding-right: 6px;
+      transition: background 0.12s;
+    }
+    a.wo-row-link:hover, a.asset-row-link:hover, a.bar-row-link:hover { background: var(--bg); }
   </style>
 </head>
 <body>
@@ -93,13 +115,25 @@
   <div class="sidebar-section">Navigatie</div>
   <a href="index.html" class="nav-item active"><i class="ti ti-layout-dashboard"></i> Dashboard</a>
   <a href="pages/assets.html" class="nav-item"><i class="ti ti-building-factory-2"></i> Assets</a>
-  <a href="pages/werkorders.html" class="nav-item"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
   <a href="pages/planning.html" class="nav-item"><i class="ti ti-calendar-event"></i> Planning</a>
-  <a href="pages/storingen.html" class="nav-item"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
-  <a href="pages/onderhoudsplannen.html" class="nav-item"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+  <div class="nav-group" id="navOnderhoud">
+    <div class="nav-group-header" onclick="toggleNavOnderhoud()">
+      <span class="nav-group-header-left"><i class="ti ti-tool"></i> Onderhoud</span>
+      <i class="ti ti-chevron-down nav-group-chevron"></i>
+    </div>
+    <div class="nav-group-body">
+      <a href="pages/werkorders.html" class="nav-item nav-sub"><i class="ti ti-clipboard-list"></i> Werkorders <span class="nav-badge" id="woBadge"></span></a>
+      <a href="pages/storingen.html" class="nav-item nav-sub"><i class="ti ti-alert-triangle"></i> Storingen <span class="nav-badge" id="storingenBadge"></span></a>
+      <a href="pages/onderhoudsplannen.html" class="nav-item nav-sub"><i class="ti ti-clipboard-text"></i> Onderhoudsplannen</a>
+      <a href="pages/werkinstructies.html" class="nav-item nav-sub"><i class="ti ti-list-check"></i> Werkinstructies</a>
+      <a href="pages/meters.html" class="nav-item nav-sub"><i class="ti ti-gauge"></i> Meters</a>
+    </div>
+  </div>
   <a href="pages/onderdelen.html" class="nav-item"><i class="ti ti-box"></i> Onderdelen</a>
   <a href="pages/qc.html" class="nav-item"><i class="ti ti-shield-check"></i> Quality Control</a>
   <a href="#" class="nav-item"><i class="ti ti-chart-bar"></i> Rapportages</a>
+  <div class="sidebar-section" style="margin-top:6px;">Configuratie</div>
+  <a href="pages/instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
 
   <div class="sidebar-section" style="margin-top:6px;">Integraties</div>
   <a href="#" class="nav-item"><i class="ti ti-brand-windows"></i> Power BI</a>
@@ -133,6 +167,29 @@
 
   <div class="content">
 
+    <!-- Vandaag-blok -->
+    <div class="vandaag-blok">
+      <div class="vandaag-header"><i class="ti ti-calendar-today"></i> <span id="vandaagDatum">Vandaag</span></div>
+      <a href="pages/werkorders.html?filter=verlopen" class="vandaag-row" id="vandaagVerlopen">
+        <div class="vandaag-icon rood"><i class="ti ti-clock-exclamation"></i></div>
+        <span class="vandaag-label">Verlopen werkorders</span>
+        <span class="vandaag-count" id="vandaagVerlopenCount">—</span>
+        <span class="vandaag-arrow">→</span>
+      </a>
+      <a href="pages/werkorders.html?filter=vandaag" class="vandaag-row">
+        <div class="vandaag-icon blauw"><i class="ti ti-clipboard-list"></i></div>
+        <span class="vandaag-label">Werkorders gepland vandaag</span>
+        <span class="vandaag-count" id="vandaagWoCount">—</span>
+        <span class="vandaag-arrow">→</span>
+      </a>
+      <a href="pages/storingen.html?filter=vandaag" class="vandaag-row">
+        <div class="vandaag-icon amber"><i class="ti ti-alert-triangle"></i></div>
+        <span class="vandaag-label">Nieuwe storingen vandaag</span>
+        <span class="vandaag-count" id="vandaagPlanCount">—</span>
+        <span class="vandaag-arrow">→</span>
+      </a>
+    </div>
+
     <!-- AI Panel -->
     <div class="ai-panel">
       <div class="ai-icon">AI</div>
@@ -149,30 +206,30 @@
 
     <!-- KPI's -->
     <div class="kpi-grid">
-      <div class="kpi-card">
+      <a href="pages/assets.html" class="kpi-card">
         <div class="kpi-label"><i class="ti ti-building-factory-2"></i> Assets</div>
-        <div class="kpi-value">148</div>
-        <div class="kpi-sub">12 locaties</div>
-        <div class="kpi-trend up">↑ 4 toegevoegd deze maand</div>
-      </div>
-      <div class="kpi-card">
+        <div class="kpi-value" id="kpiAssets">—</div>
+        <div class="kpi-sub" id="kpiAssetsSub">Actief</div>
+        <div class="kpi-trend" id="kpiAssetsTrend"></div>
+      </a>
+      <a href="pages/werkorders.html?filter=verlopen" class="kpi-card">
         <div class="kpi-label"><i class="ti ti-clipboard-list"></i> Werkorders</div>
-        <div class="kpi-value">34</div>
-        <div class="kpi-sub">7 openstaand · 3 verlopen</div>
-        <div class="kpi-trend down">↓ 2 verlopen deadline</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="ti ti-clock"></i> Gem. MTTR</div>
-        <div class="kpi-value">4.2u</div>
-        <div class="kpi-sub">Mean Time To Repair</div>
-        <div class="kpi-trend up">↑ 12% beter dan vorige maand</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label"><i class="ti ti-activity"></i> Uptime</div>
-        <div class="kpi-value">96.4%</div>
-        <div class="kpi-sub">Afgelopen 30 dagen</div>
-        <div class="kpi-trend up">↑ Doel: 95% ✓</div>
-      </div>
+        <div class="kpi-value" id="kpiWo">—</div>
+        <div class="kpi-sub" id="kpiWoSub">Openstaand</div>
+        <div class="kpi-trend" id="kpiWoTrend"></div>
+      </a>
+      <a href="pages/storingen.html?filter=open" class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-alert-triangle"></i> Open storingen</div>
+        <div class="kpi-value" id="kpiStoringen">—</div>
+        <div class="kpi-sub" id="kpiStoringenSub">Actief</div>
+        <div class="kpi-trend" id="kpiStoringenTrend"></div>
+      </a>
+      <a href="pages/assets.html?filter=storing" class="kpi-card">
+        <div class="kpi-label"><i class="ti ti-alert-circle"></i> Assets in storing</div>
+        <div class="kpi-value" id="kpiAssetsStoring">—</div>
+        <div class="kpi-sub">Actieve machinestoring</div>
+        <div class="kpi-trend" id="kpiAssetsStoringTrend"></div>
+      </a>
     </div>
 
     <!-- Werkorders + Uptime -->
@@ -182,21 +239,14 @@
           <div class="card-title"><i class="ti ti-clipboard-list"></i> Actieve werkorders</div>
           <a href="pages/werkorders.html" class="card-action">Alles bekijken →</a>
         </div>
-        <div class="wo-row"><span class="wo-id">WO-041</span><span class="wo-desc">Smering lagerblok lijn 3</span><span class="wo-person">J. de Vries</span><span class="badge badge-progress">Bezig</span></div>
-        <div class="wo-row"><span class="wo-id">WO-042</span><span class="wo-desc">Inspectie hydrauliekpomp</span><span class="wo-person">M. Bakker</span><span class="badge badge-open">Open</span></div>
-        <div class="wo-row"><span class="wo-id">WO-043</span><span class="wo-desc">Vervanging riemset C-04</span><span class="wo-person">P. Jansen</span><span class="badge badge-open">Open</span></div>
-        <div class="wo-row"><span class="wo-id">WO-039</span><span class="wo-desc">Elektrische keuring schakelkast</span><span class="wo-person">R. Smit</span><span class="badge badge-done">Klaar</span></div>
-        <div class="wo-row"><span class="wo-id">WO-038</span><span class="wo-desc">Filter wisselen compressor hal B</span><span class="wo-person">J. de Vries</span><span class="badge badge-done">Klaar</span></div>
+        <div id="woList"><div class="wo-row"><span class="wo-desc" style="color:var(--text-3);">Laden…</span></div></div>
       </div>
       <div class="card">
         <div class="card-header">
-          <div class="card-title"><i class="ti ti-activity"></i> Uptime per locatie</div>
+          <div class="card-title"><i class="ti ti-clipboard-list"></i> Assets met meeste open WO's</div>
+          <a href="pages/assets.html" class="card-action">Alles bekijken →</a>
         </div>
-        <div class="bar-row"><span class="bar-label">Hal A</span><div class="bar-track"><div class="bar-fill" style="width:98%;background:var(--green);"></div></div><span class="bar-val up">98%</span></div>
-        <div class="bar-row"><span class="bar-label">Hal B</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:var(--green);"></div></div><span class="bar-val up">95%</span></div>
-        <div class="bar-row"><span class="bar-label">Hal C</span><div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--amber);"></div></div><span class="bar-val" style="color:var(--amber-text);">88%</span></div>
-        <div class="bar-row"><span class="bar-label">Buitenterr.</span><div class="bar-track"><div class="bar-fill" style="width:91%;background:var(--green);"></div></div><span class="bar-val up">91%</span></div>
-        <div class="bar-row"><span class="bar-label">Kantoor</span><div class="bar-track"><div class="bar-fill" style="width:99%;background:var(--green);"></div></div><span class="bar-val up">99%</span></div>
+        <div id="assetWoList"><div class="bar-row"><span class="bar-label" style="color:var(--text-3);">Laden…</span></div></div>
       </div>
     </div>
 
@@ -207,41 +257,38 @@
           <div class="card-title"><i class="ti ti-building-factory-2"></i> Machinestatus</div>
           <a href="pages/assets.html" class="card-action">Alles bekijken →</a>
         </div>
-        <div class="asset-row"><div class="dot dot-green"></div><div class="asset-info"><div class="asset-name">Compressor C-01</div><div class="asset-loc">Hal A · Lijn 1</div></div><span class="status-badge status-ok">Operationeel</span></div>
-        <div class="asset-row"><div class="dot dot-amber"></div><div class="asset-info"><div class="asset-name">Compressor C-04</div><div class="asset-loc">Hal B · Lijn 2</div></div><span class="status-badge status-warn">Let op</span></div>
-        <div class="asset-row"><div class="dot dot-red"></div><div class="asset-info"><div class="asset-name">Hydrauliekpomp HP-07</div><div class="asset-loc">Hal C · Lijn 3</div></div><span class="status-badge status-crit">Storing</span></div>
-        <div class="asset-row"><div class="dot dot-green"></div><div class="asset-info"><div class="asset-name">Ventilatiesysteem V-02</div><div class="asset-loc">Hal A</div></div><span class="status-badge status-ok">Operationeel</span></div>
-        <div class="asset-row"><div class="dot dot-green"></div><div class="asset-info"><div class="asset-name">Transportband TB-03</div><div class="asset-loc">Hal B · Lijn 1</div></div><span class="status-badge status-ok">Operationeel</span></div>
+        <div id="assetList"><div class="asset-row"><span class="asset-name" style="color:var(--text-3);">Laden…</span></div></div>
       </div>
 
       <div class="card">
         <div class="card-header">
           <div class="card-title"><i class="ti ti-chart-donut"></i> Werkorders deze maand</div>
+          <a href="pages/werkorders.html" class="card-action">Alles bekijken →</a>
         </div>
         <div class="donut-wrap">
           <svg width="90" height="90" viewBox="0 0 90 90">
             <circle cx="45" cy="45" r="34" fill="none" stroke="#f0f0f0" stroke-width="10"/>
-            <circle cx="45" cy="45" r="34" fill="none" stroke="#1D9E75" stroke-width="10"
-              stroke-dasharray="133 81" stroke-dashoffset="0" stroke-linecap="round"
+            <circle id="donutVoltooid" cx="45" cy="45" r="34" fill="none" stroke="#1D9E75" stroke-width="10"
+              stroke-dasharray="0 214" stroke-dashoffset="0" stroke-linecap="round"
               transform="rotate(-90 45 45)"/>
-            <circle cx="45" cy="45" r="34" fill="none" stroke="#EF9F27" stroke-width="10"
-              stroke-dasharray="48 166" stroke-dashoffset="-133" stroke-linecap="round"
+            <circle id="donutBezig" cx="45" cy="45" r="34" fill="none" stroke="#EF9F27" stroke-width="10"
+              stroke-dasharray="0 214" stroke-dashoffset="0" stroke-linecap="round"
               transform="rotate(-90 45 45)"/>
-            <circle cx="45" cy="45" r="34" fill="none" stroke="#E24B4A" stroke-width="10"
-              stroke-dasharray="33 181" stroke-dashoffset="-181" stroke-linecap="round"
+            <circle id="donutVerlopen" cx="45" cy="45" r="34" fill="none" stroke="#E24B4A" stroke-width="10"
+              stroke-dasharray="0 214" stroke-dashoffset="0" stroke-linecap="round"
               transform="rotate(-90 45 45)"/>
-            <text x="45" y="50" text-anchor="middle" font-size="14" font-weight="600" fill="#1d1d1f">34</text>
+            <text id="donutTotal" x="45" y="50" text-anchor="middle" font-size="14" font-weight="600" fill="#1d1d1f">—</text>
           </svg>
           <div class="donut-legend">
-            <div class="legend-row"><div class="legend-dot" style="background:var(--green);"></div>Voltooid <strong>20</strong></div>
-            <div class="legend-row"><div class="legend-dot" style="background:var(--amber);"></div>Bezig <strong>7</strong></div>
-            <div class="legend-row"><div class="legend-dot" style="background:var(--red);"></div>Verlopen <strong>7</strong></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--green);"></div>Voltooid <strong id="lgVoltooid">—</strong></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--amber);"></div>Bezig <strong id="lgBezig">—</strong></div>
+            <div class="legend-row"><div class="legend-dot" style="background:var(--red);"></div>Verlopen <strong id="lgVerlopen">—</strong></div>
           </div>
         </div>
         <div class="stats-row">
-          <div class="stat-item"><div class="stat-val">4.2u</div><div class="stat-lbl">Gem. doorlooptijd</div></div>
-          <div class="stat-item"><div class="stat-val">€ 3.840</div><div class="stat-lbl">Onderhoudskosten</div></div>
-          <div class="stat-item"><div class="stat-val">8</div><div class="stat-lbl">Monteurs actief</div></div>
+          <div class="stat-item"><div class="stat-val" id="statVoltooid">—</div><div class="stat-lbl">Voltooid deze maand</div></div>
+          <div class="stat-item"><div class="stat-val" id="statOpen">—</div><div class="stat-lbl">Openstaand</div></div>
+          <div class="stat-item"><div class="stat-val" id="statOverdue">—</div><div class="stat-lbl">Verlopen</div></div>
         </div>
       </div>
     </div>
@@ -251,35 +298,248 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  function toggleNavOnderhoud() {
+    const g = document.getElementById('navOnderhoud');
+    g.classList.toggle('collapsed');
+    localStorage.setItem('navOnderhoud', g.classList.contains('collapsed') ? '1' : '0');
+  }
+  (function() {
+    const g = document.getElementById('navOnderhoud');
+    if (!g) return;
+    const hasActive = g.querySelector('.active');
+    const saved = localStorage.getItem('navOnderhoud');
+    if (!hasActive && saved === '1') g.classList.add('collapsed');
+  })();
+</script>
+<script>
   const SUPABASE_URL = 'https://mtghxnllimxhlnjtshjq.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const now = new Date();
+  const today = now.toISOString().split('T')[0];
   const h = now.getHours();
-  const gr = h < 12 ? 'Goedemorgen' : h < 18 ? 'Goedemiddag' : 'Goedenavond';
-  document.getElementById('greeting').textContent = gr + ', Leon 👋';
+  document.getElementById('greeting').textContent = (h < 12 ? 'Goedemorgen' : h < 18 ? 'Goedemiddag' : 'Goedenavond') + ', Leon 👋';
   document.getElementById('datestr').textContent = now.toLocaleDateString('nl-NL', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
-  (async () => {
+
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  function set(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+  function woBadgeCls(status, dueDate) {
+    if (dueDate && dueDate < today && status !== 'Voltooid' && status !== 'Geannuleerd') return 'badge badge-overdue';
+    if (status === 'In uitvoering') return 'badge badge-progress';
+    if (status === 'Voltooid')      return 'badge badge-done';
+    if (status === 'Geannuleerd')   return 'badge badge-cancelled';
+    return 'badge badge-open';
+  }
+  function woBadgeLabel(status, dueDate) {
+    if (dueDate && dueDate < today && status !== 'Voltooid' && status !== 'Geannuleerd') return 'Verlopen';
+    if (status === 'In uitvoering') return 'Bezig';
+    if (status === 'Voltooid')      return 'Klaar';
+    if (status === 'Geannuleerd')   return 'Geannuleerd';
+    return 'Open';
+  }
+
+  function assetDot(status) {
+    if (status === 'Storing')      return 'dot dot-red';
+    if (status === 'In onderhoud') return 'dot dot-amber';
+    return 'dot dot-green';
+  }
+  function assetBadge(status) {
+    if (status === 'Storing')      return 'status-badge status-crit';
+    if (status === 'In onderhoud') return 'status-badge status-warn';
+    return 'status-badge status-ok';
+  }
+  const statusOrder = { 'Storing': 0, 'Defect': 1, 'In onderhoud': 2, 'Operationeel': 3 };
+
+  function renderDonut(voltooid, bezig, verlopen) {
+    const total = voltooid + bezig + verlopen;
+    set('donutTotal', total);
+    set('lgVoltooid', voltooid);
+    set('lgBezig', bezig);
+    set('lgVerlopen', verlopen);
+    set('statVoltooid', voltooid);
+    set('statOpen', bezig);
+    set('statOverdue', verlopen);
+    if (total === 0) return;
+    const circ = 213.6;
+    const vArc = Math.round((voltooid / total) * circ * 10) / 10;
+    const bArc = Math.round((bezig   / total) * circ * 10) / 10;
+    const lArc = Math.round((verlopen/ total) * circ * 10) / 10;
+    const vGap = circ - vArc;
+    const bGap = circ - bArc;
+    const lGap = circ - lArc;
+    document.getElementById('donutVoltooid').setAttribute('stroke-dasharray', `${vArc} ${vGap}`);
+    document.getElementById('donutVoltooid').setAttribute('stroke-dashoffset', '0');
+    document.getElementById('donutBezig').setAttribute('stroke-dasharray', `${bArc} ${bGap}`);
+    document.getElementById('donutBezig').setAttribute('stroke-dashoffset', `-${vArc}`);
+    document.getElementById('donutVerlopen').setAttribute('stroke-dasharray', `${lArc} ${lGap}`);
+    document.getElementById('donutVerlopen').setAttribute('stroke-dashoffset', `-${vArc + bArc}`);
+  }
+
+  async function loadDashboard() {
     try {
-      const { count: woCount } = await sb.from('werkorders').select('id', { count: 'exact', head: true }).lte('due_date', new Date().toISOString().split('T')[0]).neq('status', 'Voltooid').neq('status', 'Geannuleerd');
-      const woBadge = document.getElementById('woBadge');
-      if (woBadge) { woBadge.textContent = woCount || ''; woBadge.style.display = woCount ? '' : 'none'; }
-    } catch(e) {}
-  })();
-  (async () => {
-    try {
-      const { count } = await sb.from('storingen').select('id', { count: 'exact', head: true }).in('status', ['Open', 'In behandeling']);
-      const badge = document.getElementById('storingenBadge');
-      if (badge) { badge.textContent = count || ''; badge.style.display = count ? '' : 'none'; }
-      if (count) {
-        const dateEl = document.getElementById('datestr');
-        if (dateEl) dateEl.textContent += ` · ${count} actieve storing${count !== 1 ? 'en' : ''}`;
+      const [
+        { count: assetCount },
+        { count: woOpenCount },
+        { count: woOverdueCount },
+        { count: storingCount },
+        { data: activeWOs },
+        { data: assetRows },
+        { data: monthWOs },
+        { data: openWOsByAsset },
+        { count: woVandaagCount },
+        { count: storingVandaagCount },
+        { count: assetsStoringCount }
+      ] = await Promise.all([
+        sb.from('assets').select('asset_id', { count: 'exact', head: true }).neq('status', 'Inactief'),
+        sb.from('werkorders').select('id', { count: 'exact', head: true }).neq('status', 'Voltooid').neq('status', 'Geannuleerd'),
+        sb.from('werkorders').select('id', { count: 'exact', head: true }).lte('due_date', today).neq('status', 'Voltooid').neq('status', 'Geannuleerd'),
+        sb.from('storingen').select('id', { count: 'exact', head: true }).neq('status', 'Opgelost'),
+        sb.from('werkorders').select('id,wo_number,description,assigned_to,status,due_date').neq('status', 'Voltooid').neq('status', 'Geannuleerd').order('due_date', { ascending: true, nullsFirst: false }).limit(5),
+        sb.from('assets').select('asset_id,name,location,status').neq('status', 'Inactief').limit(20),
+        sb.from('werkorders').select('status,due_date').gte('created_at', monthStart),
+        sb.from('werkorders').select('asset_id,due_date').neq('status', 'Voltooid').neq('status', 'Geannuleerd').not('asset_id', 'is', null),
+        sb.from('werkorders').select('id', { count: 'exact', head: true }).eq('due_date', today).neq('status', 'Voltooid').neq('status', 'Geannuleerd'),
+        sb.from('storingen').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00').neq('status', 'Opgelost'),
+        sb.from('assets').select('asset_id', { count: 'exact', head: true }).eq('status', 'Storing')
+      ]);
+
+      // Vandaag-blok datum
+      document.getElementById('vandaagDatum').textContent = now.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+      // Verlopen rij — groen vinkje als 0, rood als > 0
+      const verlopenCount = woOverdueCount ?? 0;
+      set('vandaagVerlopenCount', verlopenCount);
+      const verlopenRij = document.getElementById('vandaagVerlopen');
+      const verlopenIcon = verlopenRij?.querySelector('.vandaag-icon');
+      if (verlopenCount === 0) {
+        if (verlopenIcon) { verlopenIcon.className = 'vandaag-icon groen'; verlopenIcon.innerHTML = '<i class="ti ti-circle-check"></i>'; }
+      } else {
+        if (verlopenIcon) { verlopenIcon.className = 'vandaag-icon rood'; verlopenIcon.innerHTML = '<i class="ti ti-clock-exclamation"></i>'; }
       }
-    } catch(e) {}
-  })();
+
+      // Vandaag gepland + storingen vandaag
+      set('vandaagWoCount', woVandaagCount ?? 0);
+      set('vandaagPlanCount', storingVandaagCount ?? 0);
+
+      // KPI Assets
+      set('kpiAssets', assetCount ?? '—');
+      set('kpiAssetsSub', 'Actieve assets');
+
+      // KPI Werkorders
+      set('kpiWo', woOpenCount ?? '—');
+      set('kpiWoSub', `Openstaand · ${woOverdueCount ?? 0} verlopen`);
+      if (woOverdueCount > 0) {
+        const el = document.getElementById('kpiWoTrend');
+        if (el) { el.textContent = `↓ ${woOverdueCount} deadline overschreden`; el.className = 'kpi-trend down'; }
+      }
+
+      // KPI Storingen
+      set('kpiStoringen', storingCount ?? '—');
+      set('kpiStoringenSub', storingCount === 1 ? '1 actieve storing' : `${storingCount ?? 0} actieve storingen`);
+      if (storingCount > 0) {
+        const el = document.getElementById('kpiStoringenTrend');
+        if (el) { el.textContent = '↓ Actie vereist'; el.className = 'kpi-trend down'; }
+      }
+
+      // KPI Assets in storing
+      set('kpiAssetsStoring', assetsStoringCount ?? '—');
+      const storEl = document.getElementById('kpiAssetsStoringTrend');
+      if (storEl) {
+        if (assetsStoringCount > 0) { storEl.textContent = '↓ Actie vereist'; storEl.className = 'kpi-trend down'; }
+        else { storEl.textContent = '✓ Alle machines operationeel'; storEl.className = 'kpi-trend up'; }
+      }
+
+      // Sidebar badges
+      const woBadge = document.getElementById('woBadge');
+      if (woBadge) { woBadge.textContent = woOverdueCount || ''; woBadge.style.display = woOverdueCount ? '' : 'none'; }
+      const storingenBadge = document.getElementById('storingenBadge');
+      if (storingenBadge) { storingenBadge.textContent = storingCount || ''; storingenBadge.style.display = storingCount ? '' : 'none'; }
+
+      // Actieve werkorders lijst
+      const woList = document.getElementById('woList');
+      if (woList && activeWOs) {
+        if (activeWOs.length === 0) {
+          woList.innerHTML = '<div class="wo-row"><span class="wo-desc" style="color:var(--text-3);">Geen openstaande werkorders</span></div>';
+        } else {
+          woList.innerHTML = activeWOs.map(w => `
+            <a href="pages/werkorders.html?wo=${w.id}" class="wo-row wo-row-link">
+              <span class="wo-id">${w.wo_number || '—'}</span>
+              <span class="wo-desc">${w.description || '—'}</span>
+              <span class="wo-person">${w.assigned_to || '—'}</span>
+              <span class="${woBadgeCls(w.status, w.due_date)}">${woBadgeLabel(w.status, w.due_date)}</span>
+            </a>`).join('');
+        }
+      }
+
+      // Machinestatus lijst
+      const assetList = document.getElementById('assetList');
+      if (assetList && assetRows) {
+        const sorted = [...assetRows].sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9)).slice(0, 5);
+        if (sorted.length === 0) {
+          assetList.innerHTML = '<div class="asset-row"><span class="asset-name" style="color:var(--text-3);">Geen assets gevonden</span></div>';
+        } else {
+          assetList.innerHTML = sorted.map(a => `
+            <a href="pages/assets.html?asset=${a.asset_id}" class="asset-row asset-row-link">
+              <div class="${assetDot(a.status)}"></div>
+              <div class="asset-info">
+                <div class="asset-name">${a.name}</div>
+                <div class="asset-loc">${a.location || '—'}</div>
+              </div>
+              <span class="${assetBadge(a.status)}">${a.status}</span>
+            </a>`).join('');
+        }
+      }
+
+      // Assets met meeste open WO's
+      const assetWoList = document.getElementById('assetWoList');
+      if (assetWoList && openWOsByAsset) {
+        const counts = {};
+        for (const wo of openWOsByAsset) {
+          if (!counts[wo.asset_id]) counts[wo.asset_id] = { count: 0, hasOverdue: false };
+          counts[wo.asset_id].count++;
+          if (wo.due_date && wo.due_date < today) counts[wo.asset_id].hasOverdue = true;
+        }
+        const topIds = Object.entries(counts).sort((a, b) => b[1].count - a[1].count).slice(0, 5);
+        if (topIds.length === 0) {
+          assetWoList.innerHTML = '<div class="bar-row"><span class="bar-label" style="color:var(--text-3);">Geen open werkorders</span></div>';
+        } else {
+          const { data: assetNames } = await sb.from('assets').select('asset_id,name,location').in('asset_id', topIds.map(([id]) => id));
+          const nameMap = Object.fromEntries((assetNames || []).map(a => [a.asset_id, a]));
+          const maxCount = topIds[0][1].count;
+          assetWoList.innerHTML = topIds.map(([id, info]) => {
+            const a = nameMap[id] || {};
+            const barColor = info.hasOverdue ? 'var(--red)' : 'var(--amber)';
+            const valColor = info.hasOverdue ? 'var(--red-text)' : 'var(--text)';
+            const pct = Math.round((info.count / maxCount) * 100);
+            const label = (a.name || id).length > 12 ? (a.name || id).slice(0, 11) + '…' : (a.name || id);
+            return `<a href="pages/assets.html?asset=${id}" class="bar-row bar-row-link" title="${a.name || id}">
+              <span class="bar-label">${label}</span>
+              <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+              <span class="bar-val" style="color:${valColor};">${info.count}</span>
+            </a>`;
+          }).join('');
+        }
+      }
+
+      // Donut: WO's deze maand
+      if (monthWOs) {
+        const voltooid = monthWOs.filter(w => w.status === 'Voltooid').length;
+        const verlopen = monthWOs.filter(w => w.due_date && w.due_date < today && w.status !== 'Voltooid' && w.status !== 'Geannuleerd').length;
+        const bezig    = monthWOs.filter(w => w.status !== 'Voltooid' && w.status !== 'Geannuleerd' && !(w.due_date && w.due_date < today)).length;
+        renderDonut(voltooid, bezig, verlopen);
+      }
+
+    } catch(e) {
+      console.error('Dashboard laad fout:', e);
+    }
+  }
+
+  loadDashboard();
 </script>
 </body>
 </html>
