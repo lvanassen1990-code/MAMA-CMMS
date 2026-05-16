@@ -973,11 +973,13 @@
   let allEenheden = [];
 
   async function loadEenheden() {
-    const { data } = await sb.from('eenheden').select('naam').order('naam');
+    const { data, error } = await sb.from('eenheden').select('naam').order('naam');
+    if (error) { console.error('Eenheden laden mislukt:', error); return; }
     allEenheden = (data || []).map(e => e.naam);
   }
 
   function meterEenheidOptions(selected = '') {
+    if (!allEenheden.length) return '<option value="">— geen eenheden in instellingen —</option>';
     return '<option value="">— eenheid —</option>' +
       allEenheden.map(n => `<option value="${n}"${n === selected ? ' selected' : ''}>${n}</option>`).join('');
   }
@@ -2226,7 +2228,8 @@
     loadDrawerHistory(drawerAsset.asset_id);
   }
 
-  function openModal(presetParentId = null) {
+  async function openModal(presetParentId = null) {
+    await loadEenheden();
     document.getElementById('meterRows').innerHTML = '';
     meterRowCount = 0;
     document.getElementById('fPhoto').value = '';
@@ -2265,7 +2268,6 @@
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
 
-  loadEenheden();
   loadAssets().then(() => {
     const params = new URLSearchParams(location.search);
     const assetId = params.get('asset');
