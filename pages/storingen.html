@@ -497,16 +497,24 @@
   let activeChips = new Set(['Open', 'In behandeling', 'Werkorder aangemaakt']);
   let sortCol = 'created_at';
   let sortDir = 'desc';
+  let settingAutoOpgelost = false;
 
   // ── Init ──────────────────────────────────────────────────────────────────
 
   async function init() {
     await loadAssets();
-    await loadStoringen();
+    await Promise.all([loadStoringen(), loadInstellingen()]);
     updateSidebarBadges();
     const filter = new URLSearchParams(location.search).get('filter');
     if (filter === 'open') setStoringFilterFromUrl(['Open'], 'open storingen');
     else if (filter === 'vandaag') setStoringFilterFromUrl(['Open', 'In behandeling', 'Werkorder aangemaakt'], 'storingen van vandaag');
+  }
+
+  async function loadInstellingen() {
+    const { data } = await sb.from('instellingen').select('sleutel, waarde');
+    const inst = {};
+    (data || []).forEach(r => { inst[r.sleutel] = r.waarde; });
+    settingAutoOpgelost = inst['storing_auto_opgelost_bij_wo'] === 'true';
   }
 
   async function loadAssets() {
@@ -874,13 +882,12 @@
 
     if (error) { alert('Fout bij aanmaken werkorder: ' + error.message); return; }
 
-    await sb.from('storingen').update({ wo_id: wo.id, status: 'Werkorder aangemaakt' }).eq('id', currentStoring.id);
-    await sb.from('storing_activiteiten').insert({
-      storing_id: currentStoring.id,
-      type: 'werkorder_aangemaakt',
-      omschrijving: `Werkorder ${woNum} aangemaakt`,
-      door: null,
-    });
+    const storingUpdate = { wo_id: wo.id, status: settingAutoOpgelost ? 'Opgelost' : 'Werkorder aangemaakt' };
+    if (settingAutoOpgelost) storingUpdate.oplossing_omschrijving = `Automatisch opgelost bij aanmaken werkorder ${woNum}`;
+    await sb.from('storingen').update(storingUpdate).eq('id', currentStoring.id);
+    const activiteiten = [{ storing_id: currentStoring.id, type: 'werkorder_aangemaakt', omschrijving: `Werkorder ${woNum} aangemaakt`, door: null }];
+    if (settingAutoOpgelost) activiteiten.push({ storing_id: currentStoring.id, type: 'status_wijziging', omschrijving: `Automatisch opgelost bij aanmaken werkorder ${woNum}`, door: null });
+    await sb.from('storing_activiteiten').insert(activiteiten);
     await loadStoringen();
     const updated = allStoringen.find(s => s.id === currentStoring.id);
     if (updated) openDrawer(updated);
