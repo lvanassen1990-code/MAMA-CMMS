@@ -1375,6 +1375,27 @@
       }
     } catch(e) { console.error('Fout bij doorschrijven meterstanden:', e); }
 
+    // Meterstanden doorschrijven vanuit werkorder_taken (PM-checklist)
+    try {
+      const { data: takenMeters } = await sb.from('werkorder_taken')
+        .select('meter_naam, meter_waarde')
+        .eq('wo_id', drawerWO.id)
+        .not('meter_naam', 'is', null)
+        .not('meter_waarde', 'is', null);
+
+      if (takenMeters?.length && drawerWO.asset_id) {
+        const vandaag = nu.toISOString().split('T')[0];
+        for (const t of takenMeters) {
+          const stand = parseFloat(t.meter_waarde);
+          if (isNaN(stand)) continue;
+          const { data: meter } = await sb.from('meters')
+            .select('id').eq('asset_id', drawerWO.asset_id).eq('naam', t.meter_naam).maybeSingle();
+          if (!meter) continue;
+          await sb.from('meter_readings').insert({ meter_id: meter.id, stand, afgelezen_op: vandaag, ingevuld_door: door });
+          await sb.from('meters').update({ huidige_stand: stand, laatste_afgelezen_op: vandaag }).eq('id', meter.id);
+        }
+      }
+    } catch(e) { console.error('Fout bij doorschrijven PM-meterstanden:', e); }
 
     // Vervolgwerkorder aanmaken indien gewenst
     let vervolgWoNum = null;
