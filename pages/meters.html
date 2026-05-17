@@ -380,6 +380,49 @@
     });
   }
 
+  async function checkMeterTriggers(meter, nieuweStand) {
+    const { data: plannen } = await sb.from('maintenance_plans')
+      .select('id, name, meter_naam, meter_drempel, meter_trigger_stand, asset_id')
+      .eq('asset_id', meter.asset_id)
+      .eq('meter_naam', meter.naam)
+      .eq('is_active', true)
+      .not('meter_drempel', 'is', null);
+
+    for (const plan of plannen || []) {
+      let stand = plan.meter_trigger_stand ?? 0;
+      const drempel = plan.meter_drempel;
+      let getriggerd = false;
+      while (nieuweStand >= stand + drempel) {
+        stand += drempel;
+        getriggerd = true;
+        await maakPmWerkorder(plan, stand);
+      }
+      if (getriggerd) {
+        await sb.from('maintenance_plans').update({ meter_trigger_stand: stand }).eq('id', plan.id);
+      }
+    }
+  }
+
+  async function maakPmWerkorder(plan, triggerStand) {
+    const { data: last } = await sb.from('werkorders')
+      .select('wo_number').order('wo_number', { ascending: false }).limit(1);
+    let nextSeq = 1;
+    if (last?.length) {
+      const m = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
+      if (m) nextSeq = parseInt(m[1], 10) + 1;
+    }
+    const woNum = `WO-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
+    await sb.from('werkorders').insert({
+      wo_number: woNum,
+      description: `${plan.name} — metertrigger op ${triggerStand} ${plan.meter_naam}`,
+      asset_id: plan.asset_id,
+      wo_type: 'Preventief',
+      priority: 'Normaal',
+      notes: `Automatisch gegenereerd: meter "${plan.meter_naam}" bereikte ${triggerStand}.`,
+      status: 'Open',
+    });
+  }
+
   async function loadMeters() {
     const { data, error } = await sb.from('meters').select('*, assets(name)').order('naam');
     if (error) { console.error(error); return; }
@@ -599,6 +642,8 @@
     const { data: latest } = await sb.from('meter_readings').select('stand, afgelezen_op')
       .eq('meter_id', drawerMeter.id).order('afgelezen_op', { ascending: false }).limit(1).single();
     if (latest) await sb.from('meters').update({ huidige_stand: latest.stand, laatste_afgelezen_op: latest.afgelezen_op }).eq('id', drawerMeter.id);
+
+    if (drawerMeter.asset_id && latest) await checkMeterTriggers(drawerMeter, latest.stand);
 
     closeAfgelezenModal();
     await loadMeters();

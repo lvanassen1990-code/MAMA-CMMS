@@ -235,7 +235,7 @@
       <div class="form-row">
         <div class="form-field full">
           <label class="form-label">Asset</label>
-          <select class="form-input" id="fPlanAsset" onchange="renderTaskEditor()">
+          <select class="form-input" id="fPlanAsset" onchange="renderTaskEditor();vulTriggerMeterDropdown()">
             <option value="">— Selecteer asset —</option>
           </select>
         </div>
@@ -276,6 +276,24 @@
         <label class="form-label">Taken / checklist</label>
         <div class="task-editor" id="taskEditor"></div>
         <button type="button" class="add-task-btn" onclick="addTaskRow()"><i class="ti ti-plus"></i> Taak toevoegen</button>
+      </div>
+      <div style="border-top:0.5px solid var(--border);padding-top:14px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <i class="ti ti-gauge" style="font-size:13px;color:var(--accent);"></i> Meter-trigger (optioneel)
+        </div>
+        <p style="font-size:11px;color:var(--text-3);margin-bottom:10px;">Automatisch een werkorder aanmaken zodra deze meter een drempelwaarde bereikt. Herhaalt elke drempel-eenheden.</p>
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Meter</label>
+            <select class="form-input" id="fTriggerMeter">
+              <option value="">— Geen trigger —</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Elke X eenheden</label>
+            <input class="form-input" id="fTriggerDrempel" type="number" min="1" placeholder="bijv. 500" />
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -389,6 +407,14 @@
     return allMeters.filter(m => m.asset_id === assetId);
   }
 
+  function vulTriggerMeterDropdown(huidig = '') {
+    const meters = getFilteredMeters();
+    const sel = document.getElementById('fTriggerMeter');
+    if (!sel) return;
+    sel.innerHTML = '<option value="">— Geen trigger —</option>' +
+      meters.map(m => `<option value="${escHtml(m.naam)}"${m.naam === huidig ? ' selected' : ''}>${escHtml(m.naam)} (${escHtml(m.eenheid)})</option>`).join('');
+  }
+
   async function loadAll() {
     const [{ data: p }, { data: a }, { data: m }] = await Promise.all([
       sb.from('maintenance_plans').select('*, maintenance_tasks(*)').order('name'),
@@ -486,6 +512,14 @@
             <div class="info-item"><div class="info-label">Elke N dagen</div><div class="info-value">${p.interval_days}</div></div>
             <div class="info-item"><div class="info-label">Geschatte tijd</div><div class="info-value">${p.estimated_duration ? p.estimated_duration + ' min' : '—'}</div></div>
           </div>
+          ${p.meter_naam && p.meter_drempel ? `
+          <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;">
+            <i class="ti ti-gauge" style="font-size:16px;color:var(--accent);flex-shrink:0;"></i>
+            <div>
+              <div style="font-weight:500;">Meter-trigger actief</div>
+              <div style="color:var(--text-2);">${escHtml(p.meter_naam)} — elke ${p.meter_drempel} eenheden · volgende trigger op ${(p.meter_trigger_stand || 0) + p.meter_drempel}</div>
+            </div>
+          </div>` : ''}
           ${p.description ? `<p style="font-size:12px;color:var(--text-2);margin-bottom:14px;">${p.description}</p>` : ''}
         </div>
       </div>
@@ -562,7 +596,7 @@
         <span class="task-editor-nr">${i+1}</span>
         <input class="task-editor-input" value="${escHtml(t.description)}" placeholder="Omschrijf de taak…"
           oninput="taskRows[${i}].description=this.value" />
-        <button type="button" class="btn" style="padding:3px 7px;font-size:12px;flex-shrink:0;" title="Meter koppelen"
+        <button type="button" class="btn" style="padding:3px 7px;font-size:12px;flex-shrink:0;" title="Meter aflezen als onderdeel van deze taak"
           onclick="toggleMeterRow(${i})">
           <i class="ti ti-gauge" style="${hasLink ? 'color:var(--accent);' : 'color:var(--text-3);'}"></i>
         </button>
@@ -572,8 +606,6 @@
         <select onchange="taskRows[${i}].meter_naam=this.value">
           <option value="">— Geen meter —</option>${selectedOpts}
         </select>
-        <input type="number" min="1" placeholder="Drempel" value="${t.drempelwaarde ?? ''}"
-          oninput="taskRows[${i}].drempelwaarde=this.value?parseFloat(this.value):null" />
       </div>` : ''}`;
     }).join('');
   }
@@ -586,8 +618,10 @@
     document.getElementById('fPlanInterval').value = 'Kwartaal';
     document.getElementById('fPlanDays').value = 90;
     document.getElementById('fPlanDuration').value = '';
+    document.getElementById('fTriggerDrempel').value = '';
     document.getElementById('planModalTitle').textContent = 'Nieuw onderhoudsplan';
-    taskRows = [{ description: '', meter_naam: '', drempelwaarde: null, _open: false }];
+    taskRows = [{ description: '', meter_naam: '', _open: false }];
+    vulTriggerMeterDropdown('');
     renderTaskEditor();
     document.getElementById('planModal').classList.add('open');
   }
@@ -601,11 +635,13 @@
     document.getElementById('fPlanInterval').value = p.interval_type;
     document.getElementById('fPlanDays').value = p.interval_days;
     document.getElementById('fPlanDuration').value = p.estimated_duration || '';
+    document.getElementById('fTriggerDrempel').value = p.meter_drempel || '';
     document.getElementById('planModalTitle').textContent = 'Plan bewerken';
+    vulTriggerMeterDropdown(p.meter_naam || '');
     const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
     taskRows = tasks.length
-      ? tasks.map(t => ({ description: t.description, meter_naam: t.meter_naam || '', drempelwaarde: t.drempelwaarde ?? null, _open: false }))
-      : [{ description: '', meter_naam: '', drempelwaarde: null, _open: false }];
+      ? tasks.map(t => ({ description: t.description, meter_naam: t.meter_naam || '', _open: false }))
+      : [{ description: '', meter_naam: '', _open: false }];
     renderTaskEditor();
     document.getElementById('planModal').classList.add('open');
   }
@@ -623,6 +659,8 @@
         interval_days: parseInt(document.getElementById('fPlanDays').value) || 90,
         estimated_duration: parseInt(document.getElementById('fPlanDuration').value) || null,
         asset_id: document.getElementById('fPlanAsset').value || null,
+        meter_naam: document.getElementById('fTriggerMeter').value || null,
+        meter_drempel: parseFloat(document.getElementById('fTriggerDrempel').value) || null,
       };
       if (!payload.name) {
         alert('Vul een naam in.');
@@ -650,10 +688,22 @@
             order_nr: i + 1,
             description: t.description.trim(),
             meter_naam: t.meter_naam || null,
-            drempelwaarde: t.drempelwaarde || null,
           }))
         );
         if (taskErr) throw taskErr;
+      }
+
+      // Sync asset_maintenance_plans met het gekozen asset
+      const assetId = payload.asset_id;
+      await sb.from('asset_maintenance_plans').delete().eq('plan_id', planId);
+      if (assetId) {
+        const basis = new Date();
+        basis.setDate(basis.getDate() + (payload.interval_days || 90));
+        await sb.from('asset_maintenance_plans').insert({
+          plan_id: planId,
+          asset_id: assetId,
+          next_due: basis.toISOString().split('T')[0],
+        });
       }
 
       btn.disabled=false; btn.innerHTML='<i class="ti ti-check"></i> Plan opslaan';
@@ -792,6 +842,9 @@
         interval_days: plan.interval_days,
         estimated_duration: plan.estimated_duration,
         asset_id: assetId,
+        meter_naam: plan.meter_naam || null,
+        meter_drempel: plan.meter_drempel || null,
+        meter_trigger_stand: 0,
         is_active: true,
       }).select().single();
       if (planErr) throw planErr;
