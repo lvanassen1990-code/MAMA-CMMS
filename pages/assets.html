@@ -1012,7 +1012,7 @@
     const sel = document.getElementById('fPerson');
     const huidig = geselecteerd ?? sel.value;
     sel.innerHTML = '<option value="">— Geen —</option>' +
-      allMonteurs.map(n => `<option${n === huidig ? ' selected' : ''}>${escHtml(n)}</option>`).join('');
+      allMonteurs.map(n => `<option${n === huidig ? ' selected' : ''}>${n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
   }
 
   function vulCategoryDropdowns(geselecteerd) {
