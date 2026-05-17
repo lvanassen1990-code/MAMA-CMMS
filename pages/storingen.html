@@ -528,6 +528,7 @@
       const s = allStoringen.find(x => x.id === storingId);
       if (s) openDrawer(s);
     }
+    if (params.get('nieuw') === '1') openModal();
   }
 
   async function loadInstellingen() {

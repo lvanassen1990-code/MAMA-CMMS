@@ -116,6 +116,12 @@
     .plan-card.inactive { opacity: 0.55; }
     .inactive-badge { font-size: 10px; padding: 2px 7px; border-radius: 10px; background: var(--bg); border: 0.5px solid var(--border-strong); color: var(--text-3); font-weight: 500; }
 
+    /* Trigger type toggle */
+    .trigger-type-btn { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 12px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); background: var(--bg); color: var(--text-2); cursor: pointer; font-size: 12px; font-family: inherit; transition: all 0.12s; flex: 1; }
+    .trigger-type-btn i { font-size: 13px; }
+    .trigger-type-btn:hover { border-color: var(--accent); color: var(--text); }
+    .trigger-type-btn.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+
     /* Toggle switch */
     .toggle-wrap { display: flex; align-items: center; gap: 7px; cursor: pointer; }
     .toggle-label { font-size: 11px; color: var(--text-2); user-select: none; min-width: 38px; }
@@ -250,7 +256,15 @@
         <label class="form-label">Omschrijving</label>
         <textarea class="form-input" id="fPlanDesc" rows="2" placeholder="Wat houdt dit plan in?" style="resize:vertical;"></textarea>
       </div>
-      <div class="form-row">
+      <div class="form-field full">
+        <label class="form-label">Trigger</label>
+        <div style="display:flex;gap:6px;">
+          <button type="button" class="trigger-type-btn active" data-type="kalender" onclick="setTriggerType('kalender')"><i class="ti ti-calendar"></i> Kalender</button>
+          <button type="button" class="trigger-type-btn" data-type="meter" onclick="setTriggerType('meter')"><i class="ti ti-gauge"></i> Meter</button>
+          <button type="button" class="trigger-type-btn" data-type="beide" onclick="setTriggerType('beide')"><i class="ti ti-git-fork"></i> Beide</button>
+        </div>
+      </div>
+      <div id="triggerKalenderVelden" class="form-row">
         <div class="form-field">
           <label class="form-label">Interval</label>
           <select class="form-input" id="fPlanInterval" onchange="syncDays()">
@@ -268,6 +282,23 @@
           <input class="form-input" id="fPlanDays" type="number" min="1" value="90" />
         </div>
       </div>
+      <div id="triggerMeterVelden" class="form-row" style="display:none;">
+        <div class="form-field">
+          <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+            Meter
+            <button type="button" onclick="openQuickMeterModal()" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:11px;font-family:inherit;padding:0;display:flex;align-items:center;gap:3px;font-weight:500;">
+              <i class="ti ti-plus" style="font-size:12px;"></i> Nieuwe meter
+            </button>
+          </label>
+          <select class="form-input" id="fTriggerMeter" onchange="updateTriggerEenheidLabel()">
+            <option value="">— Selecteer meter —</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="form-label" id="triggerDrempelLabel">Elke X eenheden</label>
+          <input class="form-input" id="fTriggerDrempel" type="number" min="1" placeholder="bijv. 500" />
+        </div>
+      </div>
       <div class="form-field full">
         <label class="form-label">Geschatte uitvoeringstijd (minuten)</label>
         <input class="form-input" id="fPlanDuration" type="number" min="15" step="15" placeholder="bijv. 120" />
@@ -276,24 +307,6 @@
         <label class="form-label">Taken / checklist</label>
         <div class="task-editor" id="taskEditor"></div>
         <button type="button" class="add-task-btn" onclick="addTaskRow()"><i class="ti ti-plus"></i> Taak toevoegen</button>
-      </div>
-      <div style="border-top:0.5px solid var(--border);padding-top:14px;">
-        <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-          <i class="ti ti-gauge" style="font-size:13px;color:var(--accent);"></i> Meter-trigger (optioneel)
-        </div>
-        <p style="font-size:11px;color:var(--text-3);margin-bottom:10px;">Automatisch een werkorder aanmaken zodra deze meter een drempelwaarde bereikt. Herhaalt elke drempel-eenheden.</p>
-        <div class="form-row">
-          <div class="form-field">
-            <label class="form-label">Meter</label>
-            <select class="form-input" id="fTriggerMeter">
-              <option value="">— Geen trigger —</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label class="form-label">Elke X eenheden</label>
-            <input class="form-input" id="fTriggerDrempel" type="number" min="1" placeholder="bijv. 500" />
-          </div>
-        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -345,6 +358,42 @@
   </div>
 </div>
 
+<!-- Modal: Snelle meter aanmaken -->
+<div class="modal-overlay" id="quickMeterModal" onclick="handleOverlay(event,'quickMeterModal')">
+  <div class="modal" style="width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">Nieuwe meter aanmaken</div>
+      <button class="modal-close" onclick="closeModal('quickMeterModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field full">
+        <label class="form-label">Asset</label>
+        <input class="form-input" id="qmAsset" readonly style="color:var(--text-2);background:var(--bg);" />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label">Naam</label>
+          <input class="form-input" id="qmNaam" placeholder="bijv. Bedrijfsuren" />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Eenheid</label>
+          <select class="form-input" id="qmEenheid">
+            <option value="">— Kies eenheid —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Beginstand</label>
+        <input class="form-input" id="qmBeginstand" type="number" min="0" value="0" placeholder="0" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('quickMeterModal')">Annuleren</button>
+      <button class="btn primary" id="saveQuickMeterBtn" onclick="saveQuickMeter()"><i class="ti ti-plus"></i> Aanmaken</button>
+    </div>
+  </div>
+</div>
+
 <script src="../assets/search-select.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -364,7 +413,7 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let plans = [], allAssets = [], allMeters = [], selectedPlan = null;
+  let plans = [], allAssets = [], allMeters = [], allEenheden = [], selectedPlan = null;
   let showActief = true, showInactief = false;
 
   function togglePlanChip(btn, key) {
@@ -394,6 +443,54 @@
     return status === 'Operationeel' ? 'dot-green' : status === 'Let op' ? 'dot-amber' : 'dot-red';
   }
 
+  /* ── Quick meter aanmaken ── */
+  function openQuickMeterModal() {
+    const assetId = document.getElementById('fPlanAsset').value;
+    const asset = allAssets.find(a => a.asset_id === assetId);
+    document.getElementById('qmAsset').value = asset ? `${asset.name} (${asset.asset_id})` : '— Selecteer eerst een asset in het plan —';
+    document.getElementById('qmNaam').value = '';
+    document.getElementById('qmBeginstand').value = '0';
+    const sel = document.getElementById('qmEenheid');
+    sel.innerHTML = '<option value="">— Kies eenheid —</option>' +
+      allEenheden.map(e => `<option value="${escHtml(e)}">${escHtml(e)}</option>`).join('');
+    document.getElementById('quickMeterModal').classList.add('open');
+    setTimeout(() => document.getElementById('qmNaam').focus(), 100);
+  }
+
+  async function saveQuickMeter() {
+    const assetId = document.getElementById('fPlanAsset').value;
+    if (!assetId) { alert('Selecteer eerst een asset in het plan.'); return; }
+    const naam  = document.getElementById('qmNaam').value.trim();
+    const eenheid = document.getElementById('qmEenheid').value.trim();
+    const beginstand = parseFloat(document.getElementById('qmBeginstand').value) || 0;
+    if (!naam || !eenheid) { alert('Vul naam en eenheid in.'); return; }
+
+    const btn = document.getElementById('saveQuickMeterBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Bezig…';
+
+    const { data: inserted, error } = await sb.from('meters')
+      .insert({ naam, eenheid, asset_id: assetId, huidige_stand: beginstand })
+      .select().single();
+    if (error) {
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-plus"></i> Aanmaken';
+      alert('Fout: ' + error.message); return;
+    }
+    if (beginstand > 0) {
+      await sb.from('meter_readings').insert({
+        meter_id: inserted.id, stand: beginstand,
+        afgelezen_op: new Date().toISOString().split('T')[0],
+        ingevuld_door: 'Beginstand',
+      });
+    }
+
+    allMeters.push(inserted);
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-plus"></i> Aanmaken';
+    closeModal('quickMeterModal');
+    vulTriggerMeterDropdown(naam);
+    updateTriggerEenheidLabel();
+    renderTaskEditor();
+  }
+
   /* ── Load ── */
   function vulAssetDropdown(selId, huidig = '') {
     const sel = document.getElementById(selId);
@@ -411,19 +508,44 @@
     const meters = getFilteredMeters();
     const sel = document.getElementById('fTriggerMeter');
     if (!sel) return;
-    sel.innerHTML = '<option value="">— Geen trigger —</option>' +
+    sel.innerHTML = '<option value="">— Selecteer meter —</option>' +
       meters.map(m => `<option value="${escHtml(m.naam)}"${m.naam === huidig ? ' selected' : ''}>${escHtml(m.naam)} (${escHtml(m.eenheid)})</option>`).join('');
+    updateTriggerEenheidLabel();
+  }
+
+  let currentTriggerType = 'kalender';
+
+  function setTriggerType(type) {
+    currentTriggerType = type;
+    document.querySelectorAll('.trigger-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+    document.getElementById('triggerKalenderVelden').style.display = (type === 'kalender' || type === 'beide') ? '' : 'none';
+    document.getElementById('triggerMeterVelden').style.display   = (type === 'meter'    || type === 'beide') ? '' : 'none';
+  }
+
+  function updateTriggerEenheidLabel() {
+    const meterNaam = document.getElementById('fTriggerMeter')?.value;
+    const meter = allMeters.find(m => m.naam === meterNaam);
+    const label = document.getElementById('triggerDrempelLabel');
+    if (label) label.textContent = meter?.eenheid ? `Elke X ${meter.eenheid}` : 'Elke X eenheden';
+  }
+
+  function deriveTriggerType(p) {
+    if (p.meter_naam && p.interval_days) return 'beide';
+    if (p.meter_naam) return 'meter';
+    return 'kalender';
   }
 
   async function loadAll() {
-    const [{ data: p }, { data: a }, { data: m }] = await Promise.all([
+    const [{ data: p }, { data: a }, { data: m }, { data: e }] = await Promise.all([
       sb.from('maintenance_plans').select('*, maintenance_tasks(*)').order('name'),
       sb.from('assets').select('asset_id, name, location, status').neq('status','Afgeschreven').order('name'),
       sb.from('meters').select('id, naam, eenheid, asset_id').order('naam'),
+      sb.from('eenheden').select('naam').order('naam'),
     ]);
     plans = p || [];
     allAssets = a || [];
     allMeters = m || [];
+    allEenheden = (e || []).map(x => x.naam);
     vulAssetDropdown('fPlanAsset');
     vulAssetDropdown('dupAsset');
     const actief = plans.filter(x => x.is_active !== false).length;
@@ -455,8 +577,8 @@
         <div class="plan-card-header">
           <div class="plan-name">${p.name}</div>
           <div style="display:flex;gap:4px;">
-            <button class="btn" style="padding:3px 8px;font-size:11px;" title="Dupliceren" onclick="event.stopPropagation();dupliceerPlan('${p.id}')"><i class="ti ti-copy"></i></button>
-            <button class="btn" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();editPlan('${p.id}')"><i class="ti ti-pencil"></i></button>
+            <button class="btn" style="padding:4px 9px;font-size:14px;" title="Dupliceren" onclick="event.stopPropagation();dupliceerPlan('${p.id}')"><i class="ti ti-copy"></i></button>
+            <button class="btn" style="padding:4px 9px;font-size:14px;" title="Bewerken" onclick="event.stopPropagation();editPlan('${p.id}')"><i class="ti ti-pencil"></i></button>
           </div>
         </div>
         <div class="plan-desc">${p.description || '—'}</div>
@@ -481,9 +603,12 @@
     const dc = document.getElementById('detailCol');
     dc.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
 
-    const { data: link } = p.asset_id
-      ? await sb.from('asset_maintenance_plans').select('next_due').eq('plan_id', p.id).eq('asset_id', p.asset_id).maybeSingle()
-      : { data: null };
+    const [{ data: link }, { data: genWOs }] = await Promise.all([
+      p.asset_id
+        ? sb.from('asset_maintenance_plans').select('next_due').eq('plan_id', p.id).eq('asset_id', p.asset_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      sb.from('werkorders').select('id, wo_number, status, created_at, description').eq('plan_id', p.id).order('created_at', { ascending: false }),
+    ]);
 
     const asset = allAssets.find(a => a.asset_id === p.asset_id);
     const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
@@ -512,14 +637,17 @@
             <div class="info-item"><div class="info-label">Elke N dagen</div><div class="info-value">${p.interval_days}</div></div>
             <div class="info-item"><div class="info-label">Geschatte tijd</div><div class="info-value">${p.estimated_duration ? p.estimated_duration + ' min' : '—'}</div></div>
           </div>
-          ${p.meter_naam && p.meter_drempel ? `
-          <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:10px;">
+          ${p.meter_naam && p.meter_drempel ? (() => {
+            const m = allMeters.find(x => x.naam === p.meter_naam && x.asset_id === p.asset_id);
+            const eenh = m?.eenheid || 'eenheden';
+            return `<div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:10px;">
             <i class="ti ti-gauge" style="font-size:16px;color:var(--accent);flex-shrink:0;"></i>
             <div>
               <div style="font-weight:500;">Meter-trigger actief</div>
-              <div style="color:var(--text-2);">${escHtml(p.meter_naam)} — elke ${p.meter_drempel} eenheden · volgende op ${(p.meter_trigger_stand || 0) + p.meter_drempel}</div>
+              <div style="color:var(--text-2);">${escHtml(p.meter_naam)} — elke ${p.meter_drempel} ${escHtml(eenh)} · volgende op ${(p.meter_trigger_stand || 0) + p.meter_drempel} ${escHtml(eenh)}</div>
             </div>
-          </div>` : ''}
+          </div>`;
+          })() : ''}
           ${p.description ? `<p style="font-size:12px;color:var(--text-2);">${escHtml(p.description)}</p>` : ''}
         </div>
       </div>
@@ -552,6 +680,27 @@
             <span class="linked-due ${dueCls2}">${link?.next_due ? dueTxt : '—'}</span>
           </div>`
           : `<p style="font-size:12px;color:var(--text-3);">Geen asset gekoppeld. Bewerk het plan om een asset te selecteren.</p>`}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="ti ti-clipboard-list"></i> Gegenereerde werkorders (${(genWOs||[]).length})</div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          ${(genWOs||[]).length ? (genWOs.map((wo, idx) => {
+            const isLast = idx === genWOs.length - 1;
+            const statusColor = wo.status === 'Voltooid' ? 'var(--green-text)' : wo.status === 'Geannuleerd' ? 'var(--text-3)' : wo.status === 'In uitvoering' ? 'var(--amber-text)' : 'var(--blue-text)';
+            const date = wo.created_at ? new Date(wo.created_at).toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'}) : '—';
+            return `<div style="display:flex;align-items:center;gap:10px;padding:9px 16px;${isLast ? '' : 'border-bottom:0.5px solid var(--border);'}">
+              <div style="flex:1;">
+                <a href="werkorders.html?wo=${wo.id}" style="font-size:12px;font-weight:500;color:var(--accent);text-decoration:none;background:var(--blue-bg);border:0.5px solid var(--accent);border-radius:6px;padding:2px 8px;margin-right:6px;white-space:nowrap;">${escHtml(wo.wo_number)} <i class="ti ti-arrow-right" style="font-size:10px;"></i></a>
+                <span style="font-size:11px;color:var(--text-3);">${date}</span>
+              </div>
+              <span style="font-size:11px;font-weight:500;color:${statusColor};">${escHtml(wo.status)}</span>
+            </div>`;
+          }).join(''))
+          : `<div style="padding:14px 16px;font-size:12px;color:var(--text-3);">Nog geen werkorders gegenereerd vanuit dit plan.</div>`}
         </div>
       </div>`;
   }
@@ -600,6 +749,9 @@
         <select onchange="taskRows[${i}].meter_naam=this.value">
           <option value="">— Geen meter —</option>${selectedOpts}
         </select>
+        <button type="button" onclick="openQuickMeterModal()" title="Nieuwe meter aanmaken" style="background:none;border:0.5px solid var(--border-strong);border-radius:var(--radius-sm);padding:4px 7px;cursor:pointer;color:var(--accent);font-size:13px;line-height:1;flex-shrink:0;">
+          <i class="ti ti-plus"></i>
+        </button>
       </div>` : ''}`;
     }).join('');
   }
@@ -615,6 +767,7 @@
     document.getElementById('fTriggerDrempel').value = '';
     document.getElementById('planModalTitle').textContent = 'Nieuw onderhoudsplan';
     taskRows = [{ description: '', meter_naam: '', _open: false }];
+    setTriggerType('kalender');
     vulTriggerMeterDropdown('');
     renderTaskEditor();
     document.getElementById('planModal').classList.add('open');
@@ -631,6 +784,7 @@
     document.getElementById('fPlanDuration').value = p.estimated_duration || '';
     document.getElementById('fTriggerDrempel').value = p.meter_drempel || '';
     document.getElementById('planModalTitle').textContent = 'Plan bewerken';
+    setTriggerType(deriveTriggerType(p));
     vulTriggerMeterDropdown(p.meter_naam || '');
     const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
     taskRows = tasks.length
@@ -653,8 +807,8 @@
         interval_days: parseInt(document.getElementById('fPlanDays').value) || 90,
         estimated_duration: parseInt(document.getElementById('fPlanDuration').value) || null,
         asset_id: document.getElementById('fPlanAsset').value || null,
-        meter_naam: document.getElementById('fTriggerMeter').value || null,
-        meter_drempel: parseFloat(document.getElementById('fTriggerDrempel').value) || null,
+        meter_naam:    (currentTriggerType !== 'kalender') ? (document.getElementById('fTriggerMeter').value || null) : null,
+        meter_drempel: (currentTriggerType !== 'kalender') ? (parseFloat(document.getElementById('fTriggerDrempel').value) || null) : null,
       };
       if (!payload.name) {
         alert('Vul een naam in.');
@@ -748,6 +902,7 @@
       due_date:    link?.next_due || null,
       notes:       `Automatisch gegenereerd vanuit onderhoudsplan: ${plan.name}`,
       status:      'Open',
+      plan_id:     planId,
     }).select().single();
     if (error) { alert('Fout bij aanmaken WO: ' + error.message); return; }
 

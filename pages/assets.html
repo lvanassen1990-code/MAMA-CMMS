@@ -606,6 +606,7 @@
             <th class="sortable">Asset <span class="sort-icon">↕</span></th>
             <th>Categorie</th>
             <th class="sortable">Locatie <span class="sort-icon">↕</span></th>
+            <th>Afdeling</th>
             <th>Status</th>
             <th class="sortable">Laatste onderhoud <span class="sort-icon">↕</span></th>
             <th class="sortable">Volgend onderhoud <span class="sort-icon">↕</span></th>
@@ -861,7 +862,7 @@
 
     <div class="drawer-footer">
       <button type="button" class="btn" onclick="closeDrawer()"><i class="ti ti-x"></i> Sluiten</button>
-      <button type="button" class="btn primary" onclick="openAddHistoryModal()"><i class="ti ti-plus"></i> Onderhoud registreren</button>
+      <button type="button" class="btn primary" onclick="window.location='werkorders.html?nieuw='+drawerAsset.asset_id"><i class="ti ti-clipboard-list"></i> Werkorder aanmaken</button>
     </div>
   </div>
 </div>
@@ -1511,6 +1512,7 @@
       </div></td>
       <td><span class="cat-badge">${a.category || '—'}</span></td>
       <td style="font-size:12px;color:var(--text-2);">${a.location || '—'}</td>
+      <td style="font-size:12px;color:var(--text-2);">${a.department || '—'}</td>
       <td>${statusBadge(a.status)}</td>
       <td style="font-size:11px;color:var(--text-3);">${lastDate}</td>
       <td><span class="${dc}">${dt}</span></td>
@@ -1541,7 +1543,7 @@
   function renderTablePage(data) {
     const tbody = document.getElementById('assetsBody');
     if (!filteredCache.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Geen assets gevonden</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text-3);">Geen assets gevonden</td></tr>`;
       return;
     }
     // Bij actieve zoekterm: platte lijst + paginering; anders volledige boomstructuur
@@ -1689,10 +1691,10 @@
 
   async function loadAssets() {
     const tbody = document.getElementById('assetsBody');
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Laden…</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;"></i> Laden…</td></tr>`;
     const { data, error } = await sb.from('assets').select('*').order('asset_id');
     if (error) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden: ${error.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--red-text);">Fout bij laden: ${error.message}</td></tr>`;
       return;
     }
     allAssets = data;
@@ -1946,10 +1948,11 @@
     let html = '';
     try {
       const { data, error } = await sb
-        .from('maintenance_history')
-        .select('*')
+        .from('werkorders')
+        .select('id, wo_number, description, status, wo_type, completed_at, created_at, assigned_to, notes')
         .eq('asset_id', assetId)
-        .order('date', { ascending: false });
+        .eq('status', 'Voltooid')
+        .order('completed_at', { ascending: false });
 
       if (error || !data || data.length === 0) {
         html = `<div class="history-header">
@@ -1961,22 +1964,21 @@
         </div>`;
       } else {
         html = `<div class="history-header">
-          <span class="history-title">${data.length} registratie${data.length !== 1 ? 's' : ''}</span>
+          <span class="history-title">${data.length} afgeronde werkorder${data.length !== 1 ? 's' : ''}</span>
         </div>`;
         html += data.map(h => {
-          const d = new Date(h.date).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
-          const parts = h.parts_used ? h.parts_used.split(',').map(p => `<span class="part-chip">${p.trim()}</span>`).join('') : '';
+          const d = new Date(h.completed_at || h.created_at).toLocaleDateString('nl-NL', { day:'numeric', month:'short', year:'numeric' });
+          const typeColor = h.wo_type === 'Preventief' ? 'var(--blue-text)' : h.wo_type === 'Correctief' ? 'var(--red-text)' : 'var(--text-2)';
           return `<div class="history-item">
             <div class="history-date-col">${d}</div>
             <div class="history-dot-col"><div class="history-dot"></div><div class="history-line"></div></div>
             <div class="history-content">
-              <div class="history-desc">${h.description || '—'}</div>
+              <div class="history-desc" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${h.description || '—'} <a href="werkorders.html?wo=${h.id}" style="font-size:11px;color:var(--accent);text-decoration:none;font-weight:500;background:var(--blue-bg);border:0.5px solid var(--accent);border-radius:6px;padding:2px 8px;white-space:nowrap;" title="Werkorder openen">${h.wo_number} <i class="ti ti-arrow-right" style="font-size:10px;"></i></a></div>
               <div class="history-meta">
-                <span><i class="ti ti-user" style="font-size:11px;"></i> ${h.technician || '—'}</span>
-                <span><i class="ti ti-tag" style="font-size:11px;"></i> ${h.maintenance_type || '—'}</span>
-                ${h.cost ? `<span><i class="ti ti-currency-euro" style="font-size:11px;"></i> ${parseFloat(h.cost).toFixed(2)}</span>` : ''}
+                <span style="color:${typeColor};"><i class="ti ti-tag" style="font-size:11px;"></i> ${h.wo_type || '—'}</span>
+                <span><i class="ti ti-user" style="font-size:11px;"></i> ${h.assigned_to || '—'}</span>
               </div>
-              ${parts ? `<div class="history-parts">${parts}</div>` : ''}
+              ${h.notes ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px;">${h.notes}</div>` : ''}
             </div>
           </div>`;
         }).join('');
@@ -2223,10 +2225,9 @@
   async function loadDrawerStoringen(assetId) {
     const pane = document.getElementById('tabStoringen');
     try {
-      const { data, error } = await sb.from('werkorders')
-        .select('wo_number,description,assigned_to,created_at,completed_at,status,priority')
+      const { data, error } = await sb.from('storingen')
+        .select('storing_number, description, status, priority, oorzaak_categorie, herstel_tijd, gemeld_door, created_at')
         .eq('asset_id', assetId)
-        .eq('wo_type', 'Correctief')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -2235,18 +2236,21 @@
         return;
       }
 
-      const rows = data.map(w => {
-        const date = new Date(w.created_at).toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'});
-        const duur = w.completed_at
-          ? Math.round((new Date(w.completed_at) - new Date(w.created_at)) / 60000) + ' min'
-          : '—';
-        const prioColor = { Kritiek: 'var(--red-text)', Hoog: 'var(--amber-text)', Normaal: 'var(--text-2)', Laag: 'var(--text-3)' }[w.priority] || 'var(--text-2)';
+      const rows = data.map(s => {
+        const date = new Date(s.created_at).toLocaleDateString('nl-NL', {day:'numeric',month:'short',year:'numeric'});
+        const prioColor = { Kritiek: 'var(--red-text)', Hoog: 'var(--amber-text)', Normaal: 'var(--text-2)', Laag: 'var(--text-3)' }[s.priority] || 'var(--text-2)';
+        const statusColor = s.status === 'Opgelost' ? 'var(--green-text)' : s.status === 'Open' ? 'var(--red-text)' : 'var(--amber-text)';
         return `<div style="display:flex;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);align-items:flex-start;">
           <div style="flex-shrink:0;width:8px;height:8px;border-radius:50%;background:${prioColor};margin-top:5px;"></div>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:12px;font-weight:500;">${w.description}</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${date} · ${w.wo_number} · ${w.assigned_to||'—'} · Hersteltijd: ${duur}</div>
+            <div style="font-size:12px;font-weight:500;">${s.description || '—'}</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">
+              ${date} · ${s.storing_number} · gemeld door ${s.gemeld_door||'—'}
+              ${s.herstel_tijd ? ` · hersteltijd: ${s.herstel_tijd} min` : ''}
+              ${s.oorzaak_categorie ? ` · ${s.oorzaak_categorie}` : ''}
+            </div>
           </div>
+          <span style="font-size:11px;font-weight:500;color:${statusColor};flex-shrink:0;">${s.status}</span>
         </div>`;
       }).join('');
 

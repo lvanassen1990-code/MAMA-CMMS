@@ -381,23 +381,23 @@
   }
 
   async function checkMeterTriggers(meter, nieuweStand) {
-    const { data: plannen } = await sb.from('maintenance_plans')
+    const { data: plannen, error: qErr } = await sb.from('maintenance_plans')
       .select('id, name, meter_naam, meter_drempel, meter_trigger_stand, asset_id')
       .eq('asset_id', meter.asset_id)
       .eq('meter_naam', meter.naam)
-      .eq('is_active', true)
+      .neq('is_active', false)
       .not('meter_drempel', 'is', null);
+
+    if (qErr) { alert('Trigger query fout: ' + qErr.message); return; }
+    if (!plannen?.length) return;
 
     for (const plan of plannen || []) {
       let stand = plan.meter_trigger_stand ?? 0;
       const drempel = plan.meter_drempel;
-      let getriggerd = false;
-      while (nieuweStand >= stand + drempel) {
-        stand += drempel;
-        getriggerd = true;
-        await maakPmWerkorder(plan, stand);
-      }
-      if (getriggerd) {
+      if (nieuweStand >= stand + drempel) {
+        const eersteStand = stand + drempel;
+        while (nieuweStand >= stand + drempel) stand += drempel;
+        await maakPmWerkorder(plan, eersteStand);
         await sb.from('maintenance_plans').update({ meter_trigger_stand: stand }).eq('id', plan.id);
       }
     }
@@ -412,15 +412,32 @@
       if (m) nextSeq = parseInt(m[1], 10) + 1;
     }
     const woNum = `WO-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
-    await sb.from('werkorders').insert({
+    const { data: wo, error } = await sb.from('werkorders').insert({
       wo_number: woNum,
-      description: `${plan.name} — metertrigger op ${triggerStand} ${plan.meter_naam}`,
+      description: `${plan.name}`,
       asset_id: plan.asset_id,
       wo_type: 'Preventief',
       priority: 'Normaal',
       notes: `Automatisch gegenereerd: meter "${plan.meter_naam}" bereikte ${triggerStand}.`,
       status: 'Open',
-    });
+      plan_id: plan.id,
+    }).select().single();
+    if (error) { alert('Fout bij aanmaken werkorder: ' + error.message); return; }
+    alert(`Werkorder ${woNum} aangemaakt via meter-trigger (${plan.meter_naam} bereikte ${triggerStand}).`);
+
+    const { data: taken } = await sb.from('maintenance_tasks')
+      .select('*').eq('plan_id', plan.id).order('order_nr');
+    if (taken?.length && wo) {
+      await sb.from('werkorder_taken').insert(
+        taken.map(t => ({
+          wo_id: wo.id,
+          order_nr: t.order_nr,
+          omschrijving: t.description,
+          meter_naam: t.meter_naam || null,
+          voltooid: false,
+        }))
+      );
+    }
   }
 
   async function loadMeters() {
@@ -639,11 +656,9 @@
       await sb.from('meter_readings').insert({ meter_id: drawerMeter.id, stand, afgelezen_op: datum, ingevuld_door: door, asset_id });
     }
 
-    const { data: latest } = await sb.from('meter_readings').select('stand, afgelezen_op')
-      .eq('meter_id', drawerMeter.id).order('afgelezen_op', { ascending: false }).limit(1).single();
-    if (latest) await sb.from('meters').update({ huidige_stand: latest.stand, laatste_afgelezen_op: latest.afgelezen_op }).eq('id', drawerMeter.id);
+    await sb.from('meters').update({ huidige_stand: stand, laatste_afgelezen_op: datum }).eq('id', drawerMeter.id);
 
-    if (drawerMeter.asset_id && latest) await checkMeterTriggers(drawerMeter, latest.stand);
+    if (drawerMeter.asset_id) await checkMeterTriggers(drawerMeter, stand);
 
     closeAfgelezenModal();
     await loadMeters();

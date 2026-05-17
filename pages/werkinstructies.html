@@ -267,6 +267,44 @@
   </div>
 </div>
 
+<!-- Modal: Snelle meter aanmaken -->
+<div class="modal-overlay" id="wiQuickMeterModal" onclick="if(event.target===this)document.getElementById('wiQuickMeterModal').classList.remove('open')">
+  <div class="modal" style="width:380px;">
+    <div class="modal-header">
+      <div class="modal-title">Nieuwe meter aanmaken</div>
+      <button class="modal-close" onclick="document.getElementById('wiQuickMeterModal').classList.remove('open')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Asset</label>
+        <select class="form-input" id="wiQmAsset">
+          <option value="">— Selecteer asset —</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">Naam</label>
+          <input class="form-input" id="wiQmNaam" placeholder="bijv. Bedrijfsuren" />
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">Eenheid</label>
+          <select class="form-input" id="wiQmEenheid">
+            <option value="">— Kies eenheid —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beginstand</label>
+        <input class="form-input" id="wiQmBeginstand" type="number" min="0" value="0" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="document.getElementById('wiQuickMeterModal').classList.remove('open')">Annuleren</button>
+      <button class="btn primary" id="wiQmSaveBtn" onclick="saveWiQuickMeter()"><i class="ti ti-plus"></i> Aanmaken</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   function toggleNavOnderhoud() {
@@ -285,9 +323,9 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let allWI = [], drawerWI = null, drawerItems = [], allEenheden = [], allMeters = [];
+  let allWI = [], drawerWI = null, drawerItems = [], allEenheden = [], allMeters = [], allAssets = [];
 
-  document.addEventListener('DOMContentLoaded', () => { loadWerkinstructies(); loadEenheden(); loadMeters(); });
+  document.addEventListener('DOMContentLoaded', () => { loadWerkinstructies(); loadEenheden(); loadMeters(); loadAssets(); });
 
   async function loadWerkinstructies() {
     const { data, error } = await sb.from('werkinstructies').select('*, werkinstructie_items(id)').order('naam');
@@ -306,6 +344,53 @@
   async function loadMeters() {
     const { data } = await sb.from('meters').select('id,naam,eenheid,assets(name)').order('naam');
     allMeters = data || [];
+  }
+
+  async function loadAssets() {
+    const { data } = await sb.from('assets').select('asset_id, name').neq('status','Afgeschreven').order('name');
+    allAssets = data || [];
+  }
+
+  function openWiQuickMeterModal() {
+    const assetSel = document.getElementById('wiQmAsset');
+    assetSel.innerHTML = '<option value="">— Selecteer asset —</option>' +
+      allAssets.map(a => `<option value="${a.asset_id}">${a.name} (${a.asset_id})</option>`).join('');
+    document.getElementById('wiQmEenheid').innerHTML = '<option value="">— Kies eenheid —</option>' +
+      allEenheden.map(e => `<option value="${e}">${e}</option>`).join('');
+    document.getElementById('wiQmNaam').value = '';
+    document.getElementById('wiQmBeginstand').value = '0';
+    document.getElementById('wiQuickMeterModal').classList.add('open');
+    setTimeout(() => document.getElementById('wiQmNaam').focus(), 100);
+  }
+
+  async function saveWiQuickMeter() {
+    const assetId  = document.getElementById('wiQmAsset').value;
+    const naam     = document.getElementById('wiQmNaam').value.trim();
+    const eenheid  = document.getElementById('wiQmEenheid').value;
+    const begin    = parseFloat(document.getElementById('wiQmBeginstand').value) || 0;
+    if (!assetId || !naam || !eenheid) { alert('Vul asset, naam en eenheid in.'); return; }
+
+    const btn = document.getElementById('wiQmSaveBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Bezig…';
+
+    const { data: inserted, error } = await sb.from('meters')
+      .insert({ naam, eenheid, asset_id: assetId, huidige_stand: begin })
+      .select().single();
+    if (error) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-plus"></i> Aanmaken'; alert('Fout: ' + error.message); return; }
+
+    if (begin > 0) {
+      await sb.from('meter_readings').insert({
+        meter_id: inserted.id, stand: begin,
+        afgelezen_op: new Date().toISOString().split('T')[0],
+        ingevuld_door: 'Beginstand',
+      });
+    }
+
+    allMeters.push({ ...inserted, assets: allAssets.find(a => a.asset_id === assetId) });
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-plus"></i> Aanmaken';
+    document.getElementById('wiQuickMeterModal').classList.remove('open');
+    populateItemFormDropdowns();
+    document.getElementById('iMeter').value = naam;
   }
 
   function populateItemFormDropdowns() {
@@ -469,8 +554,13 @@
             </div>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label class="form-label">Meter koppelen <span style="font-size:10px;color:var(--text-3);">(optioneel — stand wordt meegeschreven bij WO afsluiten)</span></label>
-            <select class="form-input" id="iMeter"><option value="">— Geen meter —</option></select>
+            <label class="form-label">Meter koppelen <span style="font-size:10px;color:var(--text-3);font-weight:400;">(optioneel)</span></label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <select class="form-input" id="iMeter" style="flex:1;"><option value="">— Geen meter —</option></select>
+              <button type="button" onclick="openWiQuickMeterModal()" title="Nieuwe meter aanmaken" style="flex-shrink:0;padding:7px 10px;border:0.5px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--bg);cursor:pointer;color:var(--accent);font-size:14px;line-height:1;">
+                <i class="ti ti-plus"></i>
+              </button>
+            </div>
           </div>
         </div>
         <div id="iKeuzelijstFields" style="display:none;margin-bottom:10px;">

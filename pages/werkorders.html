@@ -1393,6 +1393,7 @@
           if (!meter) continue;
           await sb.from('meter_readings').insert({ meter_id: meter.id, stand, afgelezen_op: vandaag, ingevuld_door: door });
           await sb.from('meters').update({ huidige_stand: stand, laatste_afgelezen_op: vandaag }).eq('id', meter.id);
+          await checkMeterTriggersWO(drawerWO.asset_id, t.meter_naam, stand);
         }
       }
     } catch(e) { console.error('Fout bij doorschrijven PM-meterstanden:', e); }
@@ -1847,6 +1848,8 @@
     if (woId) openDrawer(woId);
     if (params.get('filter') === 'verlopen') setVerlopenFilter(true);
     if (params.get('filter') === 'vandaag') setDatumFilter(todayStr);
+    const nieuwAsset = params.get('nieuw');
+    if (nieuwAsset) openModal(nieuwAsset);
   });
   (async () => {
     try {
@@ -1855,6 +1858,54 @@
       if (badge) { badge.textContent = count || ''; badge.style.display = count ? '' : 'none'; }
     } catch(e) {}
   })();
+
+  async function checkMeterTriggersWO(assetId, meterNaam, nieuweStand) {
+    const { data: plannen } = await sb.from('maintenance_plans')
+      .select('id, name, meter_naam, meter_drempel, meter_trigger_stand, asset_id')
+      .eq('asset_id', assetId)
+      .eq('meter_naam', meterNaam)
+      .neq('is_active', false)
+      .not('meter_drempel', 'is', null);
+    for (const plan of plannen || []) {
+      let stand = plan.meter_trigger_stand ?? 0;
+      const drempel = plan.meter_drempel;
+      if (nieuweStand >= stand + drempel) {
+        const eersteStand = stand + drempel;
+        while (nieuweStand >= stand + drempel) stand += drempel;
+        await maakPmWerkorderWO(plan, eersteStand);
+        await sb.from('maintenance_plans').update({ meter_trigger_stand: stand }).eq('id', plan.id);
+      }
+    }
+  }
+
+  async function maakPmWerkorderWO(plan, triggerStand) {
+    const { data: last } = await sb.from('werkorders')
+      .select('wo_number').order('wo_number', { ascending: false }).limit(1);
+    let nextSeq = 1;
+    if (last?.length) {
+      const m = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
+      if (m) nextSeq = parseInt(m[1], 10) + 1;
+    }
+    const woNum = `WO-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
+    const { data: wo, error } = await sb.from('werkorders').insert({
+      wo_number: woNum,
+      description: plan.name,
+      asset_id: plan.asset_id,
+      wo_type: 'Preventief',
+      priority: 'Normaal',
+      notes: `Automatisch gegenereerd: meter "${plan.meter_naam}" bereikte ${triggerStand}.`,
+      status: 'Open',
+      plan_id: plan.id,
+    }).select().single();
+    if (error) { console.error('WO aanmaken mislukt:', error); return; }
+    const { data: taken } = await sb.from('maintenance_tasks')
+      .select('*').eq('plan_id', plan.id).order('order_nr');
+    if (taken?.length && wo) {
+      await sb.from('werkorder_taken').insert(
+        taken.map(t => ({ wo_id: wo.id, order_nr: t.order_nr, omschrijving: t.description, meter_naam: t.meter_naam || null, voltooid: false }))
+      );
+    }
+  }
 </script>
 </body>
 </html>
