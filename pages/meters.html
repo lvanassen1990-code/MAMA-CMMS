@@ -429,7 +429,6 @@
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-3);">Geen meters gevonden.</td></tr>';
       return;
     }
-    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
     zichtbaar.forEach(m => {
       const isStale = !m.laatste_afgelezen_op || new Date(m.laatste_afgelezen_op) < cutoff;
       const tr = document.createElement('tr');
