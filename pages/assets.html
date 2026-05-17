@@ -966,6 +966,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../assets/search-select.js"></script>
 <script>
   function toggleNavOnderhoud() {
     const g = document.getElementById('navOnderhoud');
@@ -1021,6 +1022,8 @@
     const huidig = geselecteerd ?? sel.value;
     sel.innerHTML = '<option value="">— Geen —</option>' +
       allMonteurs.map(n => `<option${n === huidig ? ' selected' : ''}>${n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
+    enhanceSearchSelect('fPerson', '— Zoek verantwoordelijke —');
+    syncSearchSelect('fPerson');
   }
 
   function vulCategoryDropdowns(geselecteerd) {
@@ -2410,6 +2413,7 @@
     document.getElementById('fInstallDate').value = new Date().toISOString().split('T')[0];
     document.getElementById('fStatus').value = 'Operationeel';
     vulMonteurDropdown('');
+    syncSearchSelect('fPerson');
     document.getElementById('fPhoto').value = '';
     document.getElementById('photoPreview').innerHTML =
       `<i class="ti ti-camera" style="font-size:22px;color:var(--text-3);"></i>
