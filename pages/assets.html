@@ -701,6 +701,20 @@
           </div>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-field full">
+          <label class="form-label">Afdeling</label>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select class="form-input" id="fDepartment" style="flex:1;"></select>
+            <button type="button" class="btn" onclick="toggleNieuweDeptRow()" title="Nieuwe afdeling toevoegen" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-plus"></i></button>
+          </div>
+          <div id="nieuweDeptRow" style="display:none;margin-top:6px;gap:6px;align-items:center;">
+            <input class="form-input" id="nieuweDeptInput" type="text" placeholder="Nieuwe afdeling…" style="flex:1;" onkeydown="if(event.key==='Enter')saveNieuweDept();if(event.key==='Escape')toggleNieuweDeptRow()" />
+            <button type="button" class="btn primary" onclick="saveNieuweDept()" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-check"></i></button>
+            <button type="button" class="btn" onclick="toggleNieuweDeptRow()" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+      </div>
       <div class="form-field full">
         <label class="form-label">Hoofd-asset (optioneel)</label>
         <select class="form-input" id="fParent" onchange="onParentChange()">
@@ -1010,6 +1024,7 @@
   }
 
   let allMonteurs = [];
+  let allDepartments = [];
 
   async function loadMonteurs() {
     const { data } = await sb.from('monteurs').select('naam').eq('actief', true).order('naam');
@@ -1081,6 +1096,42 @@
     await loadLocaties();
     vulLocationDropdown(naam);
     toggleNieuweLocRow();
+  }
+
+  async function loadDepartments() {
+    const { data } = await sb.from('departments').select('naam').eq('actief', true).order('naam');
+    allDepartments = (data || []).map(r => r.naam);
+    vulDepartmentDropdown();
+  }
+
+  function vulDepartmentDropdown(geselecteerd) {
+    const sel = document.getElementById('fDepartment');
+    const huidig = geselecteerd ?? sel.value;
+    sel.innerHTML = '<option value="">— Geen afdeling —</option>' +
+      allDepartments.map(n => `<option${n === huidig ? ' selected' : ''}>${n.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
+  }
+
+  function toggleNieuweDeptRow() {
+    const row = document.getElementById('nieuweDeptRow');
+    const zichtbaar = row.style.display === 'flex';
+    row.style.display = zichtbaar ? 'none' : 'flex';
+    if (!zichtbaar) { document.getElementById('nieuweDeptInput').value = ''; document.getElementById('nieuweDeptInput').focus(); }
+  }
+
+  async function saveNieuweDept() {
+    const input = document.getElementById('nieuweDeptInput');
+    const naam = input.value.trim();
+    if (!naam) return;
+    const { error } = await sb.from('departments').insert({ naam });
+    if (error) {
+      input.style.borderColor = 'var(--red)';
+      input.title = error.code === '23505' ? 'Bestaat al' : error.message;
+      setTimeout(() => { input.style.borderColor = ''; input.title = ''; }, 2000);
+      return;
+    }
+    await loadDepartments();
+    vulDepartmentDropdown(naam);
+    toggleNieuweDeptRow();
   }
 
   async function loadEenheden() {
@@ -1692,6 +1743,7 @@
       name,
       category:             document.getElementById('fCategory').value,
       location:             document.getElementById('fLocation').value,
+      department:           document.getElementById('fDepartment').value || null,
       parent_id:            document.getElementById('fParent').value || null,
       manufacturer:         document.getElementById('fManufacturer').value.trim(),
       model:                document.getElementById('fModel').value.trim(),
@@ -2271,6 +2323,7 @@
     const cats = allCategories;
     const locs = allLocaties;
     const persons = ['— Geen —', ...allMonteurs];
+    const depts = ['— Geen afdeling —', ...allDepartments];
 
     function sel(opts, val) {
       return `<select class="drawer-edit-input drawer-edit-select">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
@@ -2317,6 +2370,10 @@
           ${sel(persons, a.responsible_person)}
         </div>
         <div class="drawer-field">
+          <div class="drawer-label">Afdeling</div>
+          ${sel(depts, a.department)}
+        </div>
+        <div class="drawer-field">
           <div class="drawer-label">Installatiedatum</div>
           ${inp(a.installation_date, '', 'date')}
         </div>
@@ -2338,7 +2395,7 @@
     btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Opslaan…';
 
     const inputs = document.querySelectorAll('#editGrid .drawer-edit-input');
-    // volgorde: categorie(0), fabrikant(1), model(2), serienummer(3), locatie(4), verantwoordelijke(5), installatiedatum(6)
+    // volgorde: categorie(0), fabrikant(1), model(2), serienummer(3), locatie(4), verantwoordelijke(5), afdeling(6), installatiedatum(7)
     const name = document.getElementById('editName').value.trim();
     const vals = [...inputs].map(i => i.value);
     const payload = {
@@ -2349,7 +2406,8 @@
       serial_number:      vals[3],
       location:           vals[4],
       responsible_person: vals[5] === '— Geen —' ? null : vals[5],
-      installation_date:  vals[6] || null,
+      department:         vals[6] === '— Geen afdeling —' ? null : vals[6],
+      installation_date:  vals[7] || null,
     };
 
     const { error } = await sb.from('assets').update(payload).eq('asset_id', drawerAsset.asset_id);
@@ -2414,6 +2472,7 @@
     document.getElementById('fStatus').value = 'Operationeel';
     vulMonteurDropdown('');
     syncSearchSelect('fPerson');
+    vulDepartmentDropdown('');
     document.getElementById('fPhoto').value = '';
     document.getElementById('photoPreview').innerHTML =
       `<i class="ti ti-camera" style="font-size:22px;color:var(--text-3);"></i>
@@ -2450,7 +2509,7 @@
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
 
-  Promise.all([loadAssets(), loadCategories(), loadLocaties(), loadMonteurs()]).then(() => {
+  Promise.all([loadAssets(), loadCategories(), loadLocaties(), loadMonteurs(), loadDepartments()]).then(() => {
     const params = new URLSearchParams(location.search);
     const assetId = params.get('asset');
     if (assetId) openDrawer(assetId);
