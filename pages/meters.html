@@ -147,10 +147,22 @@
       </div>
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px;">
-      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);cursor:pointer;user-select:none;">
-        <input type="checkbox" id="toonInactiefToggle" onchange="toggleToonInactief()" style="width:15px;height:15px;cursor:pointer;" />
-        Toon inactieve meters
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+      <div style="position:relative;flex:1;min-width:200px;">
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text-3);pointer-events:none;"></i>
+        <input type="text" id="meterZoek" class="form-input" placeholder="Zoek op naam of asset…" oninput="renderMeters()" style="padding-left:32px;font-size:12px;" />
+      </div>
+      <select id="filterEenheid" class="form-input" onchange="renderMeters()" style="font-size:12px;min-width:140px;">
+        <option value="">Alle eenheden</option>
+      </select>
+      <select id="filterStale" class="form-input" onchange="renderMeters()" style="font-size:12px;min-width:160px;">
+        <option value="">Alle meters</option>
+        <option value="stale">Niet bijgewerkt (&gt;30d)</option>
+        <option value="ok">Bijgewerkt</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer;user-select:none;white-space:nowrap;">
+        <input type="checkbox" id="toonInactiefToggle" onchange="renderMeters()" style="width:15px;height:15px;cursor:pointer;" />
+        Toon inactief
       </label>
     </div>
 
@@ -338,7 +350,7 @@
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let allMeters = [], allAssets = [], allEenheden = [], drawerMeter = null, editingReadingId = null, toonInactief = false;
+  let allMeters = [], allAssets = [], allEenheden = [], drawerMeter = null, editingReadingId = null;
 
   document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('fDatum').value = new Date().toISOString().split('T')[0];
@@ -372,6 +384,7 @@
     const { data, error } = await sb.from('meters').select('*, assets(name)').order('naam');
     if (error) { console.error(error); return; }
     allMeters = data || [];
+    vulFilterEenheid();
     renderMeters();
     updateKPIs();
     document.getElementById('topbarSub').textContent = `${allMeters.length} meter${allMeters.length !== 1 ? 's' : ''} geconfigureerd`;
@@ -386,15 +399,32 @@
     document.getElementById('kpiGekoppeld').textContent = count ?? 0;
   }
 
-  function toggleToonInactief() {
-    toonInactief = document.getElementById('toonInactiefToggle').checked;
-    renderMeters();
+  function vulFilterEenheid() {
+    const sel = document.getElementById('filterEenheid');
+    const huidig = sel.value;
+    const eenheden = [...new Set(allMeters.map(m => m.eenheid).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">Alle eenheden</option>' +
+      eenheden.map(e => `<option value="${e}"${e === huidig ? ' selected' : ''}>${e}</option>`).join('');
   }
 
   function renderMeters() {
+    const toonInactief = document.getElementById('toonInactiefToggle').checked;
+    const zoek = (document.getElementById('meterZoek')?.value || '').toLowerCase().trim();
+    const filterEenheid = document.getElementById('filterEenheid')?.value || '';
+    const filterStale = document.getElementById('filterStale')?.value || '';
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+
     const tbody = document.getElementById('metersBody');
     tbody.innerHTML = '';
-    const zichtbaar = allMeters.filter(m => toonInactief || m.actief !== false);
+    let zichtbaar = allMeters.filter(m => toonInactief || m.actief !== false);
+
+    if (zoek) zichtbaar = zichtbaar.filter(m =>
+      m.naam.toLowerCase().includes(zoek) || (m.assets?.name || '').toLowerCase().includes(zoek)
+    );
+    if (filterEenheid) zichtbaar = zichtbaar.filter(m => m.eenheid === filterEenheid);
+    if (filterStale === 'stale') zichtbaar = zichtbaar.filter(m => !m.laatste_afgelezen_op || new Date(m.laatste_afgelezen_op) < cutoff);
+    if (filterStale === 'ok') zichtbaar = zichtbaar.filter(m => m.laatste_afgelezen_op && new Date(m.laatste_afgelezen_op) >= cutoff);
+
     if (!zichtbaar.length) {
       tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-3);">Geen meters gevonden.</td></tr>';
       return;
