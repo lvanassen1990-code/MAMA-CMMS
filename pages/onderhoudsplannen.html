@@ -481,18 +481,19 @@
     const dc = document.getElementById('detailCol');
     dc.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-3);"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:20px;"></i></div>`;
 
-    const { data: links } = await sb
-      .from('asset_maintenance_plans')
-      .select('*, assets(asset_id, name, location, status)')
-      .eq('plan_id', p.id);
+    const { data: link } = p.asset_id
+      ? await sb.from('asset_maintenance_plans').select('next_due').eq('plan_id', p.id).eq('asset_id', p.asset_id).maybeSingle()
+      : { data: null };
 
+    const asset = allAssets.find(a => a.asset_id === p.asset_id);
     const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
     const isActive = p.is_active !== false;
+    const [dueCls2, dueTxt] = dueCls(link?.next_due);
 
     dc.innerHTML = `
       <div class="card">
         <div class="card-header">
-          <div class="card-title"><i class="ti ti-clipboard-text"></i> ${p.name}</div>
+          <div class="card-title"><i class="ti ti-clipboard-text"></i> ${escHtml(p.name)}</div>
           <div style="display:flex;align-items:center;gap:10px;">
             <label class="toggle-wrap" title="${isActive ? 'Plan deactiveren' : 'Plan activeren'}">
               <label class="toggle">
@@ -501,8 +502,7 @@
               </label>
               <span class="toggle-label">${isActive ? 'Actief' : 'Inactief'}</span>
             </label>
-            ${isActive ? `<button class="btn" onclick="genereerWerkorders('${p.id}')"><i class="ti ti-bolt"></i> Genereer werkorder</button>` : ''}
-            <button class="btn" onclick="openLinkModal('${p.id}')"><i class="ti ti-link"></i> Assets koppelen</button>
+            ${isActive && p.asset_id ? `<button class="btn" onclick="genereerWerkorder('${p.id}')"><i class="ti ti-bolt"></i> Genereer werkorder</button>` : ''}
             <button class="btn" onclick="editPlan('${p.id}')"><i class="ti ti-pencil"></i> Bewerken</button>
           </div>
         </div>
@@ -513,14 +513,14 @@
             <div class="info-item"><div class="info-label">Geschatte tijd</div><div class="info-value">${p.estimated_duration ? p.estimated_duration + ' min' : '—'}</div></div>
           </div>
           ${p.meter_naam && p.meter_drempel ? `
-          <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;">
+          <div style="background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:10px;">
             <i class="ti ti-gauge" style="font-size:16px;color:var(--accent);flex-shrink:0;"></i>
             <div>
               <div style="font-weight:500;">Meter-trigger actief</div>
-              <div style="color:var(--text-2);">${escHtml(p.meter_naam)} — elke ${p.meter_drempel} eenheden · volgende trigger op ${(p.meter_trigger_stand || 0) + p.meter_drempel}</div>
+              <div style="color:var(--text-2);">${escHtml(p.meter_naam)} — elke ${p.meter_drempel} eenheden · volgende op ${(p.meter_trigger_stand || 0) + p.meter_drempel}</div>
             </div>
           </div>` : ''}
-          ${p.description ? `<p style="font-size:12px;color:var(--text-2);margin-bottom:14px;">${p.description}</p>` : ''}
+          ${p.description ? `<p style="font-size:12px;color:var(--text-2);">${escHtml(p.description)}</p>` : ''}
         </div>
       </div>
 
@@ -532,8 +532,7 @@
           ${tasks.length ? `<div class="task-list">${tasks.map(t => `
             <div class="task-item">
               <span class="task-nr">${t.order_nr}</span>
-              <span class="task-text">${t.description}</span>
-              <i class="ti ti-grip-vertical task-drag"></i>
+              <span class="task-text">${escHtml(t.description)}${t.meter_naam ? `<span style="font-size:10px;color:var(--accent);margin-left:8px;"><i class="ti ti-gauge"></i> ${escHtml(t.meter_naam)}</span>` : ''}</span>
             </div>`).join('')}</div>`
           : `<p style="font-size:12px;color:var(--text-3);">Geen taken in dit plan.</p>`}
         </div>
@@ -541,23 +540,18 @@
 
       <div class="card">
         <div class="card-header">
-          <div class="card-title"><i class="ti ti-building-factory-2"></i> Gekoppelde assets (${(links||[]).length})</div>
-          <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openLinkModal('${p.id}')"><i class="ti ti-plus"></i> Koppelen</button>
+          <div class="card-title"><i class="ti ti-building-factory-2"></i> Gekoppeld asset</div>
         </div>
         <div class="card-body">
-          ${(links||[]).length ? (links||[]).map(l => {
-            const a = l.assets;
-            const [dc2, dt] = dueCls(l.next_due);
-            return `<div class="linked-row">
-              <div class="dot ${dotClass(a.status)}"></div>
-              <div style="flex:1;">
-                <div class="linked-name">${a.name}</div>
-                <div class="linked-sub">${a.asset_id} · ${a.location || '—'}</div>
-              </div>
-              <span class="linked-due ${dc2}">${dt}</span>
-            </div>`;
-          }).join('')
-          : `<p style="font-size:12px;color:var(--text-3);">Nog geen assets gekoppeld. Klik op "Assets koppelen".</p>`}
+          ${asset ? `<div class="linked-row">
+            <div class="dot ${dotClass(asset.status)}"></div>
+            <div style="flex:1;">
+              <div class="linked-name">${escHtml(asset.name)}</div>
+              <div class="linked-sub">${asset.asset_id} · ${asset.location || '—'}</div>
+            </div>
+            <span class="linked-due ${dueCls2}">${link?.next_due ? dueTxt : '—'}</span>
+          </div>`
+          : `<p style="font-size:12px;color:var(--text-3);">Geen asset gekoppeld. Bewerk het plan om een asset te selecteren.</p>`}
         </div>
       </div>`;
   }
@@ -728,54 +722,71 @@
   }
 
   /* ── Werkorder genereren ── */
-  async function maakWerkorderAan(plan, link) {
+  async function genereerWerkorder(planId) {
+    const plan = plans.find(p => p.id === planId);
+    if (!plan?.asset_id) { alert('Geen asset gekoppeld aan dit plan.'); return; }
+
     const { data: last } = await sb.from('werkorders')
-      .select('wo_number').order('created_at', { ascending: false }).limit(1);
+      .select('wo_number').order('wo_number', { ascending: false }).limit(1);
     let nextSeq = 1;
     if (last?.length) {
       const m = last[0].wo_number.match(/WO-\d{4}-(\d+)/);
       if (m) nextSeq = parseInt(m[1], 10) + 1;
     }
     const woNum = `WO-${new Date().getFullYear()}-${String(nextSeq).padStart(4, '0')}`;
-    const payload = {
+    const asset = allAssets.find(a => a.asset_id === plan.asset_id);
+
+    const { data: link } = await sb.from('asset_maintenance_plans')
+      .select('id, next_due').eq('plan_id', planId).eq('asset_id', plan.asset_id).maybeSingle();
+
+    const { data: wo, error } = await sb.from('werkorders').insert({
       wo_number:   woNum,
-      description: `${plan.name} — ${link.assets?.name || link.asset_id}`,
-      asset_id:    link.asset_id,
+      description: `${plan.name} — ${asset?.name || plan.asset_id}`,
+      asset_id:    plan.asset_id,
       wo_type:     'Preventief',
       priority:    'Normaal',
-      due_date:    link.next_due || null,
+      due_date:    link?.next_due || null,
       notes:       `Automatisch gegenereerd vanuit onderhoudsplan: ${plan.name}`,
       status:      'Open',
-    };
-    await sb.from('werkorders').insert(payload);
+    }).select().single();
+    if (error) { alert('Fout bij aanmaken WO: ' + error.message); return; }
+
+    // Taken kopiëren als werkorder_taken
+    const taken = (plan.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
+    if (taken.length && wo) {
+      await sb.from('werkorder_taken').insert(
+        taken.map((t, i) => ({
+          wo_id: wo.id,
+          order_nr: t.order_nr ?? i + 1,
+          omschrijving: t.description,
+          meter_naam: t.meter_naam || null,
+          voltooid: false,
+        }))
+      );
+    }
 
     // next_due vooruitschuiven
-    const basis = link.next_due ? new Date(link.next_due) : new Date();
-    basis.setDate(basis.getDate() + plan.interval_days);
-    await sb.from('asset_maintenance_plans')
-      .update({ next_due: basis.toISOString().split('T')[0] })
-      .eq('id', link.id);
-  }
+    if (link) {
+      const basis = link.next_due ? new Date(link.next_due) : new Date();
+      basis.setDate(basis.getDate() + plan.interval_days);
+      await sb.from('asset_maintenance_plans')
+        .update({ next_due: basis.toISOString().split('T')[0] })
+        .eq('id', link.id);
+    }
 
-  async function genereerWerkorders(planId) {
-    const plan = plans.find(p => p.id === planId);
-    if (!plan) return;
-    const { data: links } = await sb.from('asset_maintenance_plans')
-      .select('*, assets(name)').eq('plan_id', planId);
-    if (!links?.length) { alert('Geen assets gekoppeld aan dit plan.'); return; }
-    for (const link of links) await maakWerkorderAan(plan, link);
-    alert(`${links.length} werkorder(s) aangemaakt.`);
+    alert(`Werkorder ${woNum} aangemaakt.`);
     if (selectedPlan?.id === planId) renderDetail();
   }
 
   async function checkAutoGenerate() {
     const today = new Date().toISOString().split('T')[0];
-    const actievePlannen = plans.filter(p => p.is_active !== false);
+    const actievePlannen = plans.filter(p => p.is_active !== false && p.asset_id);
     for (const plan of actievePlannen) {
-      const { data: links } = await sb.from('asset_maintenance_plans')
-        .select('*, assets(name)').eq('plan_id', plan.id).lte('next_due', today);
-      if (!links?.length) continue;
-      for (const link of links) await maakWerkorderAan(plan, link);
+      const { data: link } = await sb.from('asset_maintenance_plans')
+        .select('id, next_due').eq('plan_id', plan.id).eq('asset_id', plan.asset_id)
+        .lte('next_due', today).maybeSingle();
+      if (!link) continue;
+      await genereerWerkorder(plan.id);
     }
   }
 
