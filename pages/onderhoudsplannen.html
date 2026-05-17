@@ -76,7 +76,7 @@
     .modal-footer { padding: 14px 20px; border-top: 0.5px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; position: sticky; bottom: 0; background: var(--surface); }
 
     /* Task editor in modal */
-    .task-editor { display: flex; flex-direction: column; gap: 6px; }
+    .task-editor { display: flex; flex-direction: column; gap: 4px; }
     .task-editor-row { display: flex; align-items: center; gap: 8px; }
     .task-editor-nr { font-size: 11px; color: var(--text-3); min-width: 20px; }
     .task-editor-input { flex: 1; padding: 6px 8px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); font-size: 12px; font-family: inherit; background: var(--bg); outline: none; }
@@ -85,6 +85,11 @@
     .task-remove:hover { background: var(--red); color: #fff; }
     .add-task-btn { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); background: none; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; font-family: inherit; transition: border-color 0.12s, color 0.12s; width: 100%; }
     .add-task-btn:hover { border-color: var(--accent); color: var(--text); }
+    .task-meter-row { display: flex; align-items: center; gap: 8px; padding: 2px 0 6px 28px; }
+    .task-meter-row select, .task-meter-row input { padding: 5px 8px; border-radius: var(--radius-sm); border: 0.5px solid var(--border-strong); font-size: 11px; font-family: inherit; background: var(--bg); outline: none; }
+    .task-meter-row select { flex: 1; }
+    .task-meter-row input { width: 90px; }
+    .task-meter-row select:focus, .task-meter-row input:focus { border-color: var(--blue); background: var(--surface); }
 
     /* Link modal */
     .asset-option { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.1s; }
@@ -229,6 +234,14 @@
       <input type="hidden" id="fPlanId" />
       <div class="form-row">
         <div class="form-field full">
+          <label class="form-label">Asset</label>
+          <select class="form-input" id="fPlanAsset" onchange="renderTaskEditor()">
+            <option value="">— Selecteer asset —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field full">
           <label class="form-label">Naam van het plan</label>
           <input class="form-input" id="fPlanName" placeholder="bijv. Kwartaal groot onderhoud" />
         </div>
@@ -264,18 +277,6 @@
         <div class="task-editor" id="taskEditor"></div>
         <button type="button" class="add-task-btn" onclick="addTaskRow()"><i class="ti ti-plus"></i> Taak toevoegen</button>
       </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label class="form-label"><i class="ti ti-gauge" style="font-size:12px;"></i> Meter (optioneel)</label>
-          <select class="form-input" id="fPlanMeter">
-            <option value="">— Geen meter —</option>
-          </select>
-        </div>
-        <div class="form-field">
-          <label class="form-label">Drempelwaarde</label>
-          <input class="form-input" id="fPlanDrempel" type="number" min="1" placeholder="bijv. 500" />
-        </div>
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeModal('planModal')">Annuleren</button>
@@ -302,6 +303,31 @@
   </div>
 </div>
 
+<!-- Modal: Dupliceer plan -->
+<div class="modal-overlay" id="dupModal" onclick="handleOverlay(event,'dupModal')">
+  <div class="modal" style="width:400px;">
+    <div class="modal-header">
+      <div class="modal-title">Plan dupliceren</div>
+      <button class="modal-close" onclick="closeModal('dupModal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dupPlanId" />
+      <p style="font-size:12px;color:var(--text-2);margin-bottom:8px;">Selecteer het asset waarvoor je dit plan wilt kopiëren:</p>
+      <div class="form-field full">
+        <label class="form-label">Asset</label>
+        <select class="form-input" id="dupAsset">
+          <option value="">— Selecteer asset —</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('dupModal')">Annuleren</button>
+      <button class="btn primary" id="saveDupBtn" onclick="saveDuplicate()"><i class="ti ti-copy"></i> Dupliceren</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/search-select.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   function toggleNavOnderhoud() {
@@ -351,19 +377,29 @@
   }
 
   /* ── Load ── */
+  function vulAssetDropdown(selId, huidig = '') {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = '<option value="">— Selecteer asset —</option>' +
+      allAssets.map(a => `<option value="${a.asset_id}"${a.asset_id === huidig ? ' selected' : ''}>${escHtml(a.name)} (${a.asset_id})</option>`).join('');
+  }
+
+  function getFilteredMeters() {
+    const assetId = document.getElementById('fPlanAsset')?.value;
+    if (!assetId) return allMeters;
+    return allMeters.filter(m => m.asset_id === assetId);
+  }
+
   async function loadAll() {
     const [{ data: p }, { data: a }, { data: m }] = await Promise.all([
       sb.from('maintenance_plans').select('*, maintenance_tasks(*)').order('name'),
-      sb.from('assets').select('asset_id, name, location, status').order('asset_id'),
-      sb.from('meters').select('id, naam, eenheid').order('naam'),
+      sb.from('assets').select('asset_id, name, location, status').neq('status','Afgeschreven').order('name'),
+      sb.from('meters').select('id, naam, eenheid, asset_id').order('naam'),
     ]);
     plans = p || [];
     allAssets = a || [];
     allMeters = m || [];
-    // Vul meter dropdown
-    const sel = document.getElementById('fPlanMeter');
-    while (sel.options.length > 1) sel.remove(1);
-    allMeters.forEach(m => sel.add(new Option(`${m.naam} (${m.eenheid})`, m.id)));
+    vulAssetDropdown('fPlanAsset');
+    vulAssetDropdown('dupAsset');
     const actief = plans.filter(x => x.is_active !== false).length;
     document.getElementById('topbarSub').textContent = `${actief} actieve plannen · ${plans.length - actief} inactief`;
     renderPlansList();
@@ -392,7 +428,10 @@
       return `<div class="plan-card ${sel}${isActive ? '' : ' inactive'}" onclick="selectPlan('${p.id}')">
         <div class="plan-card-header">
           <div class="plan-name">${p.name}</div>
-          <button class="btn" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();editPlan('${p.id}')"><i class="ti ti-pencil"></i></button>
+          <div style="display:flex;gap:4px;">
+            <button class="btn" style="padding:3px 8px;font-size:11px;" title="Dupliceren" onclick="event.stopPropagation();dupliceerPlan('${p.id}')"><i class="ti ti-copy"></i></button>
+            <button class="btn" style="padding:3px 8px;font-size:11px;" onclick="event.stopPropagation();editPlan('${p.id}')"><i class="ti ti-pencil"></i></button>
+          </div>
         </div>
         <div class="plan-desc">${p.description || '—'}</div>
         <div class="plan-meta">
@@ -493,7 +532,7 @@
   let taskRows = [];
 
   function addTaskRow(desc = '') {
-    taskRows.push(desc);
+    taskRows.push({ description: desc, meter_naam: '', drempelwaarde: null, _open: false });
     renderTaskEditor();
   }
 
@@ -502,27 +541,53 @@
     renderTaskEditor();
   }
 
+  function toggleMeterRow(i) {
+    taskRows[i]._open = !taskRows[i]._open;
+    renderTaskEditor();
+  }
+
   function renderTaskEditor() {
-    document.getElementById('taskEditor').innerHTML = taskRows.map((t,i) => `
+    const meters = getFilteredMeters();
+    const meterOpties = '<option value="">— Geen meter —</option>' +
+      meters.map(m => `<option value="${escHtml(m.naam)}">${escHtml(m.naam)} (${escHtml(m.eenheid)})</option>`).join('');
+
+    document.getElementById('taskEditor').innerHTML = taskRows.map((t, i) => {
+      const hasLink = !!t.meter_naam;
+      const showRow = hasLink || t._open;
+      const selectedOpts = meters.map(m =>
+        `<option value="${escHtml(m.naam)}"${t.meter_naam === m.naam ? ' selected' : ''}>${escHtml(m.naam)} (${escHtml(m.eenheid)})</option>`
+      ).join('');
+      return `
       <div class="task-editor-row">
         <span class="task-editor-nr">${i+1}</span>
-        <input class="task-editor-input" value="${t}" placeholder="Omschrijf de taak…"
-          oninput="taskRows[${i}]=this.value" />
+        <input class="task-editor-input" value="${escHtml(t.description)}" placeholder="Omschrijf de taak…"
+          oninput="taskRows[${i}].description=this.value" />
+        <button type="button" class="btn" style="padding:3px 7px;font-size:12px;flex-shrink:0;" title="Meter koppelen"
+          onclick="toggleMeterRow(${i})">
+          <i class="ti ti-gauge" style="${hasLink ? 'color:var(--accent);' : 'color:var(--text-3);'}"></i>
+        </button>
         <button type="button" class="task-remove" onclick="removeTaskRow(${i})"><i class="ti ti-x" style="pointer-events:none;"></i></button>
-      </div>`).join('');
+      </div>
+      ${showRow ? `<div class="task-meter-row">
+        <select onchange="taskRows[${i}].meter_naam=this.value">
+          <option value="">— Geen meter —</option>${selectedOpts}
+        </select>
+        <input type="number" min="1" placeholder="Drempel" value="${t.drempelwaarde ?? ''}"
+          oninput="taskRows[${i}].drempelwaarde=this.value?parseFloat(this.value):null" />
+      </div>` : ''}`;
+    }).join('');
   }
 
   function openNewPlanModal() {
     document.getElementById('fPlanId').value = '';
+    document.getElementById('fPlanAsset').value = '';
     document.getElementById('fPlanName').value = '';
     document.getElementById('fPlanDesc').value = '';
     document.getElementById('fPlanInterval').value = 'Kwartaal';
     document.getElementById('fPlanDays').value = 90;
     document.getElementById('fPlanDuration').value = '';
-    document.getElementById('fPlanMeter').value = '';
-    document.getElementById('fPlanDrempel').value = '';
     document.getElementById('planModalTitle').textContent = 'Nieuw onderhoudsplan';
-    taskRows = [''];
+    taskRows = [{ description: '', meter_naam: '', drempelwaarde: null, _open: false }];
     renderTaskEditor();
     document.getElementById('planModal').classList.add('open');
   }
@@ -530,17 +595,17 @@
   function editPlan(id) {
     const p = plans.find(x => x.id === id);
     document.getElementById('fPlanId').value = p.id;
+    document.getElementById('fPlanAsset').value = p.asset_id || '';
     document.getElementById('fPlanName').value = p.name;
     document.getElementById('fPlanDesc').value = p.description || '';
     document.getElementById('fPlanInterval').value = p.interval_type;
     document.getElementById('fPlanDays').value = p.interval_days;
     document.getElementById('fPlanDuration').value = p.estimated_duration || '';
-    document.getElementById('fPlanMeter').value = p.meter_id || '';
-    document.getElementById('fPlanDrempel').value = p.meter_drempel || '';
     document.getElementById('planModalTitle').textContent = 'Plan bewerken';
     const tasks = (p.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
-    taskRows = tasks.map(t => t.description);
-    if (!taskRows.length) taskRows = [''];
+    taskRows = tasks.length
+      ? tasks.map(t => ({ description: t.description, meter_naam: t.meter_naam || '', drempelwaarde: t.drempelwaarde ?? null, _open: false }))
+      : [{ description: '', meter_naam: '', drempelwaarde: null, _open: false }];
     renderTaskEditor();
     document.getElementById('planModal').classList.add('open');
   }
@@ -557,8 +622,7 @@
         interval_type: document.getElementById('fPlanInterval').value,
         interval_days: parseInt(document.getElementById('fPlanDays').value) || 90,
         estimated_duration: parseInt(document.getElementById('fPlanDuration').value) || null,
-        meter_id: document.getElementById('fPlanMeter').value || null,
-        meter_drempel: parseFloat(document.getElementById('fPlanDrempel').value) || null,
+        asset_id: document.getElementById('fPlanAsset').value || null,
       };
       if (!payload.name) {
         alert('Vul een naam in.');
@@ -578,10 +642,16 @@
         planId = data.id;
       }
 
-      const validTasks = taskRows.filter(t => t.trim());
+      const validTasks = taskRows.filter(t => t.description.trim());
       if (validTasks.length) {
         const { error: taskErr } = await sb.from('maintenance_tasks').insert(
-          validTasks.map((t,i) => ({ plan_id: planId, order_nr: i+1, description: t.trim() }))
+          validTasks.map((t, i) => ({
+            plan_id: planId,
+            order_nr: i + 1,
+            description: t.description.trim(),
+            meter_naam: t.meter_naam || null,
+            drempelwaarde: t.drempelwaarde || null,
+          }))
         );
         if (taskErr) throw taskErr;
       }
@@ -696,6 +766,58 @@
     btn.disabled=false; btn.innerHTML='<i class="ti ti-link"></i> Koppeling opslaan';
     closeModal('linkModal');
     if (selectedPlan && selectedPlan.id === linkPlanId) await renderDetail();
+  }
+
+  function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function dupliceerPlan(planId) {
+    document.getElementById('dupPlanId').value = planId;
+    vulAssetDropdown('dupAsset');
+    document.getElementById('dupModal').classList.add('open');
+  }
+
+  async function saveDuplicate() {
+    const planId = document.getElementById('dupPlanId').value;
+    const assetId = document.getElementById('dupAsset').value;
+    if (!assetId) { alert('Selecteer een asset.'); return; }
+    const btn = document.getElementById('saveDupBtn');
+    btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader"></i> Bezig…';
+
+    try {
+      const plan = plans.find(p => p.id === planId);
+      const { data: newPlan, error: planErr } = await sb.from('maintenance_plans').insert({
+        name: plan.name + ' (kopie)',
+        description: plan.description,
+        interval_type: plan.interval_type,
+        interval_days: plan.interval_days,
+        estimated_duration: plan.estimated_duration,
+        asset_id: assetId,
+        is_active: true,
+      }).select().single();
+      if (planErr) throw planErr;
+
+      const tasks = (plan.maintenance_tasks || []).sort((a,b) => a.order_nr - b.order_nr);
+      if (tasks.length) {
+        const { error: taskErr } = await sb.from('maintenance_tasks').insert(
+          tasks.map(t => ({
+            plan_id: newPlan.id,
+            order_nr: t.order_nr,
+            description: t.description,
+            meter_naam: t.meter_naam || null,
+            drempelwaarde: t.drempelwaarde || null,
+          }))
+        );
+        if (taskErr) throw taskErr;
+      }
+
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-copy"></i> Dupliceren';
+      closeModal('dupModal');
+      await loadAll();
+      selectPlan(newPlan.id);
+    } catch(err) {
+      btn.disabled = false; btn.innerHTML = '<i class="ti ti-copy"></i> Dupliceren';
+      alert('Fout: ' + (err.message || JSON.stringify(err)));
+    }
   }
 
   function closeModal(id) { document.getElementById(id).classList.remove('open'); }
