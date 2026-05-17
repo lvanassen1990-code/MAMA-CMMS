@@ -3,30 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Medewerkers — MAMA</title>
+  <title>Organisatie — MAMA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" />
   <link rel="stylesheet" href="../assets/mama.css" />
   <style>
     .content { padding: 20px 24px 0; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
-    .content-scroll { flex: 1; min-height: 0; padding-bottom: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+    .content-scroll { flex: 1; min-height: 0; padding-bottom: 20px; overflow-y: auto; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
     .settings-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
     .settings-card-header { padding: 14px 18px; border-bottom: 0.5px solid var(--border); }
     .settings-card-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
     .settings-card-title i { font-size: 16px; color: var(--accent); }
     .settings-card-desc { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
     .list-row { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 0.5px solid var(--border); }
     .list-row:last-child { border-bottom: none; }
-    .mon-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-bg); color: var(--blue-text); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
-    .list-info { flex: 1; }
+    .list-row.inactief { opacity: 0.5; }
+    .list-info { flex: 1; min-width: 0; }
     .list-naam { font-size: 13px; font-weight: 500; }
     .list-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+    /* Medewerker avatar */
+    .mon-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-bg); color: var(--blue-text); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
     .rol-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: var(--bg); border: 0.5px solid var(--border-strong); color: var(--text-2); }
-    .list-row.inactief { opacity: 0.5; }
-    .add-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; padding: 10px 18px; border-top: 0.5px solid var(--border); background: var(--bg); align-items: center; }
+
+    /* Department icon */
+    .dept-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); background: var(--bg); border: 0.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .dept-icon i { font-size: 15px; color: var(--accent); }
+
+    /* Add rows */
+    .add-row { padding: 10px 18px; border-top: 0.5px solid var(--border); background: var(--bg); display: flex; flex-direction: column; gap: 8px; }
+    .add-row-inline { display: flex; gap: 8px; align-items: center; }
     .add-input { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12px; font-family: inherit; outline: none; background: var(--surface); color: var(--text); }
     .add-input:focus { border-color: var(--accent); }
+
     .empty-state { text-align: center; padding: 32px 20px; color: var(--text-3); }
     .empty-state i { font-size: 28px; display: block; margin-bottom: 8px; opacity: 0.4; }
     .empty-state p { font-size: 12px; }
@@ -70,7 +82,7 @@
       <a href="bedrijf.html" class="nav-item nav-sub"><i class="ti ti-building"></i> Bedrijfsgegevens</a>
       <a href="categorieen.html" class="nav-item nav-sub"><i class="ti ti-tag"></i> Categorieën</a>
       <a href="locaties.html" class="nav-item nav-sub"><i class="ti ti-map-pin"></i> Locaties</a>
-      <a href="medewerkers.html" class="nav-item nav-sub active"><i class="ti ti-users"></i> Medewerkers</a>
+      <a href="medewerkers.html" class="nav-item nav-sub active"><i class="ti ti-sitemap"></i> Organisatie</a>
       <a href="leveranciers.html" class="nav-item nav-sub"><i class="ti ti-truck"></i> Leveranciers</a>
     </div>
   </div>
@@ -90,31 +102,61 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Medewerkers</div>
-      <div class="topbar-sub">Monteurs en medewerkers die in het systeem gebruikt worden</div>
+      <div class="topbar-title">Organisatie</div>
+      <div class="topbar-sub">Afdelingen en medewerkers binnen het bedrijf</div>
     </div>
     <div class="topbar-right">
-      <button class="btn primary" onclick="document.getElementById('nieuwNaam').focus()"><i class="ti ti-plus"></i> Nieuwe medewerker</button>
+      <button class="btn primary" onclick="document.getElementById('nieuwDeptNaam').focus()"><i class="ti ti-plus"></i> Nieuwe afdeling</button>
+      <button class="btn" onclick="document.getElementById('nieuwNaam').focus()"><i class="ti ti-plus"></i> Nieuwe medewerker</button>
     </div>
   </div>
   <div class="content">
   <div class="content-scroll">
-    <div class="settings-card">
-      <div class="settings-card-header">
-        <div class="settings-card-title"><i class="ti ti-users"></i> Medewerkers</div>
-        <div class="settings-card-desc">Namen worden gebruikt in werkorder-toewijzingen en storingsmeldingen</div>
+    <div class="two-col">
+
+      <!-- LINKS: Afdelingen -->
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <div class="settings-card-title"><i class="ti ti-sitemap"></i> Afdelingen</div>
+          <div class="settings-card-desc">Shops en afdelingen met eindverantwoordelijke</div>
+        </div>
+        <div id="deptLijst"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
+        <div class="add-row">
+          <div class="add-row-inline">
+            <input class="add-input" id="nieuwDeptNaam" type="text" placeholder="Naam afdeling…" maxlength="60" style="flex:1;" onkeydown="if(event.key==='Enter')voegDeptToe()" />
+          </div>
+          <div class="add-row-inline">
+            <select class="add-input" id="nieuwDeptVerantw" style="flex:1;">
+              <option value="">— Eindverantwoordelijke (optioneel) —</option>
+            </select>
+            <button class="btn primary" onclick="voegDeptToe()"><i class="ti ti-plus"></i> Toevoegen</button>
+          </div>
+        </div>
       </div>
-      <div id="lijst"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
-      <div class="add-row">
-        <input class="add-input" id="nieuwNaam" type="text" placeholder="Naam…" maxlength="60" onkeydown="if(event.key==='Enter')voegToe()" />
-        <input class="add-input" id="nieuwEmail" type="email" placeholder="E-mail (optioneel)…" onkeydown="if(event.key==='Enter')voegToe()" />
-        <select class="add-input" id="nieuwRol" style="min-width:110px;">
-          <option value="Monteur">Monteur</option>
-          <option value="Manager">Manager</option>
-          <option value="Admin">Admin</option>
-        </select>
-        <button class="btn primary" onclick="voegToe()"><i class="ti ti-plus"></i> Toevoegen</button>
+
+      <!-- RECHTS: Medewerkers -->
+      <div class="settings-card">
+        <div class="settings-card-header">
+          <div class="settings-card-title"><i class="ti ti-users"></i> Medewerkers</div>
+          <div class="settings-card-desc">Namen worden gebruikt in werkorder-toewijzingen en storingsmeldingen</div>
+        </div>
+        <div id="lijst"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
+        <div class="add-row">
+          <div class="add-row-inline">
+            <input class="add-input" id="nieuwNaam" type="text" placeholder="Naam…" maxlength="60" style="flex:1;" onkeydown="if(event.key==='Enter')voegToe()" />
+            <input class="add-input" id="nieuwEmail" type="email" placeholder="E-mail (optioneel)…" style="flex:1;" onkeydown="if(event.key==='Enter')voegToe()" />
+          </div>
+          <div class="add-row-inline">
+            <select class="add-input" id="nieuwRol" style="min-width:110px;">
+              <option value="Monteur">Monteur</option>
+              <option value="Manager">Manager</option>
+              <option value="Admin">Admin</option>
+            </select>
+            <button class="btn primary" onclick="voegToe()"><i class="ti ti-plus"></i> Toevoegen</button>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
   </div>
@@ -135,9 +177,12 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10Z2h4bmxsaW14aGxuanRzaGpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MjkzNTYsImV4cCI6MjA5NDAwNTM1Nn0.YmBzRCMEmTbqFhRiHjdRpEJ0H-HxncJx-8_VNKhb_S8'
   );
 
-  let items = [];
+  let monItems = [];
+  let deptItems = [];
 
-  async function load() {
+  // ── MEDEWERKERS ──────────────────────────────────────────
+
+  async function loadMedewerkers() {
     const [{ data: mons }, { data: inUse }] = await Promise.all([
       sb.from('monteurs').select('id, naam, email, rol, actief').order('naam'),
       sb.from('werkorders').select('assigned_to, completed_by')
@@ -147,27 +192,28 @@
       if (w.assigned_to) inGebruik.add(w.assigned_to);
       if (w.completed_by) inGebruik.add(w.completed_by);
     });
-    items = (mons || []).map(m => ({ ...m, inGebruik: inGebruik.has(m.naam) }));
-    render();
+    monItems = (mons || []).map(m => ({ ...m, inGebruik: inGebruik.has(m.naam) }));
+    renderMedewerkers();
+    vulDeptVerantwDropdown();
   }
 
   function initials(naam) {
     return naam.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
   }
 
-  function render() {
+  function renderMedewerkers() {
     const el = document.getElementById('lijst');
-    if (!items.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-users"></i><p>Nog geen medewerkers</p></div>'; return; }
-    el.innerHTML = items.map(m => `
-      <div class="list-row${m.actief === false ? ' inactief' : ''}" id="r-${m.id}">
+    if (!monItems.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-users"></i><p>Nog geen medewerkers</p></div>'; return; }
+    el.innerHTML = monItems.map(m => `
+      <div class="list-row${m.actief === false ? ' inactief' : ''}" id="m-${m.id}">
         <div class="mon-avatar">${initials(m.naam)}</div>
         <div class="list-info">
           <div class="list-naam">${escHtml(m.naam)}</div>
           <div class="list-sub">${m.email ? escHtml(m.email) : '—'}</div>
         </div>
         <span class="rol-badge">${escHtml(m.rol || 'Monteur')}</span>
-        <button class="pill-btn${m.actief !== false ? ' actief' : ''}" onclick="toggleActief('${m.id}',${m.actief !== false})">${m.actief !== false ? 'Actief' : 'Inactief'}</button>
-        ${!m.inGebruik ? `<button class="pill-btn danger" onclick="verwijder('${m.id}','${escHtml(m.naam).replace(/'/g,"\\'")}')">Verwijderen</button>` : ''}
+        <button class="pill-btn${m.actief !== false ? ' actief' : ''}" onclick="toggleMonActief('${m.id}',${m.actief !== false})">${m.actief !== false ? 'Actief' : 'Inactief'}</button>
+        ${!m.inGebruik ? `<button class="pill-btn danger" onclick="verwijderMon('${m.id}','${escHtml(m.naam).replace(/'/g,"\\'")}')">Verwijderen</button>` : ''}
       </div>`).join('');
   }
 
@@ -175,36 +221,105 @@
     const naam  = document.getElementById('nieuwNaam').value.trim();
     const email = document.getElementById('nieuwEmail').value.trim();
     const rol   = document.getElementById('nieuwRol').value;
-    if (!naam) { document.getElementById('nieuwNaam').style.borderColor = 'var(--red)'; setTimeout(() => document.getElementById('nieuwNaam').style.borderColor = '', 2000); return; }
+    if (!naam) { flash('nieuwNaam'); return; }
     const { error } = await sb.from('monteurs').insert({ naam, email: email || null, rol });
-    if (error) {
-      const inp = document.getElementById('nieuwNaam');
-      inp.style.borderColor = 'var(--red)';
-      inp.title = error.code === '23505' ? 'Bestaat al' : error.message;
-      setTimeout(() => { inp.style.borderColor = ''; inp.title = ''; }, 2000);
-      return;
-    }
+    if (error) { flashErr('nieuwNaam', error); return; }
     document.getElementById('nieuwNaam').value = '';
     document.getElementById('nieuwEmail').value = '';
-    await load();
+    await loadMedewerkers();
   }
 
-  async function toggleActief(id, huidig) {
+  async function toggleMonActief(id, huidig) {
     await sb.from('monteurs').update({ actief: !huidig }).eq('id', id);
-    const item = items.find(i => i.id === id);
-    if (item) { item.actief = !huidig; render(); }
+    const item = monItems.find(i => i.id === id);
+    if (item) { item.actief = !huidig; renderMedewerkers(); }
   }
 
-  async function verwijder(id, naam) {
+  async function verwijderMon(id, naam) {
     if (!confirm(`"${naam}" verwijderen?`)) return;
     await sb.from('monteurs').delete().eq('id', id);
-    items = items.filter(r => r.id !== id);
-    render();
+    monItems = monItems.filter(r => r.id !== id);
+    renderMedewerkers();
+  }
+
+  // ── AFDELINGEN ───────────────────────────────────────────
+
+  async function loadDepts() {
+    const [{ data: depts }, { data: inUse }] = await Promise.all([
+      sb.from('departments').select('id, naam, eindverantwoordelijke, actief').order('naam'),
+      sb.from('assets').select('department')
+    ]);
+    const inGebruik = new Set((inUse || []).map(r => r.department).filter(Boolean));
+    deptItems = (depts || []).map(d => ({ ...d, inGebruik: inGebruik.has(d.naam) }));
+    renderDepts();
+  }
+
+  function renderDepts() {
+    const el = document.getElementById('deptLijst');
+    if (!deptItems.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-sitemap"></i><p>Nog geen afdelingen</p></div>'; return; }
+    el.innerHTML = deptItems.map(d => `
+      <div class="list-row${d.actief === false ? ' inactief' : ''}" id="d-${d.id}">
+        <div class="dept-icon"><i class="ti ti-building-factory"></i></div>
+        <div class="list-info">
+          <div class="list-naam">${escHtml(d.naam)}</div>
+          <div class="list-sub">${d.eindverantwoordelijke ? escHtml(d.eindverantwoordelijke) : '— geen eindverantwoordelijke —'}</div>
+        </div>
+        <button class="pill-btn${d.actief !== false ? ' actief' : ''}" onclick="toggleDeptActief('${d.id}',${d.actief !== false})">${d.actief !== false ? 'Actief' : 'Inactief'}</button>
+        ${!d.inGebruik ? `<button class="pill-btn danger" onclick="verwijderDept('${d.id}','${escHtml(d.naam).replace(/'/g,"\\'")}')">Verwijderen</button>` : ''}
+      </div>`).join('');
+  }
+
+  function vulDeptVerantwDropdown() {
+    const sel = document.getElementById('nieuwDeptVerantw');
+    const huidig = sel.value;
+    sel.innerHTML = '<option value="">— Eindverantwoordelijke (optioneel) —</option>' +
+      monItems.filter(m => m.actief !== false).map(m =>
+        `<option${m.naam === huidig ? ' selected' : ''}>${escHtml(m.naam)}</option>`
+      ).join('');
+  }
+
+  async function voegDeptToe() {
+    const naam = document.getElementById('nieuwDeptNaam').value.trim();
+    const verw = document.getElementById('nieuwDeptVerantw').value;
+    if (!naam) { flash('nieuwDeptNaam'); return; }
+    const { error } = await sb.from('departments').insert({ naam, eindverantwoordelijke: verw || null });
+    if (error) { flashErr('nieuwDeptNaam', error); return; }
+    document.getElementById('nieuwDeptNaam').value = '';
+    document.getElementById('nieuwDeptVerantw').value = '';
+    await loadDepts();
+  }
+
+  async function toggleDeptActief(id, huidig) {
+    await sb.from('departments').update({ actief: !huidig }).eq('id', id);
+    const item = deptItems.find(i => i.id === id);
+    if (item) { item.actief = !huidig; renderDepts(); }
+  }
+
+  async function verwijderDept(id, naam) {
+    if (!confirm(`"${naam}" verwijderen?`)) return;
+    await sb.from('departments').delete().eq('id', id);
+    deptItems = deptItems.filter(r => r.id !== id);
+    renderDepts();
+  }
+
+  // ── HELPERS ──────────────────────────────────────────────
+
+  function flash(id) {
+    const el = document.getElementById(id);
+    el.style.borderColor = 'var(--red)';
+    setTimeout(() => el.style.borderColor = '', 2000);
+  }
+
+  function flashErr(id, error) {
+    const el = document.getElementById(id);
+    el.style.borderColor = 'var(--red)';
+    el.title = error.code === '23505' ? 'Bestaat al' : error.message;
+    setTimeout(() => { el.style.borderColor = ''; el.title = ''; }, 2000);
   }
 
   function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-  load();
+  Promise.all([loadMedewerkers(), loadDepts()]);
 </script>
 </body>
 </html>
