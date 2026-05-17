@@ -245,11 +245,11 @@
   // ── AFDELINGEN ───────────────────────────────────────────
 
   async function loadDepts() {
-    const [{ data: depts }, { data: inUse }] = await Promise.all([
+    const [{ data: depts }, assetRes] = await Promise.all([
       sb.from('departments').select('id, naam, eindverantwoordelijke, actief').order('naam'),
       sb.from('assets').select('department')
     ]);
-    const inGebruik = new Set((inUse || []).map(r => r.department).filter(Boolean));
+    const inGebruik = new Set((assetRes.data || []).map(r => r.department).filter(Boolean));
     deptItems = (depts || []).map(d => ({ ...d, inGebruik: inGebruik.has(d.naam) }));
     renderDepts();
   }
