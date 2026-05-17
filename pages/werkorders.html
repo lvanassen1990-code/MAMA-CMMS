@@ -1791,12 +1791,16 @@
             onchange="toggleTaak('${t.id}', this.checked)" />
           <span style="font-size:13px;${t.voltooid ? 'text-decoration:line-through;color:var(--text-3);' : ''}">${t.omschrijving}</span>
         </div>
-        ${t.meter_naam ? `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding-left:30px;">
-          <span style="font-size:11px;background:var(--blue-bg);color:var(--blue-text);padding:2px 8px;border-radius:3px;flex-shrink:0;"><i class="ti ti-gauge"></i> ${t.meter_naam}</span>
-          <input type="number" class="form-input" style="max-width:160px;font-size:12px;" ${isAfgesloten ? 'disabled' : ''}
-            value="${t.meter_waarde ?? ''}" placeholder="Aflezing invoeren…"
-            onchange="saveTaakMeterWaarde('${t.id}', this.value)" />
-        </div>` : ''}
+        ${t.meter_naam ? (() => {
+          const asset = allAssets.find(a => a.asset_id === drawerWO.asset_id);
+          const assetLabel = asset ? ` — ${asset.name} (${asset.asset_id})` : '';
+          return `<div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding-left:30px;">
+            <span style="font-size:11px;background:var(--blue-bg);color:var(--blue-text);padding:2px 8px;border-radius:3px;flex-shrink:0;white-space:nowrap;"><i class="ti ti-gauge"></i> ${t.meter_naam}${assetLabel}</span>
+            <input type="number" class="form-input" style="max-width:160px;font-size:12px;" ${isAfgesloten ? 'disabled' : ''}
+              value="${t.meter_waarde ?? ''}" placeholder="Aflezing invoeren…"
+              onchange="saveTaakMeterWaarde('${t.id}', this.value)" />
+          </div>`;
+        })() : ''}
       </div>`).join('');
 
     const voltooidTaken = (taken || []).filter(t => t.voltooid).length;
