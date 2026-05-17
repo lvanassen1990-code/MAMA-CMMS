@@ -690,7 +690,15 @@
         </div>
         <div class="form-field">
           <label class="form-label">Locatie</label>
-          <select class="form-input" id="fLocation"></select>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <select class="form-input" id="fLocation" style="flex:1;"></select>
+            <button type="button" class="btn" onclick="toggleNieuweLocRow()" title="Nieuwe locatie toevoegen" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-plus"></i></button>
+          </div>
+          <div id="nieuweLocRow" style="display:none;margin-top:6px;gap:6px;align-items:center;">
+            <input class="form-input" id="nieuweLocInput" type="text" placeholder="Nieuwe locatie…" style="flex:1;" onkeydown="if(event.key==='Enter')saveNieuweLocatie();if(event.key==='Escape')toggleNieuweLocRow()" />
+            <button type="button" class="btn primary" onclick="saveNieuweLocatie()" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-check"></i></button>
+            <button type="button" class="btn" onclick="toggleNieuweLocRow()" style="padding:6px 10px;flex-shrink:0;"><i class="ti ti-x"></i></button>
+          </div>
         </div>
       </div>
       <div class="form-field full">
@@ -1047,6 +1055,29 @@
     await loadCategories();
     vulCategoryDropdowns(naam);
     toggleNieuweCatRow();
+  }
+
+  function toggleNieuweLocRow() {
+    const row = document.getElementById('nieuweLocRow');
+    const zichtbaar = row.style.display === 'flex';
+    row.style.display = zichtbaar ? 'none' : 'flex';
+    if (!zichtbaar) { document.getElementById('nieuweLocInput').value = ''; document.getElementById('nieuweLocInput').focus(); }
+  }
+
+  async function saveNieuweLocatie() {
+    const input = document.getElementById('nieuweLocInput');
+    const naam = input.value.trim();
+    if (!naam) return;
+    const { error } = await sb.from('locaties').insert({ naam });
+    if (error) {
+      input.style.borderColor = 'var(--red)';
+      input.title = error.code === '23505' ? 'Bestaat al' : error.message;
+      setTimeout(() => { input.style.borderColor = ''; input.title = ''; }, 2000);
+      return;
+    }
+    await loadLocaties();
+    vulLocationDropdown(naam);
+    toggleNieuweLocRow();
   }
 
   async function loadEenheden() {
