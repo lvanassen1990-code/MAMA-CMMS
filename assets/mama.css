@@ -452,3 +452,9 @@ body {
 .t-mono    { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Pill buttons (actief/inactief toggle, verwijder) ── */
+.pill-btn { background: none; border: 0.5px solid var(--border-strong); cursor: pointer; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; color: var(--text-3); transition: background 0.1s, color 0.1s, border-color 0.1s; }
+.pill-btn.actief { border-color: var(--green,#22c55e); color: var(--green,#22c55e); }
+.pill-btn:hover { background: var(--bg); }
+.pill-btn.danger:hover { background: var(--red-bg,#fef2f2); border-color: var(--red-text,#ef4444); color: var(--red-text,#ef4444); }

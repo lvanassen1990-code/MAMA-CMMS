@@ -466,11 +466,6 @@
           <label class="form-label">Toegewezen aan</label>
           <select class="form-input" id="fAssigned">
             <option value="">— Niet toegewezen —</option>
-            <option>J. de Vries</option>
-            <option>M. Bakker</option>
-            <option>P. Jansen</option>
-            <option>R. Smit</option>
-            <option>K. van Dam</option>
           </select>
         </div>
         <div class="form-field">
@@ -598,11 +593,6 @@
           <label class="form-label">Toegewezen aan</label>
           <select class="form-input" id="vervolgAssigned">
             <option value="">— Niet toegewezen —</option>
-            <option>J. de Vries</option>
-            <option>M. Bakker</option>
-            <option>P. Jansen</option>
-            <option>R. Smit</option>
-            <option>K. van Dam</option>
           </select>
         </div>
       </div>
@@ -1780,6 +1770,16 @@
   const thDue = document.querySelector('th[data-col="due_date"]');
   if (thDue) thDue.classList.add('sort-active');
 
+  async function loadMonteurs() {
+    const { data } = await sb.from('monteurs').select('naam').eq('actief', true).order('naam');
+    const opties = (data || []).map(m => `<option>${m.naam}</option>`).join('');
+    ['fAssigned', 'vervolgAssigned'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (sel) sel.innerHTML = '<option value="">— Niet toegewezen —</option>' + opties;
+    });
+  }
+
+  loadMonteurs();
   loadData().then(() => {
     const params = new URLSearchParams(location.search);
     const woId = params.get('wo');

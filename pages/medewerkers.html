@@ -23,8 +23,7 @@
     .list-naam { font-size: 13px; font-weight: 500; }
     .list-sub { font-size: 11px; color: var(--text-3); margin-top: 1px; }
     .rol-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; background: var(--bg); border: 0.5px solid var(--border-strong); color: var(--text-2); }
-    .list-delete { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px 6px; border-radius: var(--radius-sm); transition: background 0.1s, color 0.1s; font-size: 15px; line-height: 1; }
-    .list-delete:hover { background: var(--red-bg); color: var(--red-text); }
+    .list-row.inactief { opacity: 0.5; }
     .add-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; padding: 10px 18px; border-top: 0.5px solid var(--border); background: var(--bg); align-items: center; }
     .add-input { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12px; font-family: inherit; outline: none; background: var(--surface); color: var(--text); }
     .add-input:focus { border-color: var(--accent); }
@@ -72,6 +71,7 @@
       <a href="categorieen.html" class="nav-item nav-sub"><i class="ti ti-tag"></i> Categorieën</a>
       <a href="locaties.html" class="nav-item nav-sub"><i class="ti ti-map-pin"></i> Locaties</a>
       <a href="medewerkers.html" class="nav-item nav-sub active"><i class="ti ti-users"></i> Medewerkers</a>
+      <a href="leveranciers.html" class="nav-item nav-sub"><i class="ti ti-truck"></i> Leveranciers</a>
     </div>
   </div>
   <a href="instellingen.html" class="nav-item"><i class="ti ti-settings"></i> Instellingen</a>
@@ -138,8 +138,16 @@
   let items = [];
 
   async function load() {
-    const { data } = await sb.from('monteurs').select('id, naam, email, rol').order('naam');
-    items = data || [];
+    const [{ data: mons }, { data: inUse }] = await Promise.all([
+      sb.from('monteurs').select('id, naam, email, rol, actief').order('naam'),
+      sb.from('werkorders').select('assigned_to, completed_by')
+    ]);
+    const inGebruik = new Set();
+    (inUse || []).forEach(w => {
+      if (w.assigned_to) inGebruik.add(w.assigned_to);
+      if (w.completed_by) inGebruik.add(w.completed_by);
+    });
+    items = (mons || []).map(m => ({ ...m, inGebruik: inGebruik.has(m.naam) }));
     render();
   }
 
@@ -151,14 +159,15 @@
     const el = document.getElementById('lijst');
     if (!items.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-users"></i><p>Nog geen medewerkers</p></div>'; return; }
     el.innerHTML = items.map(m => `
-      <div class="list-row" id="r-${m.id}">
+      <div class="list-row${m.actief === false ? ' inactief' : ''}" id="r-${m.id}">
         <div class="mon-avatar">${initials(m.naam)}</div>
         <div class="list-info">
           <div class="list-naam">${escHtml(m.naam)}</div>
           <div class="list-sub">${m.email ? escHtml(m.email) : '—'}</div>
         </div>
         <span class="rol-badge">${escHtml(m.rol || 'Monteur')}</span>
-        <button class="list-delete" onclick="verwijder('${m.id}','${escHtml(m.naam).replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i> Verwijderen</button>
+        <button class="pill-btn${m.actief !== false ? ' actief' : ''}" onclick="toggleActief('${m.id}',${m.actief !== false})">${m.actief !== false ? 'Actief' : 'Inactief'}</button>
+        ${!m.inGebruik ? `<button class="pill-btn danger" onclick="verwijder('${m.id}','${escHtml(m.naam).replace(/'/g,"\\'")}')">Verwijderen</button>` : ''}
       </div>`).join('');
   }
 
@@ -178,6 +187,12 @@
     document.getElementById('nieuwNaam').value = '';
     document.getElementById('nieuwEmail').value = '';
     await load();
+  }
+
+  async function toggleActief(id, huidig) {
+    await sb.from('monteurs').update({ actief: !huidig }).eq('id', id);
+    const item = items.find(i => i.id === id);
+    if (item) { item.actief = !huidig; render(); }
   }
 
   async function verwijder(id, naam) {

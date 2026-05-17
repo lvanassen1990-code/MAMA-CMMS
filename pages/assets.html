@@ -690,13 +690,7 @@
         </div>
         <div class="form-field">
           <label class="form-label">Locatie</label>
-          <select class="form-input" id="fLocation">
-            <option>Hal A</option>
-            <option>Hal B</option>
-            <option>Hal C</option>
-            <option>Buitenterrein</option>
-            <option>Kantoor</option>
-          </select>
+          <select class="form-input" id="fLocation"></select>
         </div>
       </div>
       <div class="form-field full">
@@ -712,9 +706,16 @@
           <input class="form-input" id="fManufacturer" type="text" placeholder="bijv. Atlas Copco" />
         </div>
         <div class="form-field">
+          <label class="form-label">Model</label>
+          <input class="form-input" id="fModel" type="text" placeholder="bijv. GA 15+" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
           <label class="form-label">Serienummer</label>
           <input class="form-input" id="fSerial" type="text" placeholder="bijv. SN-2024-00441" />
         </div>
+        <div class="form-field"></div>
       </div>
       <div class="form-row">
         <div class="form-field full">
@@ -725,13 +726,7 @@
       <div class="form-row">
         <div class="form-field">
           <label class="form-label">Verantwoordelijke monteur</label>
-          <select class="form-input" id="fPerson">
-            <option>J. de Vries</option>
-            <option>M. Bakker</option>
-            <option>P. Jansen</option>
-            <option>R. Smit</option>
-            <option>K. van Dam</option>
-          </select>
+          <select class="form-input" id="fPerson"></select>
         </div>
         <div class="form-field">
           <label class="form-label">Status</label>
@@ -986,9 +981,38 @@
   let allCategories = [];
 
   async function loadCategories() {
-    const { data } = await sb.from('asset_categories').select('naam').order('naam');
+    const { data } = await sb.from('asset_categories').select('naam').eq('actief', true).order('naam');
     allCategories = (data || []).map(r => r.naam);
     vulCategoryDropdowns();
+  }
+
+  let allLocaties = [];
+
+  async function loadLocaties() {
+    const { data } = await sb.from('locaties').select('naam').eq('actief', true).order('naam');
+    allLocaties = (data || []).map(r => r.naam);
+    vulLocationDropdown();
+  }
+
+  function vulLocationDropdown(geselecteerd) {
+    const sel = document.getElementById('fLocation');
+    const huidig = geselecteerd ?? sel.value;
+    sel.innerHTML = allLocaties.map(n => `<option${n === huidig ? ' selected' : ''}>${n}</option>`).join('');
+  }
+
+  let allMonteurs = [];
+
+  async function loadMonteurs() {
+    const { data } = await sb.from('monteurs').select('naam').eq('actief', true).order('naam');
+    allMonteurs = (data || []).map(r => r.naam);
+    vulMonteurDropdown();
+  }
+
+  function vulMonteurDropdown(geselecteerd) {
+    const sel = document.getElementById('fPerson');
+    const huidig = geselecteerd ?? sel.value;
+    sel.innerHTML = '<option value="">— Geen —</option>' +
+      allMonteurs.map(n => `<option${n === huidig ? ' selected' : ''}>${escHtml(n)}</option>`).join('');
   }
 
   function vulCategoryDropdowns(geselecteerd) {
@@ -1636,9 +1660,10 @@
       location:             document.getElementById('fLocation').value,
       parent_id:            document.getElementById('fParent').value || null,
       manufacturer:         document.getElementById('fManufacturer').value.trim(),
+      model:                document.getElementById('fModel').value.trim(),
       serial_number:        document.getElementById('fSerial').value.trim(),
       installation_date:    document.getElementById('fInstallDate').value || null,
-      responsible_person:   document.getElementById('fPerson').value,
+      responsible_person:   document.getElementById('fPerson').value || null,
       status:               document.getElementById('fStatus').value,
       notes:                document.getElementById('fNotes').value.trim(),
       photo_url:            photoUrl,
@@ -2209,9 +2234,9 @@
     document.getElementById('drawerCancelBtn').style.display = '';
     document.querySelector('.drawer-hero').classList.add('edit-mode');
 
-    const cats = ['Compressor','Hydrauliek','Ventilatie','Transport','Elektrisch','Koeling'];
-    const locs = ['Hal A','Hal B','Hal C','Buitenterrein','Kantoor'];
-    const persons = ['J. de Vries','M. Bakker','P. Jansen','R. Smit','K. van Dam'];
+    const cats = allCategories;
+    const locs = allLocaties;
+    const persons = ['— Geen —', ...allMonteurs];
 
     function sel(opts, val) {
       return `<select class="drawer-edit-input drawer-edit-select">${opts.map(o=>`<option${o===val?' selected':''}>${o}</option>`).join('')}</select>`;
@@ -2289,7 +2314,7 @@
       model:              vals[2],
       serial_number:      vals[3],
       location:           vals[4],
-      responsible_person: vals[5],
+      responsible_person: vals[5] === '— Geen —' ? null : vals[5],
       installation_date:  vals[6] || null,
     };
 
@@ -2347,6 +2372,13 @@
     await loadEenheden();
     document.getElementById('meterRows').innerHTML = '';
     meterRowCount = 0;
+    ['fAssetId','fName','fManufacturer','fModel','fSerial','fNotes'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('fInstallDate').value = '';
+    document.getElementById('fStatus').value = 'Operationeel';
+    vulMonteurDropdown('');
     document.getElementById('fPhoto').value = '';
     document.getElementById('photoPreview').innerHTML =
       `<i class="ti ti-camera" style="font-size:22px;color:var(--text-3);"></i>
@@ -2383,7 +2415,7 @@
   function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 
 
-  Promise.all([loadAssets(), loadCategories()]).then(() => {
+  Promise.all([loadAssets(), loadCategories(), loadLocaties(), loadMonteurs()]).then(() => {
     const params = new URLSearchParams(location.search);
     const assetId = params.get('asset');
     if (assetId) openDrawer(assetId);

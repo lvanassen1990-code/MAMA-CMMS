@@ -19,8 +19,7 @@
     .list-row { display: flex; align-items: center; gap: 10px; padding: 11px 18px; border-bottom: 0.5px solid var(--border); }
     .list-row:last-child { border-bottom: none; }
     .list-naam { flex: 1; font-size: 13px; font-weight: 500; }
-    .list-delete { background: none; border: none; cursor: pointer; color: var(--text-3); padding: 4px 6px; border-radius: var(--radius-sm); transition: background 0.1s, color 0.1s; font-size: 15px; line-height: 1; }
-    .list-delete:hover { background: var(--red-bg); color: var(--red-text); }
+    .list-row.inactief { opacity: 0.5; }
     .add-row { display: flex; gap: 8px; padding: 10px 18px; border-top: 0.5px solid var(--border); background: var(--bg); }
     .add-input { flex: 1; border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 12px; font-family: inherit; outline: none; background: var(--surface); color: var(--text); }
     .add-input:focus { border-color: var(--accent); }
@@ -87,8 +86,8 @@
 <div class="main">
   <div class="topbar">
     <div>
-      <div class="topbar-title">Categorieën</div>
-      <div class="topbar-sub">Asset-categorieën die door het systeem gebruikt worden</div>
+      <div class="topbar-title">Locaties</div>
+      <div class="topbar-sub">Locaties die gebruikt worden bij assets en werkorders</div>
     </div>
     <div class="topbar-right">
       <button class="btn primary" onclick="focusAdd()"><i class="ti ti-plus"></i> Nieuwe locatie</button>
@@ -98,8 +97,8 @@
   <div class="content-scroll">
     <div class="settings-card">
       <div class="settings-card-header">
-        <div class="settings-card-title"><i class="ti ti-tag"></i> Categorieën</div>
-        <div class="settings-card-desc">Categorieën worden gebruikt bij het aanmaken en filteren van assets</div>
+        <div class="settings-card-title"><i class="ti ti-map-pin"></i> Locaties</div>
+        <div class="settings-card-desc">Locaties worden gebruikt bij assets en werkorders</div>
       </div>
       <div id="lijst"><div class="empty-state"><i class="ti ti-loader"></i><p>Laden…</p></div></div>
       <div class="add-row">
@@ -129,19 +128,30 @@
   let items = [];
 
   async function load() {
-    const { data } = await sb.from('locaties').select('id, naam').order('naam');
-    items = data || [];
+    const [{ data: locs }, { data: inUse }] = await Promise.all([
+      sb.from('locaties').select('id, naam, actief').order('naam'),
+      sb.from('assets').select('location')
+    ]);
+    const inGebruik = new Set((inUse || []).map(r => r.location).filter(Boolean));
+    items = (locs || []).map(r => ({ ...r, inGebruik: inGebruik.has(r.naam) }));
     render();
   }
 
   function render() {
     const el = document.getElementById('lijst');
-    if (!items.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-map-pin"></i><p>Nog geen categorieën</p></div>'; return; }
+    if (!items.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-map-pin"></i><p>Nog geen locaties</p></div>'; return; }
     el.innerHTML = items.map(r => `
-      <div class="list-row" id="r-${r.id}">
+      <div class="list-row${r.actief === false ? ' inactief' : ''}" id="r-${r.id}">
         <span class="list-naam">${escHtml(r.naam)}</span>
-        <button class="list-delete" onclick="verwijder('${r.id}','${escHtml(r.naam).replace(/'/g,"\\'")}')"><i class="ti ti-trash"></i></button>
+        <button class="pill-btn${r.actief !== false ? ' actief' : ''}" onclick="toggleActief('${r.id}',${r.actief !== false})">${r.actief !== false ? 'Actief' : 'Inactief'}</button>
+        ${!r.inGebruik ? `<button class="pill-btn danger" onclick="verwijder('${r.id}','${escHtml(r.naam).replace(/'/g,"\\'")}')">Verwijderen</button>` : ''}
       </div>`).join('');
+  }
+
+  async function toggleActief(id, huidig) {
+    await sb.from('locaties').update({ actief: !huidig }).eq('id', id);
+    const item = items.find(i => i.id === id);
+    if (item) { item.actief = !huidig; render(); }
   }
 
   async function voegToe() {
